@@ -505,6 +505,7 @@ function openNewFoodModal() {
 
 function closeNewFoodModal() {
   newFoodOverlay.classList.remove('show');
+  resetNewFoodModal();
 }
 
 newFoodClose.addEventListener('click', closeNewFoodModal);
@@ -619,6 +620,7 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', () => {
         await registerInventory(foodId, name, newFoodExpiry, memo, newFoodIsFav);
 
         showToast(`✅ ${name} を追加しました`);
+        resetNewFoodModal();
         closeNewFoodModal();
       } catch (e) {
         console.error(e);
