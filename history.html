@@ -523,8 +523,9 @@ function hideConfirm() {
 
 document.getElementById('confirmCancel').addEventListener('click', hideConfirm);
 document.getElementById('confirmOk').addEventListener('click', async () => {
+  const cb = confirmCallback;
   hideConfirm();
-  if (confirmCallback) await confirmCallback();
+  if (cb) await cb();
 });
 confirmOverlay.addEventListener('click', e => {
   if (e.target === confirmOverlay) hideConfirm();
