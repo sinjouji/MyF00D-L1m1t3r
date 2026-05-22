@@ -671,6 +671,8 @@ document.getElementById('confirmOk').addEventListener('click', async () => {
   confirmCallback = null;
   confirmOverlay.classList.remove('show');
 
+console.log(confirmOverlay.className);
+
   if (!cb) {
     console.warn('[confirmOk] callback がありません');
     return;
