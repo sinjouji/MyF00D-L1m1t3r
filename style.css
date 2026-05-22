@@ -1,0 +1,896 @@
+/* ============================================================
+   食材管理アプリ - 共通スタイルシート
+   テーマ: Warm Notebook（温かみのあるノート風）
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Kaisei+Decol:wght@400;700&display=swap');
+
+/* ===== CSS カスタムプロパティ ===== */
+:root {
+  /* 背景・サーフェス */
+  --bg:            #FAF6EE;
+  --bg-dot:        #E5DDD0;
+  --surface:       #FFFEF9;
+  --surface-2:     #F5EFE6;
+
+  /* プライマリカラー（セージグリーン） */
+  --primary:       #7BA05B;
+  --primary-d:     #5A7A42;
+  --primary-l:     #EAF3E0;
+
+  /* アクセント（テラコッタ） */
+  --accent:        #D4715A;
+  --accent-l:      #FAE8E4;
+
+  /* ゴールド（お気に入り） */
+  --gold:          #E8A830;
+  --gold-l:        #FEF5D8;
+
+  /* ステータスカラー */
+  --expired-bg:    #FBEBE8;
+  --expired-b:     #E8A099;
+  --expired-t:     #B44030;
+
+  --today-bg:      #FEF6DF;
+  --today-b:       #F0C870;
+  --today-t:       #B07820;
+
+  --soon-bg:       #ECF6E5;
+  --soon-b:        #A8D090;
+  --soon-t:        #4A8030;
+
+  /* テキスト */
+  --text:          #3A3020;
+  --text-2:        #7A6E60;
+  --text-3:        #B0A898;
+
+  /* ボーダー */
+  --border:        #E0D5C5;
+
+  /* 角丸 */
+  --r-xs:          6px;
+  --r-sm:          10px;
+  --r:             14px;
+  --r-lg:          20px;
+  --r-full:        9999px;
+
+  /* シャドウ */
+  --shadow:        0 2px 10px rgba(100,80,40,0.08);
+  --shadow-lg:     0 6px 24px rgba(100,80,40,0.15);
+
+  /* フォント */
+  --font-head:     'Kaisei Decol', serif;
+  --font-body:     'M PLUS Rounded 1c', sans-serif;
+}
+
+/* ===== リセット ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+button { cursor: pointer; }
+input, textarea { font-family: var(--font-body); }
+
+/* ===== ベース ===== */
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg);
+  /* 細かいドットグリッド背景 */
+  background-image: radial-gradient(circle, var(--bg-dot) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 130px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+
+/* ====================================
+   ヘッダー & ナビ
+   ==================================== */
+header {
+  background: var(--surface);
+  border-bottom: 2px solid var(--border);
+  padding: 10px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow);
+}
+
+.header-inner {
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.logo {
+  font-family: var(--font-head);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary-d);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+nav { display: flex; gap: 4px; }
+
+nav a {
+  text-decoration: none;
+  color: var(--text-2);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: var(--r-full);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+nav a:hover    { background: var(--primary-l); color: var(--primary-d); }
+nav a.active   { background: var(--primary); color: white; }
+
+
+/* ====================================
+   メインコンテンツ
+   ==================================== */
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px 16px 0;
+}
+
+
+/* ====================================
+   期限セクション（ホーム）
+   ==================================== */
+.expiry-section { margin-bottom: 20px; }
+
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* セクションバッジ */
+.badge {
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 3px 12px;
+  border-radius: var(--r-full);
+  border: 2px solid;
+  letter-spacing: 0.03em;
+}
+
+.badge.expired { background: var(--expired-bg); border-color: var(--expired-b); color: var(--expired-t); }
+.badge.today   { background: var(--today-bg);   border-color: var(--today-b);   color: var(--today-t); }
+.badge.soon    { background: var(--soon-bg);     border-color: var(--soon-b);    color: var(--soon-t); }
+
+.section-count { font-size: 0.78rem; color: var(--text-3); }
+
+
+/* ====================================
+   食材カード（ホーム）
+   ==================================== */
+.food-grid { display: flex; flex-direction: column; gap: 6px; }
+
+.food-card {
+  background: var(--surface);
+  border-radius: var(--r);
+  padding: 11px 14px;
+  border-left: 4px solid transparent;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.food-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+
+.food-card.expired { border-left-color: var(--expired-t); }
+.food-card.today   { border-left-color: var(--today-t); }
+.food-card.soon    { border-left-color: var(--soon-t); }
+
+.food-card-fav  { font-size: 1em; flex-shrink: 0; }
+.food-card-body { flex: 1; min-width: 0; }
+
+.food-card-name {
+  font-weight: 700;
+  font-size: 0.92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.food-card-memo {
+  font-size: 0.75rem;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.food-card-right { flex-shrink: 0; text-align: right; }
+.food-card-date  { font-size: 0.76rem; color: var(--text-2); }
+
+/* 日数チップ */
+.days-chip {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: var(--r-full);
+  margin-top: 3px;
+}
+
+.days-chip.expired { background: var(--expired-bg); color: var(--expired-t); }
+.days-chip.today   { background: var(--today-bg);   color: var(--today-t); }
+.days-chip.soon    { background: var(--soon-bg);     color: var(--soon-t); }
+
+/* 空の状態 */
+.empty-card {
+  background: var(--surface);
+  border-radius: var(--r);
+  padding: 12px 16px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 0.82rem;
+  box-shadow: var(--shadow);
+}
+
+
+/* ====================================
+   ボトムバー（トグル入力パネル）
+   ==================================== */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+}
+
+.bottom-bar-inner {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* トグルボタン */
+.toggle-btn {
+  width: 100%;
+  padding: 12px 20px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.toggle-btn:hover { background: var(--primary-d); }
+
+.toggle-arrow {
+  font-size: 0.8em;
+  transition: transform 0.3s ease;
+  display: inline-block;
+}
+
+.toggle-btn.open .toggle-arrow { transform: rotate(180deg); }
+
+/* 入力パネル（展開エリア） */
+.input-panel {
+  background: var(--surface);
+  border-top: 2px solid var(--border);
+  padding: 0 16px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease, padding 0.35s ease;
+  box-shadow: 0 -4px 20px rgba(100,80,40,0.1);
+}
+
+.input-panel.open {
+  max-height: 480px;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+/* ===== 検索バー ===== */
+.search-wrap { position: relative; margin-bottom: 12px; }
+
+.search-input {
+  width: 100%;
+  padding: 10px 16px;
+  border: 2px solid var(--border);
+  border-radius: var(--r-full);
+  font-size: 0.92rem;
+  outline: none;
+  background: var(--bg);
+  color: var(--text);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(123,160,91,0.15);
+}
+
+/* サジェストリスト（入力の上に表示） */
+.suggest-list {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--r);
+  max-height: 160px;   /* 約3〜5件でスクロール */
+  overflow-y: auto;
+  z-index: 400;
+  box-shadow: var(--shadow-lg);
+  display: none;
+}
+
+.suggest-list.show { display: block; }
+
+.suggest-item {
+  padding: 9px 16px;
+  font-size: 0.9rem;
+  transition: background 0.12s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.suggest-item:last-child { border-bottom: none; }
+.suggest-item:hover, .suggest-item.active-item { background: var(--primary-l); cursor: pointer; }
+
+.suggest-fav { font-size: 0.85em; flex-shrink: 0; }
+
+.suggest-name { flex: 1; }
+
+.suggest-badge {
+  font-size: 0.68rem;
+  color: var(--text-3);
+  background: var(--surface-2);
+  padding: 1px 6px;
+  border-radius: var(--r-full);
+  white-space: nowrap;
+}
+
+/* ===== 日数テンプレートボタン ===== */
+.date-templates {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.date-btn {
+  padding: 6px 13px;
+  border: 2px solid var(--border);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-2);
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+
+.date-btn:hover  { border-color: var(--primary); color: var(--primary-d); }
+.date-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+
+/* 手動入力（date-btn.manualを押したとき表示） */
+.manual-wrap { margin-bottom: 10px; display: none; }
+.manual-wrap.show { display: block; }
+
+input[type="date"] {
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 0.9rem;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+}
+
+input[type="date"]:focus { border-color: var(--primary); }
+
+/* ===== メモ入力 ===== */
+.memo-input {
+  width: 100%;
+  padding: 9px 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--r);
+  font-size: 0.88rem;
+  outline: none;
+  color: var(--text);
+  background: var(--bg);
+  transition: border-color 0.2s;
+  margin-bottom: 10px;
+  resize: none;
+}
+
+.memo-input:focus { border-color: var(--primary); }
+
+/* ===== 登録ボタン ===== */
+.register-btn {
+  width: 100%;
+  padding: 11px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--r-full);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 800;
+  transition: background 0.2s, transform 0.15s;
+  letter-spacing: 0.04em;
+}
+
+.register-btn:hover  { background: #C05A44; transform: translateY(-1px); }
+.register-btn:active { transform: translateY(0); }
+
+
+/* ====================================
+   FAB（新規食材追加ボタン）
+   ==================================== */
+.fab {
+  position: fixed;
+  bottom: 62px;
+  right: 16px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 16px rgba(212,113,90,0.45);
+  z-index: 190;
+  transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.fab:hover {
+  transform: scale(1.12) rotate(90deg);
+  box-shadow: 0 6px 20px rgba(212,113,90,0.55);
+}
+
+/* FABを隠す（パネルオープン時） */
+.fab.hidden { transform: scale(0); pointer-events: none; }
+
+
+/* ====================================
+   モーダル
+   ==================================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(58,48,32,0.45);
+  z-index: 500;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
+.modal-overlay.center { align-items: center; padding: 20px; }
+
+.modal-overlay.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ボトムシートモーダル */
+.modal {
+  background: var(--surface);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  padding: 12px 20px 32px;
+  width: 100%;
+  max-width: 640px;
+  max-height: 88vh;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 0.32s cubic-bezier(0.32,0.72,0,1);
+}
+
+.modal-overlay.show .modal { transform: translateY(0); }
+
+/* センターモーダル（確認用） */
+.modal.confirm-modal {
+  border-radius: var(--r-lg);
+  max-width: 340px;
+  transform: scale(0.92);
+  text-align: center;
+  padding: 28px 22px;
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s;
+}
+
+.modal-overlay.center.show .modal.confirm-modal { transform: scale(1); }
+
+/* ハンドル */
+.modal-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 14px;
+}
+
+.modal-title {
+  font-family: var(--font-head);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-close {
+  background: var(--surface-2);
+  border: none;
+  font-size: 1rem;
+  color: var(--text-2);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.modal-close:hover { background: var(--expired-bg); color: var(--expired-t); }
+
+/* ===== 食材名入力行（名前＋お気に入り） ===== */
+.food-name-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.food-name-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--r);
+  font-size: 0.95rem;
+  outline: none;
+  background: var(--bg);
+  transition: border-color 0.2s;
+}
+
+.food-name-input:focus { border-color: var(--primary); }
+
+/* モーダル内のサジェスト（下に表示） */
+.modal-suggest-list {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--r);
+  max-height: 150px;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
+  margin-bottom: 10px;
+  display: none;
+}
+
+.modal-suggest-list.show { display: block; }
+
+/* お気に入りトグルボタン */
+.fav-toggle-btn {
+  width: 44px;
+  height: 44px;
+  border: 2px solid var(--border);
+  border-radius: var(--r);
+  background: var(--surface);
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  color: var(--text-3);
+}
+
+.fav-toggle-btn:hover   { border-color: var(--gold); }
+.fav-toggle-btn.active  { border-color: var(--gold); background: var(--gold-l); }
+
+/* ===== 確認モーダル詳細ボックス ===== */
+.confirm-head { font-family: var(--font-head); font-size: 1.05rem; font-weight: 700; }
+.confirm-sub  { font-size: 0.8rem; color: var(--text-2); margin-top: 5px; }
+
+.confirm-detail {
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: var(--r);
+  padding: 12px 14px;
+  margin: 14px 0;
+  text-align: left;
+}
+
+.confirm-detail p { font-size: 0.86rem; margin: 4px 0; }
+.confirm-detail .dl { color: var(--text-3); font-size: 0.76rem; margin-right: 4px; }
+
+.confirm-btns { display: flex; gap: 10px; margin-top: 4px; }
+
+.btn-cancel {
+  flex: 1; padding: 10px;
+  border: 2px solid var(--border);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  font-family: var(--font-body);
+  font-size: 0.88rem; font-weight: 700;
+  color: var(--text-2);
+  transition: border-color 0.18s;
+}
+
+.btn-cancel:hover { border-color: var(--text-2); }
+
+.btn-confirm {
+  flex: 1; padding: 10px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--r-full);
+  font-family: var(--font-body);
+  font-size: 0.88rem; font-weight: 800;
+  transition: background 0.18s;
+}
+
+.btn-confirm:hover { background: var(--primary-d); }
+
+
+/* ====================================
+   トースト通知
+   ==================================== */
+.toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: rgba(58,48,32,0.9);
+  color: white;
+  padding: 9px 20px;
+  border-radius: var(--r-full);
+  font-size: 0.84rem;
+  font-weight: 700;
+  opacity: 0;
+  transition: opacity 0.25s, transform 0.25s;
+  z-index: 1000;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+
+/* ====================================
+   ローディング
+   ==================================== */
+.loading-wrap {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; padding: 30px;
+  color: var(--text-3); font-size: 0.85rem;
+}
+
+.spinner {
+  width: 18px; height: 18px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+
+/* ====================================
+   DB・履歴ページ共通
+   ==================================== */
+
+/* フィルターバー */
+.page-filter-bar {
+  background: var(--surface);
+  border-bottom: 2px solid var(--border);
+  padding: 12px 16px;
+  position: sticky;
+  top: 58px;
+  z-index: 90;
+  box-shadow: var(--shadow);
+}
+
+.page-filter-inner {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font-family: var(--font-head);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--primary-d);
+  margin-bottom: 10px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-input {
+  flex: 1;
+  min-width: 140px;
+  padding: 8px 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--r-full);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  outline: none;
+  background: var(--bg);
+  transition: border-color 0.2s;
+}
+
+.filter-input:focus { border-color: var(--primary); }
+
+.filter-chip {
+  padding: 7px 13px;
+  border: 2px solid var(--border);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  font-family: var(--font-body);
+  font-size: 0.78rem; font-weight: 700;
+  color: var(--text-2);
+  white-space: nowrap;
+  transition: all 0.18s;
+}
+
+.filter-chip:hover  { border-color: var(--gold); color: var(--gold); }
+.filter-chip.active { background: var(--gold-l); border-color: var(--gold); color: #9A6800; }
+
+/* 日付フィルター行（履歴ページ） */
+.date-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.date-filter-row label { font-size: 0.78rem; color: var(--text-2); white-space: nowrap; }
+
+input.date-filter-input {
+  padding: 6px 10px;
+  border: 2px solid var(--border);
+  border-radius: var(--r-sm);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  outline: none;
+  background: var(--bg);
+}
+
+input.date-filter-input:focus { border-color: var(--primary); }
+
+/* リストラッパー */
+.list-wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 12px 16px;
+}
+
+.list-count {
+  font-size: 0.75rem;
+  color: var(--text-3);
+  text-align: right;
+  margin-bottom: 8px;
+}
+
+/* リストアイテム */
+.list-item {
+  background: var(--surface);
+  border-radius: var(--r);
+  padding: 11px 14px;
+  margin-bottom: 7px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: box-shadow 0.15s;
+}
+
+.list-item:hover { box-shadow: var(--shadow-lg); }
+
+.list-item-left { flex: 1; min-width: 0; }
+
+.list-item-name {
+  font-weight: 700;
+  font-size: 0.92rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.list-item-sub {
+  font-size: 0.76rem;
+  color: var(--text-3);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* アイコンボタン */
+.icon-btn {
+  width: 32px; height: 32px;
+  border: none; border-radius: var(--r-sm);
+  font-size: 0.9rem;
+  transition: opacity 0.18s, transform 0.18s;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.icon-btn:hover { opacity: 0.72; transform: scale(1.1); }
+
+.icon-btn.edit { background: var(--primary-l); color: var(--primary-d); }
+.icon-btn.del  { background: var(--expired-bg); color: var(--expired-t); }
+.icon-btn.save { background: var(--primary); color: white; }
+.icon-btn.fav-on  { background: var(--gold-l);   color: var(--gold); }
+.icon-btn.fav-off { background: var(--surface-2); color: var(--text-3); }
+
+/* インライン編集入力 */
+.edit-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 2px solid var(--primary);
+  border-radius: var(--r-sm);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  outline: none;
+  background: var(--bg);
+}
+
+/* ===== 空の状態 ===== */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-3);
+  font-size: 0.88rem;
+}
+
+.empty-state-icon { font-size: 2.5rem; margin-bottom: 10px; }
+
+
+/* ====================================
+   レスポンシブ
+   ==================================== */
+@media (max-width: 480px) {
+  nav a { font-size: 0.75rem; padding: 4px 8px; }
+  .logo { font-size: 1rem; }
+  .date-btn { padding: 5px 10px; font-size: 0.78rem; }
+}

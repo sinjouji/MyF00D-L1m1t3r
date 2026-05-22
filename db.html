@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>食材DB 🥦</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ===== 食材DB固有スタイル ===== */
+
+    /* 並び替えタブ */
+    .sort-tabs {
+      display: flex;
+      gap: 5px;
+      margin-top: 9px;
+      flex-wrap: wrap;
+    }
+    .sort-tab {
+      padding: 5px 12px;
+      border: 2px solid var(--border);
+      border-radius: var(--r-full);
+      background: var(--surface);
+      font-family: var(--font-body);
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--text-2);
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .sort-tab:hover  { border-color: var(--primary); color: var(--primary-d); }
+    .sort-tab.active { background: var(--primary); border-color: var(--primary); color: white; }
+
+    /* インライン編集行 */
+    .edit-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
+    }
+    .edit-row-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .edit-input-name {
+      flex: 1;
+      padding: 6px 10px;
+      border: 2px solid var(--primary);
+      border-radius: var(--r-sm);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      outline: none;
+      background: var(--bg);
+    }
+
+    /* 在庫状態バッジ */
+    .stock-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: var(--r-full);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .stock-badge.in-stock    { background: var(--soon-bg);    color: var(--soon-t); }
+    .stock-badge.no-stock    { background: var(--surface-2);  color: var(--text-3); }
+    .stock-badge.expired     { background: var(--expired-bg); color: var(--expired-t); }
+    .stock-badge.today       { background: var(--today-bg);   color: var(--today-t); }
+
+    /* 期限ミニ表示 */
+    .expiry-mini {
+      font-size: 0.73rem;
+      color: var(--text-3);
+    }
+
+    /* 削除確認インライン */
+    .del-confirm-row {
+      background: var(--expired-bg);
+      border: 2px solid var(--expired-b);
+      border-radius: var(--r);
+      padding: 10px 14px;
+      margin-bottom: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.86rem;
+      animation: slideDown 0.2s ease;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .del-confirm-msg { color: var(--expired-t); font-weight: 700; }
+    .del-confirm-btns { display: flex; gap: 7px; }
+    .del-confirm-btns .btn-cancel  { padding: 6px 12px; font-size: 0.8rem; }
+    .del-confirm-btns .btn-confirm { padding: 6px 12px; font-size: 0.8rem; background: var(--expired-t); }
+  </style>
+</head>
+<body>
+
+<!-- ====================================
+     ヘッダー & ナビ
+     ==================================== -->
+<header>
+  <div class="header-inner">
+    <a class="logo" href="index.html">🥦 食材管理</a>
+    <nav>
+      <a href="index.html">ホーム</a>
+      <a href="db.html" class="active">食材DB</a>
+      <a href="history.html">履歴</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ====================================
+     フィルターバー（固定）
+     ==================================== -->
+<div class="page-filter-bar">
+  <div class="page-filter-inner">
+    <p class="page-title">📚 食材データベース</p>
+    <div class="filter-row">
+      <!-- 食材名検索 -->
+      <input
+        type="text"
+        class="filter-input"
+        id="dbSearchInput"
+        placeholder="🔍 食材名で検索…"
+      >
+      <!-- お気に入り絞り込み -->
+      <button class="filter-chip" id="dbFavFilter">⭐ お気に入り</button>
+      <!-- 在庫あり絞り込み -->
+      <button class="filter-chip" id="dbStockFilter">📦 在庫あり</button>
+    </div>
+    <!-- 並び替えタブ -->
+    <div class="sort-tabs">
+      <button class="sort-tab active" data-sort="name">名前順</button>
+      <button class="sort-tab" data-sort="fav">お気に入り優先</button>
+      <button class="sort-tab" data-sort="expiry">期限順</button>
+      <button class="sort-tab" data-sort="created">登録順</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================
+     メイン：食材リスト
+     ==================================== -->
+<div class="list-wrap">
+  <p class="list-count" id="dbCount">読み込み中…</p>
+  <div id="dbList">
+    <div class="loading-wrap"><div class="spinner"></div>読み込み中…</div>
+  </div>
+</div>
+
+<!-- ====================================
+     FAB（新規食材追加）
+     ==================================== -->
+<button class="fab" id="fabBtn" title="新規食材を追加" style="bottom:20px;">＋</button>
+
+<!-- ====================================
+     新規食材追加モーダル（DBページ版）
+     ==================================== -->
+<div class="modal-overlay" id="newFoodOverlay">
+  <div class="modal" id="newFoodModal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">
+      <span>🌿 新規食材を追加</span>
+      <button class="modal-close" id="newFoodClose">✕</button>
+    </div>
+
+    <div class="food-name-row">
+      <input
+        type="text"
+        class="food-name-input"
+        id="newFoodName"
+        placeholder="食材名を入力…"
+        autocomplete="off"
+      >
+      <button class="fav-toggle-btn" id="newFoodFavBtn" title="お気に入り登録">☆</button>
+    </div>
+    <!-- 重複チェックメッセージ -->
+    <p id="dupMsg" style="font-size:0.78rem; color:var(--accent); margin-bottom:8px; display:none;">
+      ⚠️ 同名の食材が既に存在します
+    </p>
+
+    <button class="register-btn" id="newFoodRegisterBtn">追加する</button>
+  </div>
+</div>
+
+<!-- ====================================
+     確認モーダル
+     ==================================== -->
+<div class="modal-overlay center" id="confirmOverlay">
+  <div class="modal confirm-modal">
+    <p class="confirm-head" id="confirmTitle">削除しますか？</p>
+    <p class="confirm-sub"  id="confirmSub"></p>
+    <div class="confirm-detail" id="confirmDetail"></div>
+    <div class="confirm-btns">
+      <button class="btn-cancel"  id="confirmCancel">キャンセル</button>
+      <button class="btn-confirm" id="confirmOk">削除する</button>
+    </div>
+  </div>
+</div>
+
+<!-- トースト通知 -->
+<div class="toast" id="toast"></div>
+
+<!-- ====================================
+     Firebase & スクリプト
+     ==================================== -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="app.js"></script>
+
+<script>
+/* ============================================================
+   db.js  —  食材DBページのロジック
+   ============================================================ */
+
+// ===== 状態管理 =====
+let allFoods       = [];   // Firestoreリアルタイム（食材マスタ）
+let inventoryMap   = {};   // { foodId: inventoryItem }（在庫の最新状態）
+let currentSort    = 'name';
+let filterFav      = false;
+let filterStock    = false;
+let searchQuery    = '';
+
+// 確認モーダルのコールバック
+let confirmCallback = null;
+
+// 編集中のfoodId（1件のみ）
+let editingFoodId = null;
+
+// 新規モーダル用
+let newFoodIsFav = false;
+
+
+/* ====================================
+   リアルタイム監視：食材マスタ & 在庫
+   ==================================== */
+onFoodsSnapshot(foods => {
+  allFoods = foods;
+  renderDb();
+});
+
+onInventorySnapshot(items => {
+  // foodIdをキーにしたマップを作成
+  inventoryMap = {};
+  items.forEach(i => { inventoryMap[i.foodId] = i; });
+  renderDb();
+});
+
+
+/* ====================================
+   フィルター & 検索 & ソート
+   ==================================== */
+document.getElementById('dbSearchInput').addEventListener('input', e => {
+  searchQuery = e.target.value.trim().toLowerCase();
+  renderDb();
+});
+
+document.getElementById('dbFavFilter').addEventListener('click', () => {
+  filterFav = !filterFav;
+  document.getElementById('dbFavFilter').classList.toggle('active', filterFav);
+  renderDb();
+});
+
+document.getElementById('dbStockFilter').addEventListener('click', () => {
+  filterStock = !filterStock;
+  document.getElementById('dbStockFilter').classList.toggle('active', filterStock);
+  renderDb();
+});
+
+document.querySelectorAll('.sort-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.sort-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentSort = tab.dataset.sort;
+    renderDb();
+  });
+});
+
+
+/* ====================================
+   食材リスト レンダリング
+   ==================================== */
+function renderDb() {
+  let list = [...allFoods];
+
+  // --- フィルター ---
+  if (searchQuery) {
+    const exact   = list.filter(f => f.name.toLowerCase() === searchQuery);
+    const prefix  = list.filter(f => f.name.toLowerCase().startsWith(searchQuery) && f.name.toLowerCase() !== searchQuery);
+    const partial = list.filter(f => f.name.toLowerCase().includes(searchQuery) && !f.name.toLowerCase().startsWith(searchQuery));
+    list = [...exact, ...prefix, ...partial];
+  }
+  if (filterFav) {
+    list = list.filter(f => f.favorite);
+  }
+  if (filterStock) {
+    list = list.filter(f => !!inventoryMap[f.id]);
+  }
+
+  // --- ソート ---
+  switch (currentSort) {
+    case 'name':
+      list.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+      break;
+    case 'fav':
+      list.sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0) || a.name.localeCompare(b.name, 'ja'));
+      break;
+    case 'expiry':
+      list.sort((a, b) => {
+        const da = inventoryMap[a.id]?.expiryDate || '9999-12-31';
+        const db_ = inventoryMap[b.id]?.expiryDate || '9999-12-31';
+        return da.localeCompare(db_);
+      });
+      break;
+    case 'created':
+      list.sort((a, b) => {
+        const ta = a.createdAt?.seconds || 0;
+        const tb = b.createdAt?.seconds || 0;
+        return tb - ta;
+      });
+      break;
+  }
+
+  document.getElementById('dbCount').textContent = `${list.length} 件`;
+
+  const container = document.getElementById('dbList');
+
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🔍</div>
+        条件に一致する食材はありません
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = '';
+  list.forEach(food => {
+    const inv    = inventoryMap[food.id] || null;
+    const isEdit = editingFoodId === food.id;
+    container.appendChild(renderFoodItem(food, inv, isEdit));
+  });
+}
+
+
+/* ====================================
+   食材アイテム生成
+   ==================================== */
+function renderFoodItem(food, inv, isEdit) {
+  const wrapper = document.createElement('div');
+
+  if (isEdit) {
+    // ===== 編集中の行 =====
+    wrapper.innerHTML = `
+      <div class="list-item" id="item-${food.id}">
+        <div class="edit-row">
+          <div class="edit-row-top">
+            <input
+              class="edit-input-name"
+              id="editName-${food.id}"
+              value="${escapeHtml(food.name)}"
+              placeholder="食材名"
+              maxlength="40"
+            >
+          </div>
+        </div>
+        <div class="list-item-actions">
+          <!-- お気に入りトグル -->
+          <button
+            class="icon-btn ${food.favorite ? 'fav-on' : 'fav-off'}"
+            id="editFav-${food.id}"
+            title="お気に入り"
+            data-fav="${food.favorite}"
+          >${food.favorite ? '⭐' : '☆'}</button>
+          <!-- 保存 -->
+          <button class="icon-btn save" id="saveBtn-${food.id}" title="保存">💾</button>
+          <!-- キャンセル -->
+          <button class="icon-btn" style="background:var(--surface-2);color:var(--text-2);" id="cancelBtn-${food.id}" title="キャンセル">✕</button>
+        </div>
+      </div>
+    `;
+
+    // お気に入りトグル
+    const favBtn = wrapper.querySelector(`#editFav-${food.id}`);
+    favBtn.addEventListener('click', () => {
+      const cur = favBtn.dataset.fav === 'true';
+      favBtn.dataset.fav  = String(!cur);
+      favBtn.textContent  = !cur ? '⭐' : '☆';
+      favBtn.className    = `icon-btn ${!cur ? 'fav-on' : 'fav-off'}`;
+    });
+
+    // 保存
+    wrapper.querySelector(`#saveBtn-${food.id}`).addEventListener('click', async () => {
+      const newName = wrapper.querySelector(`#editName-${food.id}`).value.trim();
+      const newFav  = wrapper.querySelector(`#editFav-${food.id}`).dataset.fav === 'true';
+      if (!newName) { showToast('⚠️ 食材名を入力してください'); return; }
+      try {
+        const updates = { name: newName, favorite: newFav };
+        await updateFood(food.id, updates);
+
+        // 在庫にも食材名・お気に入りを反映
+        if (inventoryMap[food.id]) {
+          await db.collection('inventory').doc(inventoryMap[food.id].id).update({
+            foodName: newName,
+            favorite: newFav
+          });
+        }
+        showToast(`✅ ${newName} を更新しました`);
+        editingFoodId = null;
+      } catch (e) {
+        console.error(e);
+        showToast('❌ 更新に失敗しました');
+      }
+    });
+
+    // キャンセル
+    wrapper.querySelector(`#cancelBtn-${food.id}`).addEventListener('click', () => {
+      editingFoodId = null;
+      renderDb();
+    });
+
+  } else {
+    // ===== 通常表示の行 =====
+    const stockInfo = buildStockInfo(inv);
+
+    wrapper.innerHTML = `
+      <div class="list-item" id="item-${food.id}">
+        <div class="list-item-left">
+          <div class="list-item-name">
+            ${food.favorite ? '<span title="お気に入り">⭐</span>' : ''}
+            ${escapeHtml(food.name)}
+            <span class="stock-badge ${stockInfo.cls}">${stockInfo.label}</span>
+          </div>
+          <div class="list-item-sub">${stockInfo.sub}</div>
+        </div>
+        <div class="list-item-actions">
+          <!-- お気に入りクイックトグル -->
+          <button
+            class="icon-btn ${food.favorite ? 'fav-on' : 'fav-off'}"
+            data-action="fav"
+            data-id="${food.id}"
+            data-fav="${food.favorite}"
+            title="お気に入り切り替え"
+          >${food.favorite ? '⭐' : '☆'}</button>
+          <!-- 編集 -->
+          <button class="icon-btn edit" data-action="edit" data-id="${food.id}" title="編集">✏️</button>
+          <!-- 削除 -->
+          <button class="icon-btn del"  data-action="del"  data-id="${food.id}" title="削除">🗑️</button>
+        </div>
+      </div>
+    `;
+
+    // アクションバインド
+    wrapper.querySelectorAll('[data-action]').forEach(btn => {
+      btn.addEventListener('click', () => handleItemAction(btn.dataset.action, food, inv));
+    });
+  }
+
+  return wrapper;
+}
+
+/** 在庫情報からステータス文字列を生成 */
+function buildStockInfo(inv) {
+  if (!inv) return { cls: 'no-stock', label: '在庫なし', sub: '' };
+  const days = getDaysUntil(inv.expiryDate);
+  if (days < 0)  return { cls: 'expired',  label: '期限切れ', sub: `${formatDate(inv.expiryDate)}　${inv.memo || ''}` };
+  if (days === 0) return { cls: 'today',    label: '今日まで', sub: `${formatDate(inv.expiryDate)}　${inv.memo || ''}` };
+  return { cls: 'in-stock', label: `あと${days}日`, sub: `${formatDate(inv.expiryDate)}　${inv.memo || ''}` };
+}
+
+
+/* ====================================
+   アクションハンドラー
+   ==================================== */
+async function handleItemAction(action, food, inv) {
+  switch (action) {
+    // ===== お気に入りクイックトグル =====
+    case 'fav': {
+      const newFav = !food.favorite;
+      try {
+        await updateFood(food.id, { favorite: newFav });
+        // 在庫にも反映
+        if (inv) await db.collection('inventory').doc(inv.id).update({ favorite: newFav });
+        showToast(newFav ? `⭐ お気に入りに追加しました` : `☆ お気に入りを解除しました`);
+      } catch (e) { showToast('❌ 更新に失敗しました'); }
+      break;
+    }
+
+    // ===== 編集開始 =====
+    case 'edit': {
+      editingFoodId = food.id;
+      renderDb();
+      // スクロールして編集欄が見えるようにする
+      setTimeout(() => {
+        const el = document.getElementById(`item-${food.id}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.getElementById(`editName-${food.id}`)?.focus();
+      }, 50);
+      break;
+    }
+
+    // ===== 削除 =====
+    case 'del': {
+      showConfirm({
+        title:   '食材を削除しますか？',
+        sub:     '食材マスタから削除します。在庫・履歴のデータは残ります。',
+        detail:  `<p><span class="dl">食材名</span>${escapeHtml(food.name)}</p>`,
+        okLabel: '削除する',
+        callback: async () => {
+          try {
+            await deleteFood(food.id);
+            // 在庫からも削除
+            if (inv) await deleteInventoryItem(inv.id);
+            showToast(`🗑️ ${food.name} を削除しました`);
+          } catch (e) {
+            console.error(e);
+            showToast('❌ 削除に失敗しました');
+          }
+        }
+      });
+      break;
+    }
+  }
+}
+
+
+/* ====================================
+   新規食材追加モーダル（DBページ版：期限なし）
+   ==================================== */
+const newFoodOverlay   = document.getElementById('newFoodOverlay');
+const newFoodClose     = document.getElementById('newFoodClose');
+const newFoodFavBtn    = document.getElementById('newFoodFavBtn');
+const newFoodNameEl    = document.getElementById('newFoodName');
+const dupMsgEl         = document.getElementById('dupMsg');
+
+document.getElementById('fabBtn').addEventListener('click', () => {
+  resetNewFoodModal();
+  newFoodOverlay.classList.add('show');
+  setTimeout(() => newFoodNameEl.focus(), 320);
+});
+
+newFoodClose.addEventListener('click', () => newFoodOverlay.classList.remove('show'));
+newFoodOverlay.addEventListener('click', e => {
+  if (e.target === newFoodOverlay) newFoodOverlay.classList.remove('show');
+});
+
+// お気に入りトグル
+newFoodFavBtn.addEventListener('click', () => {
+  newFoodIsFav = !newFoodIsFav;
+  newFoodFavBtn.textContent = newFoodIsFav ? '⭐' : '☆';
+  newFoodFavBtn.classList.toggle('active', newFoodIsFav);
+});
+
+// 重複チェック
+newFoodNameEl.addEventListener('input', () => {
+  const name = newFoodNameEl.value.trim().toLowerCase();
+  const dup  = allFoods.some(f => f.name.toLowerCase() === name);
+  dupMsgEl.style.display = (dup && name) ? 'block' : 'none';
+});
+
+// 登録ボタン
+document.getElementById('newFoodRegisterBtn').addEventListener('click', async () => {
+  const name = newFoodNameEl.value.trim();
+  if (!name) { showToast('⚠️ 食材名を入力してください'); newFoodNameEl.focus(); return; }
+
+  const dup = allFoods.some(f => f.name.toLowerCase() === name.toLowerCase());
+  if (dup) {
+    showToast('⚠️ 同名の食材が既に存在します');
+    return;
+  }
+
+  showConfirm({
+    title:   '食材を追加しますか？',
+    sub:     '食材マスタに追加します（在庫はホームから登録できます）',
+    detail:  `
+      <p><span class="dl">食材名</span>${escapeHtml(name)}</p>
+      <p><span class="dl">お気に入り</span>${newFoodIsFav ? '⭐ あり' : 'なし'}</p>
+    `,
+    okLabel: '追加する',
+    callback: async () => {
+      try {
+        await addFood(name, newFoodIsFav);
+        showToast(`✅ ${name} を追加しました`);
+        newFoodOverlay.classList.remove('show');
+      } catch (e) {
+        console.error(e);
+        showToast('❌ 追加に失敗しました');
+      }
+    }
+  });
+});
+
+function resetNewFoodModal() {
+  newFoodNameEl.value   = '';
+  newFoodIsFav          = false;
+  newFoodFavBtn.textContent = '☆';
+  newFoodFavBtn.classList.remove('active');
+  dupMsgEl.style.display = 'none';
+}
+
+
+/* ====================================
+   確認モーダル（共通）
+   ==================================== */
+const confirmOverlay = document.getElementById('confirmOverlay');
+
+function showConfirm({ title, sub, detail, okLabel = '削除する', callback }) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmSub').textContent   = sub;
+  document.getElementById('confirmDetail').innerHTML  = detail;
+  document.getElementById('confirmOk').textContent    = okLabel;
+  confirmCallback = callback;
+  confirmOverlay.classList.add('show');
+}
+
+function hideConfirm() {
+  confirmOverlay.classList.remove('show');
+  confirmCallback = null;
+}
+
+document.getElementById('confirmCancel').addEventListener('click', hideConfirm);
+document.getElementById('confirmOk').addEventListener('click', async () => {
+  hideConfirm();
+  if (confirmCallback) await confirmCallback();
+});
+confirmOverlay.addEventListener('click', e => {
+  if (e.target === confirmOverlay) hideConfirm();
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>履歴 🥦</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ===== 履歴ページ固有スタイル ===== */
+
+    /* フィルターバーを少し広げる */
+    .page-filter-bar { top: 58px; }
+
+    /* 履歴アイテムのレイアウト調整 */
+    .hist-item {
+      background: var(--surface);
+      border-radius: var(--r);
+      padding: 10px 14px;
+      margin-bottom: 7px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      transition: box-shadow 0.15s;
+    }
+    .hist-item:hover { box-shadow: var(--shadow-lg); }
+
+    .hist-left { flex: 1; min-width: 0; }
+
+    .hist-name {
+      font-weight: 700;
+      font-size: 0.92rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    /* 期限チップ（履歴では当時の日付に色付け） */
+    .hist-expiry-chip {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: var(--r-full);
+      white-space: nowrap;
+    }
+    .hist-expiry-chip.expired { background: var(--expired-bg); color: var(--expired-t); }
+    .hist-expiry-chip.today   { background: var(--today-bg);   color: var(--today-t); }
+    .hist-expiry-chip.soon    { background: var(--soon-bg);     color: var(--soon-t); }
+    .hist-expiry-chip.ok      { background: var(--primary-l);   color: var(--primary-d); }
+
+    .hist-meta {
+      font-size: 0.74rem;
+      color: var(--text-3);
+      margin-top: 3px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .hist-memo {
+      font-size: 0.78rem;
+      color: var(--text-2);
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hist-right { flex-shrink: 0; }
+
+    /* 一括削除ボタン */
+    .bulk-delete-btn {
+      padding: 6px 14px;
+      border: 2px solid var(--expired-b);
+      border-radius: var(--r-full);
+      background: var(--expired-bg);
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--expired-t);
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .bulk-delete-btn:hover { background: var(--expired-t); color: white; border-color: var(--expired-t); }
+
+    /* ページング */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 0;
+      font-size: 0.84rem;
+      color: var(--text-2);
+    }
+    .page-btn {
+      padding: 6px 14px;
+      border: 2px solid var(--border);
+      border-radius: var(--r-full);
+      background: var(--surface);
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-2);
+      transition: all 0.18s;
+    }
+    .page-btn:hover:not(:disabled)  { border-color: var(--primary); color: var(--primary-d); }
+    .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* キーワードハイライト */
+    .highlight {
+      background: var(--today-bg);
+      color: var(--today-t);
+      border-radius: 2px;
+      padding: 0 1px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ====================================
+     ヘッダー & ナビ
+     ==================================== -->
+<header>
+  <div class="header-inner">
+    <a class="logo" href="index.html">🥦 食材管理</a>
+    <nav>
+      <a href="index.html">ホーム</a>
+      <a href="db.html">食材DB</a>
+      <a href="history.html" class="active">履歴</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ====================================
+     フィルターバー（固定）
+     ==================================== -->
+<div class="page-filter-bar">
+  <div class="page-filter-inner">
+    <p class="page-title">📋 登録履歴</p>
+
+    <!-- 行1：キーワード検索 + お気に入り絞込 -->
+    <div class="filter-row">
+      <input
+        type="text"
+        class="filter-input"
+        id="histSearch"
+        placeholder="🔍 食材名・メモで検索…"
+      >
+      <button class="filter-chip" id="histFavFilter">⭐ お気に入り</button>
+      <button class="bulk-delete-btn" id="bulkDeleteBtn">🗑️ 絞込を削除</button>
+    </div>
+
+    <!-- 行2：日付範囲 -->
+    <div class="date-filter-row">
+      <label>登録日：</label>
+      <input type="date" class="date-filter-input" id="dateFrom" placeholder="開始日">
+      <span style="color:var(--text-3); font-size:0.85rem;">〜</span>
+      <input type="date" class="date-filter-input" id="dateTo"   placeholder="終了日">
+      <button
+        style="font-size:0.75rem; color:var(--text-3); background:none; border:none; text-decoration:underline; cursor:pointer;"
+        id="clearDateBtn"
+      >クリア</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================
+     メイン：履歴リスト
+     ==================================== -->
+<div class="list-wrap">
+  <p class="list-count" id="histCount">読み込み中…</p>
+  <div id="histList">
+    <div class="loading-wrap"><div class="spinner"></div>読み込み中…</div>
+  </div>
+  <!-- ページネーション -->
+  <div class="pagination" id="pagination" style="display:none;">
+    <button class="page-btn" id="prevPage">◀ 前へ</button>
+    <span id="pageInfo">1 / 1</span>
+    <button class="page-btn" id="nextPage">次へ ▶</button>
+  </div>
+</div>
+
+<!-- ====================================
+     確認モーダル
+     ==================================== -->
+<div class="modal-overlay center" id="confirmOverlay">
+  <div class="modal confirm-modal">
+    <p class="confirm-head" id="confirmTitle">削除しますか？</p>
+    <p class="confirm-sub"  id="confirmSub"></p>
+    <div class="confirm-detail" id="confirmDetail"></div>
+    <div class="confirm-btns">
+      <button class="btn-cancel"  id="confirmCancel">キャンセル</button>
+      <button class="btn-confirm" id="confirmOk" style="background:var(--expired-t);">削除する</button>
+    </div>
+  </div>
+</div>
+
+<!-- トースト通知 -->
+<div class="toast" id="toast"></div>
+
+<!-- ====================================
+     Firebase & スクリプト
+     ==================================== -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="app.js"></script>
+
+<script>
+/* ============================================================
+   history.js  —  履歴ページのロジック
+   ============================================================ */
+
+// ===== 状態管理 =====
+let allHistory     = [];   // Firestoreリアルタイム（全履歴）
+let filteredHistory = [];  // フィルター済みリスト
+
+let searchQuery = '';
+let filterFav   = false;
+let dateFrom    = '';
+let dateTo      = '';
+
+const PAGE_SIZE    = 20;   // 1ページあたりの表示件数
+let   currentPage  = 1;
+
+let confirmCallback = null;
+
+
+/* ====================================
+   リアルタイム監視：履歴
+   ==================================== */
+onHistorySnapshot(items => {
+  allHistory = items;
+  applyFiltersAndRender();
+});
+
+
+/* ====================================
+   フィルター入力イベント
+   ==================================== */
+document.getElementById('histSearch').addEventListener('input', e => {
+  searchQuery = e.target.value.trim().toLowerCase();
+  currentPage = 1;
+  applyFiltersAndRender();
+});
+
+document.getElementById('histFavFilter').addEventListener('click', () => {
+  filterFav = !filterFav;
+  document.getElementById('histFavFilter').classList.toggle('active', filterFav);
+  currentPage = 1;
+  applyFiltersAndRender();
+});
+
+document.getElementById('dateFrom').addEventListener('change', e => {
+  dateFrom = e.target.value;
+  currentPage = 1;
+  applyFiltersAndRender();
+});
+
+document.getElementById('dateTo').addEventListener('change', e => {
+  dateTo = e.target.value;
+  currentPage = 1;
+  applyFiltersAndRender();
+});
+
+document.getElementById('clearDateBtn').addEventListener('click', () => {
+  dateFrom = dateTo = '';
+  document.getElementById('dateFrom').value = '';
+  document.getElementById('dateTo').value   = '';
+  currentPage = 1;
+  applyFiltersAndRender();
+});
+
+
+/* ====================================
+   フィルター適用
+   ==================================== */
+function applyFiltersAndRender() {
+  let list = [...allHistory];
+
+  // キーワード（食材名 or メモ）
+  if (searchQuery) {
+    const exact   = list.filter(h =>
+      h.foodName?.toLowerCase() === searchQuery ||
+      h.memo?.toLowerCase() === searchQuery
+    );
+    const prefix  = list.filter(h =>
+      (h.foodName?.toLowerCase().startsWith(searchQuery) && h.foodName?.toLowerCase() !== searchQuery) ||
+      (h.memo?.toLowerCase().startsWith(searchQuery) && h.memo?.toLowerCase() !== searchQuery)
+    );
+    const partial = list.filter(h =>
+      !exact.includes(h) && !prefix.includes(h) && (
+        h.foodName?.toLowerCase().includes(searchQuery) ||
+        h.memo?.toLowerCase().includes(searchQuery)
+      )
+    );
+    list = [...exact, ...prefix, ...partial];
+  }
+
+  // お気に入り絞り込み
+  if (filterFav) {
+    list = list.filter(h => h.favorite);
+  }
+
+  // 登録日フィルター
+  if (dateFrom) {
+    list = list.filter(h => {
+      if (!h.registeredAt) return false;
+      const d = h.registeredAt.toDate ? h.registeredAt.toDate() : new Date(h.registeredAt);
+      return d >= new Date(dateFrom);
+    });
+  }
+  if (dateTo) {
+    list = list.filter(h => {
+      if (!h.registeredAt) return false;
+      const d = h.registeredAt.toDate ? h.registeredAt.toDate() : new Date(h.registeredAt);
+      const to = new Date(dateTo);
+      to.setHours(23, 59, 59, 999);
+      return d <= to;
+    });
+  }
+
+  filteredHistory = list;
+  renderHistory();
+}
+
+
+/* ====================================
+   履歴レンダリング
+   ==================================== */
+function renderHistory() {
+  const total    = filteredHistory.length;
+  const totalPgs = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  // ページ番号を範囲内に収める
+  currentPage = Math.min(currentPage, totalPgs);
+
+  document.getElementById('histCount').textContent = `${total} 件`;
+
+  const start   = (currentPage - 1) * PAGE_SIZE;
+  const paginated = filteredHistory.slice(start, start + PAGE_SIZE);
+
+  const container = document.getElementById('histList');
+
+  if (total === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        条件に一致する履歴はありません
+      </div>
+    `;
+    document.getElementById('pagination').style.display = 'none';
+    return;
+  }
+
+  container.innerHTML = '';
+  paginated.forEach(item => {
+    container.appendChild(renderHistItem(item));
+  });
+
+  // ページネーション
+  const paginationEl = document.getElementById('pagination');
+  if (totalPgs > 1) {
+    paginationEl.style.display = 'flex';
+    document.getElementById('pageInfo').textContent = `${currentPage} / ${totalPgs}`;
+    document.getElementById('prevPage').disabled = currentPage === 1;
+    document.getElementById('nextPage').disabled = currentPage === totalPgs;
+  } else {
+    paginationEl.style.display = 'none';
+  }
+}
+
+/** ページ移動 */
+document.getElementById('prevPage').addEventListener('click', () => {
+  if (currentPage > 1) { currentPage--; renderHistory(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+});
+document.getElementById('nextPage').addEventListener('click', () => {
+  const totalPgs = Math.ceil(filteredHistory.length / PAGE_SIZE);
+  if (currentPage < totalPgs) { currentPage++; renderHistory(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+});
+
+
+/* ====================================
+   履歴アイテム生成
+   ==================================== */
+function renderHistItem(item) {
+  const wrapper = document.createElement('div');
+
+  // 登録当時の期限ステータスを計算（現在時点から）
+  const expiryStatus = item.expiryDate ? getExpiryStatus(item.expiryDate) : 'ok';
+  const regDate      = formatDateTime(item.registeredAt);
+
+  // キーワードハイライト
+  const hl = (str) => {
+    if (!searchQuery || !str) return escapeHtml(str || '');
+    const esc = escapeHtml(searchQuery).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return escapeHtml(str).replace(
+      new RegExp(`(${esc})`, 'gi'),
+      '<span class="highlight">$1</span>'
+    );
+  };
+
+  wrapper.innerHTML = `
+    <div class="hist-item">
+      <div class="hist-left">
+        <div class="hist-name">
+          ${item.favorite ? '<span title="お気に入り">⭐</span>' : ''}
+          <span>${hl(item.foodName)}</span>
+          ${item.expiryDate
+            ? `<span class="hist-expiry-chip ${expiryStatus}">${formatDate(item.expiryDate)}</span>`
+            : ''}
+        </div>
+        ${item.memo
+          ? `<div class="hist-memo">💬 ${hl(item.memo)}</div>`
+          : ''}
+        <div class="hist-meta">
+          <span>📅 登録：${regDate}</span>
+        </div>
+      </div>
+      <div class="hist-right">
+        <button class="icon-btn del" data-id="${item.id}" title="削除">🗑️</button>
+      </div>
+    </div>
+  `;
+
+  // 削除ボタン
+  wrapper.querySelector('.icon-btn.del').addEventListener('click', () => {
+    showConfirm({
+      title:   '履歴を削除しますか？',
+      sub:     'この操作は取り消せません',
+      detail:  `
+        <p><span class="dl">食材名</span>${escapeHtml(item.foodName || '')}</p>
+        <p><span class="dl">期限</span>${formatDate(item.expiryDate)}</p>
+        ${item.memo ? `<p><span class="dl">メモ</span>${escapeHtml(item.memo)}</p>` : ''}
+        <p><span class="dl">登録日時</span>${regDate}</p>
+      `,
+      callback: async () => {
+        try {
+          await deleteHistoryItem(item.id);
+          showToast('🗑️ 履歴を削除しました');
+        } catch (e) {
+          console.error(e);
+          showToast('❌ 削除に失敗しました');
+        }
+      }
+    });
+  });
+
+  return wrapper;
+}
+
+
+/* ====================================
+   一括削除ボタン
+   ==================================== */
+document.getElementById('bulkDeleteBtn').addEventListener('click', () => {
+  if (filteredHistory.length === 0) {
+    showToast('⚠️ 削除する履歴がありません');
+    return;
+  }
+
+  // フィルターが何も掛かっていない場合は全削除の警告を出す
+  const isFiltered = searchQuery || filterFav || dateFrom || dateTo;
+  const label = isFiltered
+    ? `現在の絞り込み条件に一致する ${filteredHistory.length} 件`
+    : `全履歴 ${filteredHistory.length} 件`;
+
+  showConfirm({
+    title:   `${label}を削除しますか？`,
+    sub:     'この操作は取り消せません。削除後は復元できません。',
+    detail:  `<p style="color:var(--expired-t); font-weight:700;">${label}を一括削除します</p>`,
+    callback: async () => {
+      try {
+        // バッチ削除（Firestoreは1バッチ500件制限）
+        const ids  = filteredHistory.map(h => h.id);
+        const SIZE = 400;
+        for (let i = 0; i < ids.length; i += SIZE) {
+          const batch = db.batch();
+          ids.slice(i, i + SIZE).forEach(id => {
+            batch.delete(db.collection('history').doc(id));
+          });
+          await batch.commit();
+        }
+        showToast(`🗑️ ${ids.length} 件の履歴を削除しました`);
+      } catch (e) {
+        console.error(e);
+        showToast('❌ 削除に失敗しました');
+      }
+    }
+  });
+});
+
+
+/* ====================================
+   確認モーダル（共通）
+   ==================================== */
+const confirmOverlay = document.getElementById('confirmOverlay');
+
+function showConfirm({ title, sub, detail, callback }) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmSub').textContent   = sub;
+  document.getElementById('confirmDetail').innerHTML  = detail;
+  confirmCallback = callback;
+  confirmOverlay.classList.add('show');
+}
+
+function hideConfirm() {
+  confirmOverlay.classList.remove('show');
+  confirmCallback = null;
+}
+
+document.getElementById('confirmCancel').addEventListener('click', hideConfirm);
+document.getElementById('confirmOk').addEventListener('click', async () => {
+  hideConfirm();
+  if (confirmCallback) await confirmCallback();
+});
+confirmOverlay.addEventListener('click', e => {
+  if (e.target === confirmOverlay) hideConfirm();
+});
+
+</script>
+</body>
+</html>
