@@ -253,9 +253,31 @@ function getToday() { return getDateStr(0); }
  * @param {string} expiryDate  "YYYY-MM-DD"
  */
 function getDaysUntil(expiryDate) {
-  const today  = new Date(getToday());
-  const expiry = new Date(expiryDate);
-  return Math.floor((expiry - today) / (1000 * 60 * 60 * 24));
+  if (!expiryDate) return 9999;
+
+  let expiry;
+
+  // Firestore Timestamp対応
+  if (expiryDate.toDate) {
+    expiry = expiryDate.toDate();
+  }
+  // Date型
+  else if (expiryDate instanceof Date) {
+    expiry = expiryDate;
+  }
+  // 文字列
+  else {
+    expiry = new Date(expiryDate);
+  }
+
+  const today = new Date(getToday());
+
+  expiry.setHours(0,0,0,0);
+  today.setHours(0,0,0,0);
+
+  return Math.floor(
+    (expiry - today) / (1000 * 60 * 60 * 24)
+  );
 }
 
 /**
