@@ -663,12 +663,26 @@ function hideConfirm() {
 }
 
 document.getElementById('confirmCancel').addEventListener('click', hideConfirm);
-document.getElementById('confirmOk').addEventListener('click', async () => {
-  const cb = confirmCallback;
-  hideConfirm();
-  if (cb) await cb();
-});
 
+document.getElementById('confirmOk').addEventListener('click', async () => {
+  console.log('[confirmOk] clicked');
+
+  const cb = confirmCallback;
+  confirmCallback = null;
+  confirmOverlay.classList.remove('show');
+
+  if (!cb) {
+    console.warn('[confirmOk] callback がありません');
+    return;
+  }
+
+  try {
+    await cb();
+  } catch (e) {
+    console.error('[confirmOk] callback error:', e);
+    showToast('❌ 処理に失敗しました');
+  }
+});
 confirmOverlay.addEventListener('click', e => {
   if (e.target === confirmOverlay) hideConfirm();
 });
