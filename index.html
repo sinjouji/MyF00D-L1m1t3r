@@ -229,36 +229,28 @@ onInventorySnapshot(
    ホーム画面レンダリング
    ==================================== */
 function renderHome() {
-  const main = document.getElementById('mainContent');
+  const today  = getToday();
+  const main   = document.getElementById('mainContent');
 
-  const validItems = inventoryItems.filter(i => i && i.expiryDate && i.foodName);
-
-  const expired = validItems.filter(i => getDaysUntil(i.expiryDate) < 0);
-
-  const todayArr = validItems.filter(i =>
-    getDaysUntil(i.expiryDate) === 0
-  );
-
-  const soonArr = validItems.filter(i => {
+  // 期限切れ・今日・3日以内 に分類
+  const expired = inventoryItems.filter(i => getDaysUntil(i.expiryDate) < 0);
+  const todayArr = inventoryItems.filter(i => getDaysUntil(i.expiryDate) === 0);
+  const soonArr  = inventoryItems.filter(i => {
     const d = getDaysUntil(i.expiryDate);
     return d > 0 && d <= 3;
   });
 
-  const laterArr = validItems.filter(i =>
-    getDaysUntil(i.expiryDate) > 3
-  );
-
   main.innerHTML = `
-    ${renderSection('expired', '🚨 期限切れ', expired, '期限切れの食材はありません ✨')}
-    ${renderSection('today', '⏰ 今日まで', todayArr, '今日期限の食材はありません')}
-    ${renderSection('soon', '📅 ３日以内', soonArr, '3日以内に期限が来る食材はありません')}
-    ${renderSection('ok', '🧊 その他', laterArr, 'その他の登録食材はありません')}
+    ${renderSection('expired', '🚨 期限切れ',   expired,  '期限切れの食材はありません ✨')}
+    ${renderSection('today',   '⏰ 今日まで',    todayArr, '今日期限の食材はありません')}
+    ${renderSection('soon',    '📅 ３日以内',    soonArr,  '3日以内に期限が来る食材はありません')}
   `;
 
+  // カードクリックで検索バーに食材名をセット
   document.querySelectorAll('.food-card[data-invid]').forEach(card => {
     card.addEventListener('click', () => {
       const invId = card.dataset.invid;
-      const item = inventoryItems.find(i => i.id === invId);
+      const item  = inventoryItems.find(i => i.id === invId);
       if (!item) return;
       selectHomeFood(item);
       openTogglePanel();
@@ -285,14 +277,13 @@ function renderSection(status, label, items, emptyMsg) {
 }
 
 function renderFoodCard(item, status) {
-  const days = getDaysUntil(item.expiryDate);
+  const days  = getDaysUntil(item.expiryDate);
   const label = daysLabel(days);
-
   return `
     <div class="food-card ${status}" data-invid="${item.id}">
       <span class="food-card-fav">${item.favorite ? '⭐' : ''}</span>
       <div class="food-card-body">
-        <div class="food-card-name">${escapeHtml(item.foodName || '')}</div>
+        <div class="food-card-name">${escapeHtml(item.foodName)}</div>
         ${item.memo ? `<div class="food-card-memo">${escapeHtml(item.memo)}</div>` : ''}
       </div>
       <div class="food-card-right">
@@ -514,12 +505,6 @@ function openNewFoodModal() {
 
 function closeNewFoodModal() {
   newFoodOverlay.classList.remove('show');
-  newFoodOverlay.style.display = 'none';
-  resetNewFoodModal();
-
-  setTimeout(() => {
-    newFoodOverlay.style.display = '';
-  }, 50);
 }
 
 newFoodClose.addEventListener('click', closeNewFoodModal);
@@ -618,31 +603,28 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', () => {
     `,
     okLabel: newFoodExistingId ? '登録する' : '追加する',
     callback: async () => {
-  try {
-    console.log('[newFood] start');
+      try {
+        let foodId = newFoodExistingId;
 
-    let foodId = newFoodExistingId;
+        if (!foodId) {
+          // 新規食材をマスタに追加
+          const ref = await addFood(name, newFoodIsFav);
+          foodId = ref.id;
+        } else {
+          // 既存食材のお気に入りを更新
+          await updateFood(foodId, { favorite: newFoodIsFav });
+        }
 
-    if (!foodId) {
-      console.log('[newFood] addFood');
-      const ref = await addFood(name, newFoodIsFav);
-      foodId = ref.id;
-      console.log('[newFood] foodId:', foodId);
-    } else {
-      await updateFood(foodId, { favorite: newFoodIsFav });
+        // 在庫 & 履歴に登録
+        await registerInventory(foodId, name, newFoodExpiry, memo, newFoodIsFav);
+
+        showToast(`✅ ${name} を追加しました`);
+        closeNewFoodModal();
+      } catch (e) {
+        console.error(e);
+        showToast('❌ 追加に失敗しました');
+      }
     }
-
-    console.log('[newFood] registerInventory');
-    await registerInventory(foodId, name, newFoodExpiry, memo, newFoodIsFav);
-
-    showToast(`✅ ${name} を追加しました`);
-  } catch (e) {
-    console.error('[newFood] error:', e);
-    showToast('❌ 追加に失敗しました');
-  } finally {
-  closeNewFoodModal();
-}
-}
   });
 });
 
@@ -681,28 +663,22 @@ function hideConfirm() {
 }
 
 document.getElementById('confirmCancel').addEventListener('click', hideConfirm);
-
 document.getElementById('confirmOk').addEventListener('click', async () => {
-  console.log('[confirmOk] clicked');
-
+  // ★ hideConfirm() は confirmCallback を null にするため、先に参照を保存する
   const cb = confirmCallback;
-  confirmCallback = null;
-  confirmOverlay.classList.remove('show');
+  hideConfirm();
+  if (!cb) return;
 
-console.log(confirmOverlay.className);
-
-  if (!cb) {
-    console.warn('[confirmOk] callback がありません');
-    return;
-  }
-
+  // 二重クリック防止
+  const okBtn = document.getElementById('confirmOk');
+  okBtn.disabled = true;
   try {
     await cb();
-  } catch (e) {
-    console.error('[confirmOk] callback error:', e);
-    showToast('❌ 処理に失敗しました');
+  } finally {
+    okBtn.disabled = false;
   }
 });
+
 confirmOverlay.addEventListener('click', e => {
   if (e.target === confirmOverlay) hideConfirm();
 });

@@ -639,6 +639,7 @@ function hideConfirm() {
 
 document.getElementById('confirmCancel').addEventListener('click', hideConfirm);
 document.getElementById('confirmOk').addEventListener('click', async () => {
+  // ★ hideConfirm() は confirmCallback を null にするため、先に参照を保存する
   const cb = confirmCallback;
   hideConfirm();
   if (cb) await cb();
