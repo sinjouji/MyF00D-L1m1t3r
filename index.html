@@ -229,37 +229,36 @@ onInventorySnapshot(
    ホーム画面レンダリング
    ==================================== */
 function renderHome() {
-  const today  = getToday();
-  const main   = document.getElementById('mainContent');
+  const main = document.getElementById('mainContent');
 
-  // 期限切れ・今日・3日以内 に分類
-  const expired = inventoryItems.filter(i => getDaysUntil(i.expiryDate) < 0);
+  const validItems = inventoryItems.filter(i => i && i.expiryDate && i.foodName);
 
-const todayArr = inventoryItems.filter(i =>
-  getDaysUntil(i.expiryDate) === 0
-);
+  const expired = validItems.filter(i => getDaysUntil(i.expiryDate) < 0);
 
-const soonArr = inventoryItems.filter(i => {
-  const d = getDaysUntil(i.expiryDate);
-  return d > 0 && d <= 3;
-});
+  const todayArr = validItems.filter(i =>
+    getDaysUntil(i.expiryDate) === 0
+  );
 
-const laterArr = inventoryItems.filter(i =>
-  getDaysUntil(i.expiryDate) > 3
-);
+  const soonArr = validItems.filter(i => {
+    const d = getDaysUntil(i.expiryDate);
+    return d > 0 && d <= 3;
+  });
+
+  const laterArr = validItems.filter(i =>
+    getDaysUntil(i.expiryDate) > 3
+  );
 
   main.innerHTML = `
-    ${renderSection('expired', '🚨 期限切れ',   expired,  '期限切れの食材はありません ✨')}
-    ${renderSection('today',   '⏰ 今日まで',    todayArr, '今日期限の食材はありません')}
-    ${renderSection('soon',    '📅 ３日以内',    soonArr,  '3日以内に期限が来る食材はありません')}
-    ${renderSection('ok', '🧊 その他', laterArr, '登録された食材はありません')}
+    ${renderSection('expired', '🚨 期限切れ', expired, '期限切れの食材はありません ✨')}
+    ${renderSection('today', '⏰ 今日まで', todayArr, '今日期限の食材はありません')}
+    ${renderSection('soon', '📅 ３日以内', soonArr, '3日以内に期限が来る食材はありません')}
+    ${renderSection('ok', '🧊 その他', laterArr, 'その他の登録食材はありません')}
   `;
 
-  // カードクリックで検索バーに食材名をセット
   document.querySelectorAll('.food-card[data-invid]').forEach(card => {
     card.addEventListener('click', () => {
       const invId = card.dataset.invid;
-      const item  = inventoryItems.find(i => i.id === invId);
+      const item = inventoryItems.find(i => i.id === invId);
       if (!item) return;
       selectHomeFood(item);
       openTogglePanel();
@@ -286,13 +285,14 @@ function renderSection(status, label, items, emptyMsg) {
 }
 
 function renderFoodCard(item, status) {
-  const days  = getDaysUntil(item.expiryDate);
+  const days = getDaysUntil(item.expiryDate);
   const label = daysLabel(days);
+
   return `
     <div class="food-card ${status}" data-invid="${item.id}">
       <span class="food-card-fav">${item.favorite ? '⭐' : ''}</span>
       <div class="food-card-body">
-        <div class="food-card-name">${escapeHtml(item.foodName)}</div>
+        <div class="food-card-name">${escapeHtml(item.foodName || '')}</div>
         ${item.memo ? `<div class="food-card-memo">${escapeHtml(item.memo)}</div>` : ''}
       </div>
       <div class="food-card-right">
@@ -515,12 +515,11 @@ function openNewFoodModal() {
 function closeNewFoodModal() {
   newFoodOverlay.classList.remove('show');
   newFoodOverlay.style.display = 'none';
-
   resetNewFoodModal();
 
   setTimeout(() => {
     newFoodOverlay.style.display = '';
-  }, 10);
+  }, 50);
 }
 
 newFoodClose.addEventListener('click', closeNewFoodModal);
@@ -641,10 +640,8 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', () => {
     console.error('[newFood] error:', e);
     showToast('❌ 追加に失敗しました');
   } finally {
-    console.log('[newFood] finally close modal');
-    closeNewFoodModal();
-    resetNewFoodModal();
-  }
+  closeNewFoodModal();
+}
 }
   });
 });
