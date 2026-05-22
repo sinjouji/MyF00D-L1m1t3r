@@ -207,10 +207,22 @@ let confirmCallback = null;
 /* ====================================
    在庫をリアルタイム監視 → 画面を更新
    ==================================== */
-onInventorySnapshot(items => {
-  inventoryItems = items;
-  renderHome();
-});
+
+// まず空の状態でレンダリングしてローディングを解除
+renderHome();
+
+// Firestoreからリアルタイム更新（設定済みなら上書き）
+onInventorySnapshot(
+  items => {
+    inventoryItems = items;
+    renderHome();
+  },
+  err => {
+    // Firebase未設定・接続エラー時はそのまま空表示を維持
+    console.warn('Firebase未接続のため在庫データを取得できません:', err.message);
+    showFirebaseWarning();
+  }
+);
 
 
 /* ====================================
@@ -329,14 +341,7 @@ function selectHomeFood(item) {
   homeSuggestList.classList.remove('show');
 }
 
-// サジェスト設定（在庫リストから検索）
-setupSuggest({
-  input: homeSearchEl,
-  listEl: homeSuggestList,
-  getFoods: () => allFoods,
-  inventoryItems: null,  // 動的に差し替えるためonInputで手動処理
-  onSelect: selectHomeFood,
-});
+// ※ サジェストはホームパネル用に手動実装（在庫リストが動的なため）
 
 // 在庫アイテム用に上書き（inventoryItemsが動的に変わるため）
 let homeDebounce;
@@ -483,10 +488,13 @@ const newFoodManualWrap = document.getElementById('newFoodManualWrap');
 const newFoodManualDate = document.getElementById('newFoodManualDate');
 
 // FABクリックでモーダルを開く
-fab.addEventListener('click', async () => {
-  // 食材マスタを最新取得
-  allFoods = await getAllFoods();
+// ★ まずモーダルを即座に開き、食材マスタはバックグラウンドで取得
+fab.addEventListener('click', () => {
   openNewFoodModal();
+  // 食材マスタをバックグラウンドで取得（サジェスト用）
+  getAllFoods()
+    .then(foods => { allFoods = foods; })
+    .catch(err  => { console.warn('食材マスタ取得失敗（サジェスト無効）:', err.message); });
 });
 
 function openNewFoodModal() {
@@ -642,7 +650,7 @@ const confirmOverlay = document.getElementById('confirmOverlay');
 
 function showConfirm({ title, sub, detail, okLabel = '登録する', callback }) {
   document.getElementById('confirmTitle').textContent  = title;
-  document.getElementById('confirmSub').textContent    = sub;
+  document.getElementById('confirmSub').textContent    = sub || '';
   document.getElementById('confirmDetail').innerHTML   = detail;
   document.getElementById('confirmOk').textContent     = okLabel;
   confirmCallback = callback;
@@ -663,6 +671,33 @@ document.getElementById('confirmOk').addEventListener('click', async () => {
 confirmOverlay.addEventListener('click', e => {
   if (e.target === confirmOverlay) hideConfirm();
 });
+
+/* ====================================
+   Firebase未設定時の警告バナー（1回のみ表示）
+   ==================================== */
+let firebaseWarningShown = false;
+function showFirebaseWarning() {
+  if (firebaseWarningShown) return;
+  firebaseWarningShown = true;
+  const banner = document.createElement('div');
+  banner.style.cssText = `
+    background: var(--today-bg);
+    border: 2px solid var(--today-b);
+    color: var(--today-t);
+    border-radius: var(--r);
+    padding: 12px 16px;
+    margin-bottom: 14px;
+    font-size: 0.83rem;
+    line-height: 1.6;
+  `;
+  banner.innerHTML = `
+    ⚠️ <strong>Firebase未設定</strong>：データの保存・読み込みができません。<br>
+    <code>firebase-config.js</code> に自分のFirebaseプロジェクトの設定を入力してください。<br>
+    <span style="color:var(--text-3)">（詳しくはREADME.mdを参照）</span>
+  `;
+  const main = document.getElementById('mainContent');
+  main.insertBefore(banner, main.firstChild);
+}
 
 </script>
 </body>

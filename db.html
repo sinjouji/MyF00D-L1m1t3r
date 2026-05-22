@@ -240,17 +240,29 @@ let newFoodIsFav = false;
 /* ====================================
    リアルタイム監視：食材マスタ & 在庫
    ==================================== */
-onFoodsSnapshot(foods => {
-  allFoods = foods;
-  renderDb();
-});
 
-onInventorySnapshot(items => {
-  // foodIdをキーにしたマップを作成
-  inventoryMap = {};
-  items.forEach(i => { inventoryMap[i.foodId] = i; });
-  renderDb();
-});
+// 即座に空表示でローディングを解除
+renderDb();
+
+onFoodsSnapshot(
+  foods => {
+    allFoods = foods;
+    renderDb();
+  },
+  err => {
+    console.warn('Firebase未接続:', err.message);
+    showDbWarning();
+  }
+);
+
+onInventorySnapshot(
+  items => {
+    inventoryMap = {};
+    items.forEach(i => { inventoryMap[i.foodId] = i; });
+    renderDb();
+  },
+  err => { console.warn('inventory取得失敗:', err.message); }
+);
 
 
 /* ====================================
@@ -633,6 +645,17 @@ document.getElementById('confirmOk').addEventListener('click', async () => {
 confirmOverlay.addEventListener('click', e => {
   if (e.target === confirmOverlay) hideConfirm();
 });
+
+/* Firebase未設定警告 */
+let dbWarningShown = false;
+function showDbWarning() {
+  if (dbWarningShown) return;
+  dbWarningShown = true;
+  const el = document.createElement('div');
+  el.style.cssText = `background:var(--today-bg);border:2px solid var(--today-b);color:var(--today-t);border-radius:var(--r);padding:11px 14px;margin-bottom:10px;font-size:0.82rem;line-height:1.6;`;
+  el.innerHTML = `⚠️ <strong>Firebase未設定</strong>：<code>firebase-config.js</code> を設定してください。`;
+  document.querySelector('.list-wrap').insertBefore(el, document.getElementById('dbCount'));
+}
 
 </script>
 </body>

@@ -231,10 +231,20 @@ let confirmCallback = null;
 /* ====================================
    リアルタイム監視：履歴
    ==================================== */
-onHistorySnapshot(items => {
-  allHistory = items;
-  applyFiltersAndRender();
-});
+
+// 即座に空表示でローディングを解除
+applyFiltersAndRender();
+
+onHistorySnapshot(
+  items => {
+    allHistory = items;
+    applyFiltersAndRender();
+  },
+  err => {
+    console.warn('Firebase未接続:', err.message);
+    showHistWarning();
+  }
+);
 
 
 /* ====================================
@@ -519,6 +529,17 @@ document.getElementById('confirmOk').addEventListener('click', async () => {
 confirmOverlay.addEventListener('click', e => {
   if (e.target === confirmOverlay) hideConfirm();
 });
+
+/* Firebase未設定警告 */
+let histWarningShown = false;
+function showHistWarning() {
+  if (histWarningShown) return;
+  histWarningShown = true;
+  const el = document.createElement('div');
+  el.style.cssText = `background:var(--today-bg);border:2px solid var(--today-b);color:var(--today-t);border-radius:var(--r);padding:11px 14px;margin-bottom:10px;font-size:0.82rem;line-height:1.6;`;
+  el.innerHTML = `⚠️ <strong>Firebase未設定</strong>：<code>firebase-config.js</code> を設定してください。`;
+  document.querySelector('.list-wrap').insertBefore(el, document.getElementById('histCount'));
+}
 
 </script>
 </body>

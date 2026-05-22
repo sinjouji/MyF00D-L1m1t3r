@@ -27,14 +27,21 @@ async function getAllFoods() {
 
 /**
  * 食材をリアルタイム監視
- * @param {Function} callback  変更があるたびに呼ばれる
+ * @param {Function} callback      変更があるたびに呼ばれる
+ * @param {Function} [onError]     エラー時に呼ばれる（省略可）
  * @returns {Function} unsubscribe関数
  */
-function onFoodsSnapshot(callback) {
-  return db.collection('foods').orderBy('name').onSnapshot(snap => {
-    const foods = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    callback(foods);
-  });
+function onFoodsSnapshot(callback, onError) {
+  return db.collection('foods').orderBy('name').onSnapshot(
+    snap => {
+      const foods = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      callback(foods);
+    },
+    err => {
+      console.error('[Firestore] foods監視エラー:', err);
+      if (onError) onError(err);
+    }
+  );
 }
 
 /**
@@ -96,13 +103,20 @@ async function searchFoodsByName(query, allFoods = null) {
 /**
  * 在庫をリアルタイム監視（期限日順）
  * @param {Function} callback
+ * @param {Function} [onError]
  * @returns {Function} unsubscribe関数
  */
-function onInventorySnapshot(callback) {
-  return db.collection('inventory').orderBy('expiryDate').onSnapshot(snap => {
-    const items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    callback(items);
-  });
+function onInventorySnapshot(callback, onError) {
+  return db.collection('inventory').orderBy('expiryDate').onSnapshot(
+    snap => {
+      const items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      callback(items);
+    },
+    err => {
+      console.error('[Firestore] inventory監視エラー:', err);
+      if (onError) onError(err);
+    }
+  );
 }
 
 /**
@@ -187,15 +201,22 @@ async function addHistory(foodId, foodName, expiryDate, memo = '', favorite = fa
 /**
  * 履歴をリアルタイム監視（新しい順）
  * @param {Function} callback
+ * @param {Function} [onError]
  * @returns {Function} unsubscribe関数
  */
-function onHistorySnapshot(callback) {
+function onHistorySnapshot(callback, onError) {
   return db.collection('history')
     .orderBy('registeredAt', 'desc')
-    .onSnapshot(snap => {
-      const items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      callback(items);
-    });
+    .onSnapshot(
+      snap => {
+        const items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        callback(items);
+      },
+      err => {
+        console.error('[Firestore] history監視エラー:', err);
+        if (onError) onError(err);
+      }
+    );
 }
 
 /**
