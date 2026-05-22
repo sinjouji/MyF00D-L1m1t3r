@@ -414,21 +414,19 @@ function renderFoodItem(food, inv, isEdit) {
       const newFav  = wrapper.querySelector(`#editFav-${food.id}`).dataset.fav === 'true';
       if (!newName) { showToast('⚠️ 食材名を入力してください'); return; }
       try {
-        const updates = { name: newName, favorite: newFav };
-        await updateFood(food.id, updates);
+        await updateFood(food.id, { name: newName, favorite: newFav });
 
-        // 在庫にも食材名・お気に入りを反映
-        if (inventoryMap[food.id]) {
-          await db.collection('inventory').doc(inventoryMap[food.id].id).update({
-            foodName: newName,
-            favorite: newFav
-          });
-        }
+        // 在庫にも食材名・お気に入りを反映（ドキュメントIDはfoodId）
+        await db.collection('inventory').doc(food.id).set(
+          { foodName: newName, favorite: newFav },
+          { merge: true }
+        );
+
         showToast(`✅ ${newName} を更新しました`);
         editingFoodId = null;
       } catch (e) {
-        console.error(e);
-        showToast('❌ 更新に失敗しました');
+        handleFirebaseError(e, '更新');
+        editingFoodId = null;
       }
     });
 
@@ -498,10 +496,10 @@ async function handleItemAction(action, food, inv) {
       const newFav = !food.favorite;
       try {
         await updateFood(food.id, { favorite: newFav });
-        // 在庫にも反映
-        if (inv) await db.collection('inventory').doc(inv.id).update({ favorite: newFav });
+        // 在庫にも反映（inventoryのドキュメントIDはfoodId）
+        await db.collection('inventory').doc(food.id).set({ favorite: newFav }, { merge: true });
         showToast(newFav ? `⭐ お気に入りに追加しました` : `☆ お気に入りを解除しました`);
-      } catch (e) { showToast('❌ 更新に失敗しました'); }
+      } catch (e) { handleFirebaseError(e, '更新'); }
       break;
     }
 
@@ -528,12 +526,11 @@ async function handleItemAction(action, food, inv) {
         callback: async () => {
           try {
             await deleteFood(food.id);
-            // 在庫からも削除
-            if (inv) await deleteInventoryItem(inv.id);
+            // 在庫からも削除（ドキュメントIDはfoodId）
+            await deleteInventoryItem(food.id);
             showToast(`🗑️ ${food.name} を削除しました`);
           } catch (e) {
-            console.error(e);
-            showToast('❌ 削除に失敗しました');
+            handleFirebaseError(e, '削除');
           }
         }
       });
@@ -599,11 +596,11 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', async ()
     callback: async () => {
       try {
         await addFood(name, newFoodIsFav);
-        showToast(`✅ ${name} を追加しました`);
         newFoodOverlay.classList.remove('show');
+        showToast(`✅ ${name} を追加しました`);
       } catch (e) {
-        console.error(e);
-        showToast('❌ 追加に失敗しました');
+        newFoodOverlay.classList.remove('show');
+        handleFirebaseError(e, '追加');
       }
     }
   });

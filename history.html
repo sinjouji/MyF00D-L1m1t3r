@@ -451,8 +451,7 @@ function renderHistItem(item) {
           await deleteHistoryItem(item.id);
           showToast('🗑️ 履歴を削除しました');
         } catch (e) {
-          console.error(e);
-          showToast('❌ 削除に失敗しました');
+          handleFirebaseError(e, '削除');
         }
       }
     });
@@ -495,8 +494,7 @@ document.getElementById('bulkDeleteBtn').addEventListener('click', () => {
         }
         showToast(`🗑️ ${ids.length} 件の履歴を削除しました`);
       } catch (e) {
-        console.error(e);
-        showToast('❌ 削除に失敗しました');
+        handleFirebaseError(e, '一括削除');
       }
     }
   });

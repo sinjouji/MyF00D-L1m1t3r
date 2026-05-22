@@ -135,6 +135,11 @@ async function getInventoryByFoodId(foodId) {
 
 /**
  * 在庫を登録・更新（upsert）し、同時に履歴を追加
+ *
+ * ★ foodId をそのままドキュメントIDに使うことで、
+ *    既存レコードの検索クエリが不要になり確実に動作する。
+ *    set() は存在すれば上書き、なければ新規作成。
+ *
  * @param {string}  foodId
  * @param {string}  foodName
  * @param {string}  expiryDate  "YYYY-MM-DD"
@@ -142,7 +147,9 @@ async function getInventoryByFoodId(foodId) {
  * @param {boolean} favorite
  */
 async function registerInventory(foodId, foodName, expiryDate, memo = '', favorite = false) {
-  const data = {
+  console.log('[registerInventory] 開始', { foodId, foodName, expiryDate });
+
+  const inventoryData = {
     foodId,
     foodName,
     expiryDate,
@@ -151,24 +158,18 @@ async function registerInventory(foodId, foodName, expiryDate, memo = '', favori
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
 
-  // 既存レコード確認
-  const existing = await getInventoryByFoodId(foodId);
+  // foodId をドキュメントIDとして set()：食材1件につき在庫1件を保証
+  await db.collection('inventory').doc(foodId).set(inventoryData);
+  console.log('[registerInventory] inventory 書き込み完了');
 
-  if (existing) {
-    // 既存なら上書き
-    await db.collection('inventory').doc(existing.id).update(data);
-  } else {
-    // 新規作成
-    await db.collection('inventory').add(data);
-  }
-
-  // 履歴に追加
+  // 履歴に追加（登録のたびに新規レコード）
   await addHistory(foodId, foodName, expiryDate, memo, favorite);
+  console.log('[registerInventory] history 書き込み完了');
 }
 
 /**
  * 在庫を削除
- * @param {string} id  在庫のドキュメントID
+ * @param {string} id  在庫のドキュメントID（= foodId）
  */
 async function deleteInventoryItem(id) {
   return await db.collection('inventory').doc(id).delete();
@@ -253,31 +254,9 @@ function getToday() { return getDateStr(0); }
  * @param {string} expiryDate  "YYYY-MM-DD"
  */
 function getDaysUntil(expiryDate) {
-  if (!expiryDate) return 9999;
-
-  let expiry;
-
-  // Firestore Timestamp対応
-  if (expiryDate.toDate) {
-    expiry = expiryDate.toDate();
-  }
-  // Date型
-  else if (expiryDate instanceof Date) {
-    expiry = expiryDate;
-  }
-  // 文字列
-  else {
-    expiry = new Date(expiryDate);
-  }
-
-  const today = new Date(getToday());
-
-  expiry.setHours(0,0,0,0);
-  today.setHours(0,0,0,0);
-
-  return Math.floor(
-    (expiry - today) / (1000 * 60 * 60 * 24)
-  );
+  const today  = new Date(getToday());
+  const expiry = new Date(expiryDate);
+  return Math.floor((expiry - today) / (1000 * 60 * 60 * 24));
 }
 
 /**
@@ -425,8 +404,31 @@ function setupSuggest({ input, listEl, getFoods, onSelect, maxShow = 8, inventor
 }
 
 /**
- * XSS対策：文字列をエスケープ
+ * Firebase エラーを人が読みやすいメッセージに変換してトーストで表示する
+ * @param {Error}  e
+ * @param {string} action  '追加'|'更新'|'削除' など
  */
+function handleFirebaseError(e, action = '操作') {
+  console.error(`[Firebase エラー] ${action}:`, e.code, e.message, e);
+  let msg = '';
+  switch (e.code) {
+    case 'permission-denied':
+      msg = '⛔ 権限エラー：Firestore のセキュリティルールを確認してください';
+      break;
+    case 'unavailable':
+      msg = '📡 オフライン：ネットワーク接続を確認してください';
+      break;
+    case 'not-found':
+      msg = '🔍 データが見つかりませんでした';
+      break;
+    case 'unauthenticated':
+      msg = '🔑 認証エラー：ログインが必要です';
+      break;
+    default:
+      msg = `❌ ${action}に失敗しました（${e.code || e.message || '不明なエラー'}）`;
+  }
+  showToast(msg, 3500);
+}
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')

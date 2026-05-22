@@ -457,8 +457,7 @@ document.getElementById('homeRegisterBtn').addEventListener('click', () => {
         resetHomePanel();
         closeTogglePanel();
       } catch (e) {
-        console.error(e);
-        showToast('❌ 登録に失敗しました');
+        handleFirebaseError(e, '期限登録');
       }
     }
   });
@@ -605,24 +604,29 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', () => {
     callback: async () => {
       try {
         let foodId = newFoodExistingId;
+        console.log('[新規食材登録] 開始', { name, foodId, newFoodExpiry });
 
         if (!foodId) {
           // 新規食材をマスタに追加
           const ref = await addFood(name, newFoodIsFav);
           foodId = ref.id;
+          console.log('[新規食材登録] foods 追加完了, foodId:', foodId);
         } else {
           // 既存食材のお気に入りを更新
           await updateFood(foodId, { favorite: newFoodIsFav });
+          console.log('[新規食材登録] foods 更新完了');
         }
 
         // 在庫 & 履歴に登録
         await registerInventory(foodId, name, newFoodExpiry, memo, newFoodIsFav);
 
-        showToast(`✅ ${name} を追加しました`);
+        // 成功 → モーダルを閉じてトースト
         closeNewFoodModal();
+        showToast(`✅ ${name} を追加しました`);
       } catch (e) {
-        console.error(e);
-        showToast('❌ 追加に失敗しました');
+        // 失敗でも必ずモーダルを閉じ、実際のエラーを表示
+        closeNewFoodModal();
+        handleFirebaseError(e, '追加');
       }
     }
   });
