@@ -604,29 +604,33 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', () => {
     `,
     okLabel: newFoodExistingId ? '登録する' : '追加する',
     callback: async () => {
-      try {
-        let foodId = newFoodExistingId;
+  try {
+    console.log('[newFood] start');
 
-        if (!foodId) {
-          // 新規食材をマスタに追加
-          const ref = await addFood(name, newFoodIsFav);
-          foodId = ref.id;
-        } else {
-          // 既存食材のお気に入りを更新
-          await updateFood(foodId, { favorite: newFoodIsFav });
-        }
+    let foodId = newFoodExistingId;
 
-        // 在庫 & 履歴に登録
-        await registerInventory(foodId, name, newFoodExpiry, memo, newFoodIsFav);
-
-        showToast(`✅ ${name} を追加しました`);
-        resetNewFoodModal();
-        closeNewFoodModal();
-      } catch (e) {
-        console.error(e);
-        showToast('❌ 追加に失敗しました');
-      }
+    if (!foodId) {
+      console.log('[newFood] addFood');
+      const ref = await addFood(name, newFoodIsFav);
+      foodId = ref.id;
+      console.log('[newFood] foodId:', foodId);
+    } else {
+      await updateFood(foodId, { favorite: newFoodIsFav });
     }
+
+    console.log('[newFood] registerInventory');
+    await registerInventory(foodId, name, newFoodExpiry, memo, newFoodIsFav);
+
+    showToast(`✅ ${name} を追加しました`);
+  } catch (e) {
+    console.error('[newFood] error:', e);
+    showToast('❌ 追加に失敗しました');
+  } finally {
+    console.log('[newFood] finally close modal');
+    closeNewFoodModal();
+    resetNewFoodModal();
+  }
+}
   });
 });
 
