@@ -234,16 +234,25 @@ function renderHome() {
 
   // 期限切れ・今日・3日以内 に分類
   const expired = inventoryItems.filter(i => getDaysUntil(i.expiryDate) < 0);
-  const todayArr = inventoryItems.filter(i => getDaysUntil(i.expiryDate) === 0);
-  const soonArr  = inventoryItems.filter(i => {
-    const d = getDaysUntil(i.expiryDate);
-    return d > 0 && d <= 3;
-  });
+
+const todayArr = inventoryItems.filter(i =>
+  getDaysUntil(i.expiryDate) === 0
+);
+
+const soonArr = inventoryItems.filter(i => {
+  const d = getDaysUntil(i.expiryDate);
+  return d > 0 && d <= 3;
+});
+
+const laterArr = inventoryItems.filter(i =>
+  getDaysUntil(i.expiryDate) > 3
+);
 
   main.innerHTML = `
     ${renderSection('expired', '🚨 期限切れ',   expired,  '期限切れの食材はありません ✨')}
     ${renderSection('today',   '⏰ 今日まで',    todayArr, '今日期限の食材はありません')}
     ${renderSection('soon',    '📅 ３日以内',    soonArr,  '3日以内に期限が来る食材はありません')}
+    ${renderSection('ok', '🧊 その他', laterArr, '登録された食材はありません')}
   `;
 
   // カードクリックで検索バーに食材名をセット
@@ -505,7 +514,13 @@ function openNewFoodModal() {
 
 function closeNewFoodModal() {
   newFoodOverlay.classList.remove('show');
+  newFoodOverlay.style.display = 'none';
+
   resetNewFoodModal();
+
+  setTimeout(() => {
+    newFoodOverlay.style.display = '';
+  }, 10);
 }
 
 newFoodClose.addEventListener('click', closeNewFoodModal);
