@@ -294,7 +294,14 @@ function renderHome() {
 
         try {
           await db.collection('inventory').doc(item.foodId || item.id).delete();
-          showToast('✅ ' + item.foodName + ' を在庫から消しました');
+
+inventoryItems = inventoryItems.filter(function(i) {
+  return i.id !== item.id && i.foodId !== item.foodId;
+});
+
+renderHome();
+
+showToast('✅ ' + item.foodName + ' を在庫から消しました');
         } catch (e) {
           console.error('在庫削除エラー:', e);
           showToast('❌ 在庫から消せませんでした');
