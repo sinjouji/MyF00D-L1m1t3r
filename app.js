@@ -36,10 +36,19 @@ function getToday() { return getDateStr(0); }
  * @param {string} expiryDate "YYYY-MM-DD"
  */
 function getDaysUntil(expiryDate) {
-  if (!expiryDate) return 9999;
+  var s = toDateStr(expiryDate);
+  if (!s) return 9999;
+
   var today = new Date(getToday());
-  var exp   = new Date(expiryDate);
+  var exp = new Date(s);
   return Math.floor((exp - today) / 86400000);
+}
+
+function formatDate(s) {
+  s = toDateStr(s);
+  if (!s) return '';
+  var p = s.split('-');
+  return p[0] + '/' + p[1] + '/' + p[2];
 }
 
 /**
@@ -90,6 +99,30 @@ function formatDateTime(val) {
   return d.getFullYear() + '/' + pad(d.getMonth() + 1) + '/' + pad(d.getDate()) +
          ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
 }
+
+
+
+function toDateStr(value) {
+  if (!value) return '';
+
+  if (typeof value === 'string') return value.slice(0, 10);
+
+  if (typeof value.toDate === 'function') {
+    var d = value.toDate();
+    return d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
+  }
+
+  if (value instanceof Date) {
+    return value.getFullYear() + '-' +
+      String(value.getMonth() + 1).padStart(2, '0') + '-' +
+      String(value.getDate()).padStart(2, '0');
+  }
+
+  return '';
+}
+
 
 
 /* ====================================
