@@ -207,16 +207,17 @@ setTimeout(function() {
    ホーム レンダリング（4セクション）
    ==================================== */
 function renderHome() {
+  console.log('[renderHome] start');
+
   var main = document.getElementById('mainContent');
 
   if (!invReady) {
     main.innerHTML =
-      '<div class="empty-state">' +
-      '<div class="empty-state-icon">⏳</div>' +
-      'Firestoreに接続中です…' +
-      '</div>';
+      '<div class="empty-state">Firestore接続中...</div>';
     return;
   }
+
+  try {
 
   // 以降は今の renderHome の中身
 
@@ -245,6 +246,17 @@ function renderHome() {
       if (item) { selectHomeFood(item); openPanel(); }
     });
   });
+}
+
+  } catch (e) {
+    console.error('[renderHome] crash:', e);
+
+    main.innerHTML =
+      '<div class="empty-state">' +
+      '⚠️ 描画エラー: ' +
+      escapeHtml(e.message || String(e)) +
+      '</div>';
+  }
 }
 
 function buildSection(status, label, items, emptyMsg) {
