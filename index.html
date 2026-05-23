@@ -122,6 +122,8 @@
 <script src="firebase-config.js"></script>
 <script src="app.js"></script>
 <script>
+console.log('[index] script start');
+
 /* ============================================================
    index.html — ホームページ スクリプト
 
@@ -639,6 +641,7 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', async fu
     showToast('❌ 追加に失敗しました（' + (e.code || e.message) + '）');
   }
 });
+console.log('[index] script end');
 </script>
 </body>
 </html>
