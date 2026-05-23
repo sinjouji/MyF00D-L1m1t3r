@@ -394,17 +394,31 @@ var homeSuggestList = document.getElementById('homeSuggestList');
 var selFoodInfo     = document.getElementById('selectedFoodInfo');
 var selFoodName     = document.getElementById('selectedFoodName');
 
-function selectHomeFood(food) {
+function selectHomeFood(item) {
+  var foodId =
+    item.foodId || item.id;
+
+  var foodName =
+    item.foodName || item.name;
+
+  if (!foodId || !foodName) {
+    console.warn('[selectHomeFood] invalid item:', item);
+    showToast('❌ 食材データが壊れています');
+    return;
+  }
+
   homeSelectedFood = {
-    foodId: food.id,
-    foodName: food.name,
-    favorite: !!food.favorite
+    foodId: foodId,
+    foodName: foodName,
+    favorite: !!item.favorite
   };
 
-  homeSearchEl.value = food.name;
-  selFoodName.textContent = food.name;
+  homeSearchEl.value = foodName;
+  selFoodName.textContent = foodName;
   selFoodInfo.style.display = 'block';
   homeSuggestList.classList.remove('show');
+
+  console.log('[selectHomeFood] selected:', homeSelectedFood);
 }
 
 var homeSearchTimer;
@@ -510,8 +524,13 @@ document.getElementById('homeRegisterBtn').addEventListener('click', async funct
   }
   
      
-  if (!docId || !food.foodName) {
-  showToast('❌ 食材データが壊れています');
+  var food = homeSelectedFood;
+
+console.log('[register] homeSelectedFood:', food);
+
+if (!food || !food.foodId || !food.foodName) {
+  showToast('❌ データが壊れています');
+  console.warn('[register] invalid selected food:', food);
   return;
 }
 

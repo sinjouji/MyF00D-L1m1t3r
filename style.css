@@ -606,6 +606,14 @@ input[type="date"]:focus { border-color: var(--primary); }
 
 .modal-close:hover { background: var(--expired-bg); color: var(--expired-t); }
 
+.modal,
+.input-panel,
+.bottom-bar-inner {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 /* ===== 食材名入力行（名前＋お気に入り） ===== */
 .food-name-row {
   display: flex;
