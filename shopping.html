@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>買い物メモ 🛒</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { padding-bottom: 220px; }
+
+    /* ===== カテゴリフィルタータブ ===== */
+    .cat-tabs {
+      display: flex;
+      gap: 6px;
+      padding: 10px 16px 0;
+      max-width: 640px;
+      margin: 0 auto;
+      flex-wrap: wrap;
+    }
+
+    /* ===== 入力エリア（固定ボトム） ===== */
+    .shop-bottom {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 200;
+    }
+    .shop-bottom-inner {
+      max-width: 640px;
+      margin: 0 auto;
+      background: var(--surface);
+      border-top: 2px solid var(--border);
+      padding: 12px 16px 20px;
+      box-shadow: 0 -4px 20px rgba(100,80,40,0.1);
+    }
+
+    /* 名前行 */
+    .shop-add-name-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .shop-add-name-row input[type="text"] {
+      flex: 1;
+      padding: 10px 14px;
+      border: 2px solid var(--border);
+      border-radius: var(--r);
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      outline: none;
+      background: var(--bg);
+      transition: border-color 0.2s;
+    }
+    .shop-add-name-row input[type="text"]:focus { border-color: var(--primary); }
+
+    /* カテゴリ選択ボタン（食材 / 雑貨） */
+    .cat-select-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .cat-select-btn {
+      flex: 1;
+      padding: 7px;
+      border: 2px solid var(--border);
+      border-radius: var(--r);
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-2);
+      background: var(--surface);
+      transition: all 0.18s;
+    }
+    .cat-select-btn:hover { border-color: var(--primary); }
+    .cat-select-btn.active.food { background: var(--primary-l); border-color: var(--primary); color: var(--primary-d); }
+    .cat-select-btn.active.misc { background: #EBE4F5; border-color: #9B7EC8; color: #5A4480; }
+
+    /* メモ+登録行 */
+    .shop-add-bottom-row {
+      display: flex;
+      gap: 8px;
+    }
+    .shop-add-bottom-row input[type="text"] {
+      flex: 1;
+      padding: 9px 12px;
+      border: 2px solid var(--border);
+      border-radius: var(--r);
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      outline: none;
+      background: var(--bg);
+      transition: border-color 0.2s;
+    }
+    .shop-add-bottom-row input[type="text"]:focus { border-color: var(--primary); }
+    .shop-add-bottom-row .register-btn {
+      width: auto;
+      padding: 9px 20px;
+      white-space: nowrap;
+    }
+
+    /* サジェストリスト（入力パネルの上に出る） */
+    .shop-suggest-wrap { position: relative; }
+    .shop-suggest-list {
+      position: absolute;
+      bottom: calc(100% + 4px);
+      left: 0; right: 0;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--r);
+      max-height: 160px;
+      overflow-y: auto;
+      z-index: 400;
+      box-shadow: var(--shadow-lg);
+      display: none;
+    }
+    .shop-suggest-list.show { display: block; }
+
+    /* 操作ボタン行（チェック済み削除など） */
+    .shop-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 8px 16px 0;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    .count-label {
+      font-size: 0.78rem;
+      color: var(--text-3);
+      align-self: center;
+      margin-right: auto;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a class="logo" href="index.html">🥦 食材管理</a>
+    <nav>
+      <a href="index.html">ホーム</a>
+      <a href="db.html">食材DB</a>
+      <a href="shopping.html" class="active">買い物</a>
+      <a href="history.html">履歴</a>
+    </nav>
+  </div>
+</header>
+
+<!-- カテゴリタブ -->
+<div class="cat-tabs">
+  <button class="cat-chip active" data-cat="all">すべて</button>
+  <button class="cat-chip" data-cat="food">🥦 食材</button>
+  <button class="cat-chip" data-cat="misc">🧴 雑貨</button>
+</div>
+
+<!-- 操作ボタン -->
+<div class="shop-actions">
+  <span class="count-label" id="shopCount">0 件</span>
+  <button class="clear-btn" id="clearCheckedBtn">✅ チェック済みを削除</button>
+  <button class="clear-btn" id="clearAllBtn" style="border-color:var(--expired-b);color:var(--expired-t);">
+    🗑️ すべて削除
+  </button>
+</div>
+
+<!-- アイテムリスト -->
+<div class="list-wrap" style="margin-top:6px;">
+  <div id="shopList">
+    <div class="loading-wrap"><div class="spinner"></div>読み込み中…</div>
+  </div>
+</div>
+
+<!-- 固定ボトム入力エリア -->
+<div class="shop-bottom">
+  <div class="shop-bottom-inner">
+
+    <!-- 名前入力 + サジェスト -->
+    <div class="shop-suggest-wrap">
+      <div class="shop-suggest-list" id="shopSuggestList"></div>
+      <div class="shop-add-name-row">
+        <input type="text" id="shopItemName" placeholder="アイテム名を入力…" autocomplete="off" maxlength="60">
+      </div>
+    </div>
+
+    <!-- カテゴリ選択 -->
+    <div class="cat-select-row">
+      <button class="cat-select-btn active food" data-sel="food">🥦 食材</button>
+      <button class="cat-select-btn misc" data-sel="misc">🧴 雑貨</button>
+    </div>
+
+    <!-- メモ + 追加ボタン -->
+    <div class="shop-add-bottom-row">
+      <input type="text" id="shopItemMemo" placeholder="メモ（任意）" maxlength="100">
+      <button class="register-btn" id="shopAddBtn">追加</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- 確認モーダル -->
+<div class="modal-overlay center" id="confirmOverlay">
+  <div class="modal confirm-modal">
+    <p class="confirm-head" id="confirmTitle"></p>
+    <p class="confirm-sub"  id="confirmSub"></p>
+    <div class="confirm-detail" id="confirmDetail"></div>
+    <div class="confirm-btns">
+      <button class="btn-cancel"  id="confirmCancel">キャンセル</button>
+      <button class="btn-confirm" id="confirmOk">実行する</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="app.js"></script>
+<script>
+/* ============================================================
+   shopping.html — 買い物メモ スクリプト
+
+   Firestore コレクション: shoppingItems
+   {
+     name:      string   // アイテム名
+     category:  'food' | 'misc'
+     memo:      string
+     checked:   boolean  // チェック済み
+     createdAt: Date
+   }
+
+   責務:
+     ・food / misc を問わず「買い物候補」だけ管理
+     ・inventory / foods には一切書かない
+     ・チェック = 「カートに入れた」の印（削除はしない）
+ ============================================================ */
+
+initConfirmDialog();
+
+var allItems    = [];   // shoppingItems（onSnapshot）
+var filterCat   = 'all';  // 'all' | 'food' | 'misc'
+var foodNames   = [];   // foods の name 一覧（サジェスト用）
+var selCategory = 'food'; // 入力パネルで選択中のカテゴリ
+
+
+/* ====================================
+   Firestore リスナー
+   ==================================== */
+
+/* 買い物メモ */
+db.collection('shoppingItems').onSnapshot(function(snap) {
+  allItems = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+  /* 未チェック → チェック済みの順、その中で登録日時順 */
+  allItems.sort(function(a, b) {
+    if (a.checked !== b.checked) return (a.checked ? 1 : -1);
+    var ta = a.createdAt instanceof Date ? a.createdAt.getTime()
+           : (a.createdAt && a.createdAt.seconds ? a.createdAt.seconds * 1000 : 0);
+    var tb = b.createdAt instanceof Date ? b.createdAt.getTime()
+           : (b.createdAt && b.createdAt.seconds ? b.createdAt.seconds * 1000 : 0);
+    return ta - tb;  // 古い順（先に追加したものが上）
+  });
+  renderShop();
+}, function(err) {
+  console.error('shoppingItems error:', err.code, err.message);
+  showToast('⚠️ 読み込みエラー: ' + err.code);
+  renderShop();
+});
+
+/* foods（食材名サジェスト用） */
+db.collection('foods').onSnapshot(function(snap) {
+  foodNames = snap.docs.map(function(d) { return d.data().name || ''; });
+}, function(err) {
+  console.warn('foods (for suggest) error:', err.code);
+});
+
+
+/* ====================================
+   カテゴリタブ
+   ==================================== */
+document.querySelectorAll('.cat-chip').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.cat-chip').forEach(function(t) { t.classList.remove('active'); });
+    tab.classList.add('active');
+    filterCat = tab.dataset.cat;
+    renderShop();
+  });
+});
+
+
+/* ====================================
+   レンダリング
+   ==================================== */
+function renderShop() {
+  var list = filterCat === 'all'
+    ? allItems.slice()
+    : allItems.filter(function(i) { return i.category === filterCat; });
+
+  var unchecked = list.filter(function(i) { return !i.checked; });
+  var checked   = list.filter(function(i) { return i.checked; });
+
+  /* カウント表示 */
+  document.getElementById('shopCount').textContent =
+    unchecked.length + ' 件' + (checked.length ? '（チェック済み ' + checked.length + ' 件）' : '');
+
+  var container = document.getElementById('shopList');
+
+  if (list.length === 0) {
+    container.innerHTML =
+      '<div class="empty-state">' +
+        '<div class="empty-state-icon">🛒</div>' +
+        (filterCat === 'all'
+          ? '買い物メモはまだありません<br><span style="font-size:0.8rem;color:var(--text-3);">下の入力欄からアイテムを追加しましょう</span>'
+          : 'このカテゴリのアイテムはありません') +
+      '</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  /* 未チェック → チェック済みの順で表示 */
+  unchecked.concat(checked).forEach(function(item) {
+    container.appendChild(buildShopItem(item));
+  });
+}
+
+function buildShopItem(item) {
+  var wrap = document.createElement('div');
+  var catCls   = item.category === 'food' ? 'food' : 'misc';
+  var catLabel = item.category === 'food' ? '🥦 食材' : '🧴 雑貨';
+
+  wrap.innerHTML =
+    '<div class="shop-item' + (item.checked ? ' is-checked' : '') + '" data-id="' + item.id + '">' +
+      '<div class="shop-check">' + (item.checked ? '✓' : '') + '</div>' +
+      '<div class="shop-item-body">' +
+        '<div class="shop-name">' +
+          escapeHtml(item.name) +
+          '<span class="cat-label ' + catCls + '">' + catLabel + '</span>' +
+        '</div>' +
+        (item.memo ? '<div class="shop-memo">' + escapeHtml(item.memo) + '</div>' : '') +
+      '</div>' +
+      '<div class="list-item-actions">' +
+        '<button class="icon-btn del" title="削除">🗑️</button>' +
+      '</div>' +
+    '</div>';
+
+  /* チェックトグル */
+  wrap.querySelector('.shop-check').addEventListener('click', async function() {
+    try {
+      await db.collection('shoppingItems').doc(item.id).update({ checked: !item.checked });
+    } catch (e) {
+      showToast('❌ 更新失敗（' + (e.code || e.message) + '）');
+    }
+  });
+
+  /* アイテム本体クリックでもチェックトグル */
+  wrap.querySelector('.shop-item-body').addEventListener('click', async function() {
+    try {
+      await db.collection('shoppingItems').doc(item.id).update({ checked: !item.checked });
+    } catch (e) {
+      showToast('❌ 更新失敗（' + (e.code || e.message) + '）');
+    }
+  });
+
+  /* 削除ボタン */
+  wrap.querySelector('.icon-btn.del').addEventListener('click', async function(e) {
+    e.stopPropagation();
+    try {
+      await db.collection('shoppingItems').doc(item.id).delete();
+      showToast('🗑️ 削除しました');
+    } catch (e) {
+      showToast('❌ 削除失敗（' + (e.code || e.message) + '）');
+    }
+  });
+
+  return wrap;
+}
+
+
+/* ====================================
+   カテゴリ選択ボタン（入力パネル）
+   ==================================== */
+document.querySelectorAll('.cat-select-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.cat-select-btn').forEach(function(b) {
+      b.classList.remove('active');
+    });
+    btn.classList.add('active');
+    selCategory = btn.dataset.sel;
+  });
+});
+
+
+/* ====================================
+   アイテム名サジェスト
+   既登録アイテム名（全カテゴリ）+ foods の名前 を候補に
+   ==================================== */
+var shopNameInput  = document.getElementById('shopItemName');
+var shopSuggestEl  = document.getElementById('shopSuggestList');
+var suggestTimer;
+
+shopNameInput.addEventListener('input', function() {
+  clearTimeout(suggestTimer);
+  suggestTimer = setTimeout(function() {
+    var q = shopNameInput.value.trim();
+    shopSuggestEl.innerHTML = '';
+    if (!q) { shopSuggestEl.classList.remove('show'); return; }
+
+    /* 既登録アイテム名（重複なし）+ foods 名を合わせて候補にする */
+    var existingNames = allItems.map(function(i) { return i.name; });
+    var allNames = existingNames.concat(foodNames).filter(function(n, idx, arr) {
+      return arr.indexOf(n) === idx;  // 重複除去
+    });
+    var nameObjs = allNames.map(function(n) { return { name: n }; });
+    var candidates = suggestSort(q, nameObjs, 'name', 8);
+
+    if (!candidates.length) { shopSuggestEl.classList.remove('show'); return; }
+
+    candidates.forEach(function(obj) {
+      var div = document.createElement('div');
+      div.className = 'suggest-item';
+      div.innerHTML = '<span class="suggest-name">' + escapeHtml(obj.name) + '</span>';
+      div.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        shopNameInput.value = obj.name;
+        shopSuggestEl.classList.remove('show');
+      });
+      shopSuggestEl.appendChild(div);
+    });
+    shopSuggestEl.classList.add('show');
+  }, 150);
+});
+
+shopNameInput.addEventListener('blur', function() {
+  setTimeout(function() { shopSuggestEl.classList.remove('show'); }, 200);
+});
+
+
+/* ====================================
+   アイテム追加
+   ==================================== */
+document.getElementById('shopAddBtn').addEventListener('click', addItem);
+shopNameInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') addItem();
+});
+
+async function addItem() {
+  var name = shopNameInput.value.trim();
+  if (!name) { showToast('⚠️ アイテム名を入力してください'); shopNameInput.focus(); return; }
+
+  var memo = document.getElementById('shopItemMemo').value.trim();
+
+  try {
+    await db.collection('shoppingItems').add({
+      name:      name,
+      category:  selCategory,
+      memo:      memo,
+      checked:   false,
+      createdAt: new Date()
+    });
+    /* 入力欄をリセット（カテゴリ選択は維持） */
+    shopNameInput.value = '';
+    document.getElementById('shopItemMemo').value = '';
+    shopNameInput.focus();
+    showToast('✅ ' + name + ' を追加しました');
+  } catch (e) {
+    console.error('shoppingItems 追加エラー:', e.code, e.message);
+    showToast('❌ 追加失敗（' + (e.code || e.message) + '）');
+  }
+}
+
+
+/* ====================================
+   チェック済みを削除
+   ==================================== */
+document.getElementById('clearCheckedBtn').addEventListener('click', async function() {
+  var checked = allItems.filter(function(i) { return i.checked; });
+  if (checked.length === 0) { showToast('⚠️ チェック済みのアイテムがありません'); return; }
+
+  var ok = await confirmDialog({
+    title:   'チェック済み ' + checked.length + ' 件を削除しますか？',
+    sub:     'この操作は取り消せません',
+    detail:  '',
+    okLabel: '削除する'
+  });
+  if (!ok) return;
+
+  try {
+    var batch = db.batch();
+    checked.forEach(function(item) {
+      batch.delete(db.collection('shoppingItems').doc(item.id));
+    });
+    await batch.commit();
+    showToast('🗑️ チェック済み ' + checked.length + ' 件を削除しました');
+  } catch (e) {
+    showToast('❌ 削除失敗（' + (e.code || e.message) + '）');
+  }
+});
+
+
+/* ====================================
+   すべて削除
+   ==================================== */
+document.getElementById('clearAllBtn').addEventListener('click', async function() {
+  if (allItems.length === 0) { showToast('⚠️ アイテムがありません'); return; }
+
+  var ok = await confirmDialog({
+    title:   '買い物メモを全削除しますか？',
+    sub:     'この操作は取り消せません',
+    detail:  '<p style="color:var(--expired-t);font-weight:700;">リスト全 ' + allItems.length + ' 件を削除します</p>',
+    okLabel: 'すべて削除する'
+  });
+  if (!ok) return;
+
+  try {
+    for (var i = 0; i < allItems.length; i += 400) {
+      var batch = db.batch();
+      allItems.slice(i, i + 400).forEach(function(item) {
+        batch.delete(db.collection('shoppingItems').doc(item.id));
+      });
+      await batch.commit();
+    }
+    showToast('🗑️ 買い物メモを全削除しました');
+  } catch (e) {
+    showToast('❌ 削除失敗（' + (e.code || e.message) + '）');
+  }
+});
+</script>
+</body>
+</html>
