@@ -190,10 +190,16 @@ var _confirmResolve = null;
 function confirmDialog(opts) {
   return new Promise(function(resolve) {
     _confirmResolve = resolve;
-    document.getElementById('confirmTitle').textContent = opts.title   || '';
-    document.getElementById('confirmSub').textContent   = opts.sub     || '';
-    document.getElementById('confirmDetail').innerHTML  = opts.detail  || '';
-    document.getElementById('confirmOk').textContent    = opts.okLabel || '実行する';
+
+    var detailEl = document.getElementById('confirmDetail');
+    var detail = opts.detail || '';
+
+    document.getElementById('confirmTitle').textContent = opts.title || '';
+    document.getElementById('confirmSub').textContent = opts.sub || '';
+    detailEl.innerHTML = detail;
+    detailEl.style.display = detail.trim() ? 'block' : 'none';
+    document.getElementById('confirmOk').textContent = opts.okLabel || '実行する';
+
     document.getElementById('confirmOverlay').classList.add('show');
   });
 }
