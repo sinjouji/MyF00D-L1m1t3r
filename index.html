@@ -196,13 +196,23 @@ db.collection('inventory').onSnapshot(
 var allFoods = [];
 
 db.collection('foods').onSnapshot(function(snap) {
+
   allFoods = snap.docs.map(function(d) {
     return Object.assign({ id: d.id }, d.data());
   });
-});
+
+  foodMap = {};
+
+  allFoods.forEach(function(food) {
+    foodMap[food.id] = food;
+  });
+
   if (invReady) renderHome();
+
 }, function(err) {
+
   console.warn('foods onSnapshot error:', err.code);
+
 });
 
 
