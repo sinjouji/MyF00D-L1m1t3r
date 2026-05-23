@@ -315,6 +315,7 @@ main {
   overflow: hidden;
   transition: max-height 0.35s ease, padding 0.35s ease;
   box-shadow: 0 -4px 20px rgba(100,80,40,0.1);
+  min-width: 0;
 }
 
 .input-panel.open {
@@ -431,6 +432,22 @@ input[type="date"] {
 }
 
 input[type="date"]:focus { border-color: var(--primary); }
+
+.manual-wrap {
+  width: 100%;
+  min-width: 0;
+}
+
+.manual-wrap input[type="date"] {
+  appearance: none;
+  -webkit-appearance: none;
+
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+
+  display: block;
+}
 
 /* ===== メモ入力 ===== */
 .memo-input {
