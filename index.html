@@ -452,11 +452,6 @@ homeManualDate.addEventListener('change', function() {
    トグルパネル：期限登録
    ==================================== */
    
-   if (!docId || !food.foodName) {
-  showToast('❌ 食材データが壊れています');
-  return;
-}
-   
 document.getElementById('homeRegisterBtn').addEventListener('click', async function() {
   if (!homeSelectedFood) {
     showToast('⚠️ 食材を選択してください');
@@ -467,6 +462,12 @@ document.getElementById('homeRegisterBtn').addEventListener('click', async funct
     showToast('⚠️ 期限日を選択してください');
     return;
   }
+  
+     
+  if (!docId || !food.foodName) {
+  showToast('❌ 食材データが壊れています');
+  return;
+}
 
   var food  = homeSelectedFood;
   var date  = homeExpiryDate;
