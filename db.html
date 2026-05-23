@@ -261,7 +261,12 @@ function buildFoodItem(food) {
       try {
         await db.collection('foods').doc(food.id).update({ name: newName, favorite: newFav });
         /* inventory の foodName を同期（foodName は表示用の非正規化） */
-        await db.collection('inventory').doc(food.id).set({ foodName: newName }, { merge: true });
+        if (inv) {
+  await db.collection('inventory').doc(food.id).set(
+    { foodName: newName },
+    { merge: true }
+  );
+}
         showToast('✅ ' + newName + ' を更新しました');
         editingId = null;
       } catch (e) {
