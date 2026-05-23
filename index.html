@@ -398,14 +398,23 @@ function selectHomeFood(food) {
 }
 
 var homeSearchTimer;
+
 homeSearchEl.addEventListener('input', function() {
   clearTimeout(homeSearchTimer);
+
   homeSearchTimer = setTimeout(function() {
+
     homeSelectedFood = null;
     selFoodInfo.style.display = 'none';
 
     var foodList = Object.values(foodMap);
-    var candidates = suggestSort(homeSearchEl.value, foodList, 'name', 8);
+
+    var candidates = suggestSort(
+      homeSearchEl.value,
+      foodList,
+      'name',
+      8
+    );
 
     homeSuggestList.innerHTML = '';
 
@@ -415,11 +424,20 @@ homeSearchEl.addEventListener('input', function() {
     }
 
     candidates.forEach(function(food) {
+
       var div = document.createElement('div');
+
       div.className = 'suggest-item';
+
       div.innerHTML =
-        '<span class="suggest-fav">' + (food.favorite ? '⭐' : '') + '</span>' +
-        '<span class="suggest-name">' + escapeHtml(food.name) + '</span>' +
+        '<span class="suggest-fav">' +
+          (food.favorite ? '⭐' : '') +
+        '</span>' +
+
+        '<span class="suggest-name">' +
+          escapeHtml(food.name) +
+        '</span>' +
+
         '<span class="suggest-badge">食材DB</span>';
 
       div.addEventListener('mousedown', function(e) {
@@ -428,15 +446,19 @@ homeSearchEl.addEventListener('input', function() {
       });
 
       homeSuggestList.appendChild(div);
+
     });
 
     homeSuggestList.classList.add('show');
+
   }, 150);
 });
-homeSearchEl.addEventListener('blur', function() {
-  setTimeout(function() { homeSuggestList.classList.remove('show'); }, 200);
-});
 
+homeSearchEl.addEventListener('blur', function() {
+  setTimeout(function() {
+    homeSuggestList.classList.remove('show');
+  }, 200);
+});
 
 /* ====================================
    トグルパネル：日数テンプレート
