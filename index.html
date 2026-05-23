@@ -477,8 +477,10 @@ document.getElementById('homeRegisterBtn').addEventListener('click', async funct
 
   try {
     /* ★ inventory のドキュメントIDは foodId 固定（upsert） */
-    await db.collection('inventory').doc(food.foodId).set({
-      foodId:    food.foodId,
+    var docId = food.foodId || food.id;
+
+await db.collection('inventory').doc(docId).set({
+      foodId:    docId,
       foodName:  food.foodName,
       expiryDate: date,
       memo:      memo,
