@@ -262,23 +262,37 @@ function renderHome() {
     buildSection('normal',  '📦 在庫中',      normal,   '');
 
   /* カードクリック → トグルパネルを開いてその食材をセット */
-  main.querySelectorAll('.food-card[data-invid]').forEach(function(card) {
-    card.addEventListener('click', function() {
-      var item = inventoryItems.find(function(i) { return i.id === card.dataset.invid; });
-      if (item) { selectHomeFood(item); openPanel(); }
+  main.querySelectorAll('.useup-btn').forEach(function(btn) {
+  btn.addEventListener('click', async function(e) {
+    e.stopPropagation();
+
+    var invId = btn.dataset.id;
+    var item = inventoryItems.find(function(i) {
+      return i.id === invId;
     });
+
+    if (!item) return;
+
+    var ok = await confirmDialog({
+      title: '在庫から消しますか？',
+      sub: '食材DBと履歴は残ります',
+      detail:
+        '<p><span class="dl">食材</span>' + escapeHtml(item.foodName) + '</p>' +
+        '<p><span class="dl">期限</span>' + formatDate(item.expiryDate) + '</p>',
+      okLabel: '使い切った'
+    });
+
+    if (!ok) return;
+
+    try {
+      await db.collection('inventory').doc(item.foodId || item.id).delete();
+      showToast('✅ ' + item.foodName + ' を在庫から消しました');
+    } catch (e) {
+      console.error('在庫削除エラー:', e);
+      showToast('❌ 在庫から消せませんでした');
+    }
   });
-
-  } catch (e) {
-    console.error('[renderHome] crash:', e);
-
-    main.innerHTML =
-      '<div class="empty-state">' +
-      '⚠️ 描画エラー: ' +
-      escapeHtml(e.message || String(e)) +
-      '</div>';
-  }
-}
+});
 
 function buildSection(status, label, items, emptyMsg) {
   /* normal セクションは空なら丸ごと非表示 */
@@ -305,8 +319,9 @@ function buildFoodCard(item, status) {
       (item.memo ? '<div class="food-card-memo">' + escapeHtml(item.memo) + '</div>' : '') +
     '</div>' +
     '<div class="food-card-right">' +
-      '<div class="food-card-date">' + formatDate(item.expiryDate) + '</div>' +
-      '<span class="days-chip ' + status + '">' + label + '</span>' +
+  '<div class="food-card-date">' + formatDate(item.expiryDate) + '</div>' +
+  '<span class="days-chip ' + status + '">' + label + '</span>' +
+  '<button class="mini-action useup-btn" data-action="useup" data-id="' + item.id + '">使い切った</button>' +
     '</div>' +
     '</div>';
 }

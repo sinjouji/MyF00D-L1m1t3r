@@ -246,6 +246,23 @@ main {
 }
 
 
+/*在庫消去*/
+.mini-action {
+  margin-top: 5px;
+  padding: 3px 8px;
+  border: none;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.mini-action:hover {
+  background: var(--primary-l);
+  color: var(--primary-d);
+}
+
 /* ====================================
    ボトムバー（トグル入力パネル）
    ==================================== */
