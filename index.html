@@ -122,249 +122,185 @@
 <script src="firebase-config.js"></script>
 <script src="app.js"></script>
 <script>
-console.log('[index] script start');
-
 /* ============================================================
    index.html — ホームページ スクリプト
 
-   Firestore 操作（このページで直接実行）:
-     db.collection('inventory')  読み取り（onSnapshot）
-     db.collection('foods')      読み取り（onSnapshot）・追加
-     db.collection('inventory').doc(foodId).set()  在庫登録（upsert）
-     db.collection('history').add()                 履歴追加
+   【修正ポイント】
+   ・ホームのサジェストを inventory + foods（DB登録済み）の両方に対応
+   ・selectedFood を必ず { foodId, foodName } 形式に正規化
+   ・DBのみ登録食材（inventory未登録）も期限登録できる
    ============================================================ */
 
-/* ===== 確認ダイアログ初期化 ===== */
 initConfirmDialog();
 
 /* ===== 状態変数 ===== */
-var inventoryItems  = [];   // 在庫リスト（onSnapshot で更新）
-var foodMap         = {};   // { foodId: {id, name, favorite} }（お気に入り参照用）
-var invReady        = false;// 在庫の初回ロード完了フラグ
+var inventoryItems    = [];  // inventory コレクション（expiryDate あり）
+var foodMap           = {};  // foods コレクション { foodId: {id, name, favorite} }
 
-var homeSelectedFood = null;  // トグルパネルで選択中の在庫アイテム
-var homeExpiryDate   = null;  // トグルパネルで選択中の期限日
-
+var homeSelectedFood  = null;  // { foodId, foodName, expiryDate } に正規化済み
+var homeExpiryDate    = null;
 var newFoodIsFav      = false;
 var newFoodExpiry     = null;
-var newFoodExistingId = null;  // 既存食材を選んだ場合の foodId
+var newFoodExistingId = null;
+
+/* 即座に空画面を表示（ローディング解除） */
+renderHome();
 
 
 /* ====================================
-   Firestore リスナー
-   ★ orderBy は使わない → JS でソート → インデックス不要
+   Firestore リスナー（orderBy なし・JSソート）
    ==================================== */
-
-/* 在庫 */
-/* 在庫：まず get() で確実に表示 → その後 onSnapshot */
-function loadInventorySnap(snap) {
-  inventoryItems = snap.docs.map(function(d) {
-    return Object.assign({ id: d.id }, d.data());
-  });
-
-  inventoryItems.sort(function(a, b) {
-    return toDateStr(a.expiryDate).localeCompare(toDateStr(b.expiryDate));
-  });
-
-  invReady = true;
-  renderHome();
-}
-
-db.collection('inventory').get()
-  .then(function(snap) {
-    console.log('[inventory get] OK:', snap.size);
-    loadInventorySnap(snap);
-  })
-  .catch(function(e) {
-    console.error('[inventory get] NG:', e.code, e.message, e);
-    invReady = true;
-    inventoryItems = [];
-    renderHome();
-    showToast('❌ 在庫読み込み失敗: ' + (e.code || e.message));
-  });
 
 db.collection('inventory').onSnapshot(
   function(snap) {
-    console.log('[inventory snapshot] OK:', snap.size);
-    loadInventorySnap(snap);
+    inventoryItems = snap.docs.map(function(d) {
+      return Object.assign({ id: d.id }, d.data());
+    });
+    inventoryItems.sort(function(a, b) {
+      return (a.expiryDate || '').localeCompare(b.expiryDate || '');
+    });
+    renderHome();
   },
   function(err) {
-    console.error('[inventory snapshot] error:', err.code, err.message);
+    console.error('[inventory] error:', err.code, err.message);
+    showBanner('error',
+      '⚠️ 在庫の読み込みに失敗しました<br>' +
+      'エラー: <code>' + err.code + '</code> — ' + err.message + '<br>' +
+      'Firestoreのセキュリティルールが <code>allow read, write: if true</code> か確認してください'
+    );
+    renderHome();
   }
 );
-/* 食材マスタ（お気に入りフラグ取得用） */
-var allFoods = [];
 
-db.collection('foods').onSnapshot(function(snap) {
-
-  allFoods = snap.docs.map(function(d) {
-    return Object.assign({ id: d.id }, d.data());
-  });
-
-  foodMap = {};
-
-  allFoods.forEach(function(food) {
-    foodMap[food.id] = food;
-  });
-
-  if (invReady) renderHome();
-
-}, function(err) {
-
-  console.warn('foods onSnapshot error:', err.code);
-
-});
-
-
-db.collection('inventory').get()
-  .then(function(snap) {
-    console.log('[inventory get] OK:', snap.size);
-    showToast('✅ inventory 読み取りOK: ' + snap.size + '件');
-  })
-  .catch(function(e) {
-    console.error('[inventory get] NG:', e.code, e.message, e);
-    showToast('❌ inventory 読み取り失敗: ' + e.code);
-  });
-
-
-setTimeout(function() {
-  if (!invReady) {
-    invReady = true;
+db.collection('foods').onSnapshot(
+  function(snap) {
+    foodMap = {};
+    snap.docs.forEach(function(d) {
+      foodMap[d.id] = Object.assign({ id: d.id }, d.data());
+    });
     renderHome();
-    showToast('⚠️ Firestoreの初回応答がありません');
-    console.warn('inventory onSnapshot did not respond');
+  },
+  function(err) {
+    console.warn('[foods] error:', err.code, err.message);
   }
-}, 5000);
+);
+
+
+/* ====================================
+   バナー表示
+   ==================================== */
+function showBanner(type, html) {
+  var el = document.getElementById('_banner');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = '_banner';
+    var main = document.getElementById('mainContent');
+    main.parentNode.insertBefore(el, main);
+  }
+  var isErr = type === 'error';
+  el.style.cssText =
+    'background:' + (isErr ? 'var(--expired-bg)' : 'var(--today-bg)') + ';' +
+    'border:2px solid ' + (isErr ? 'var(--expired-b)' : 'var(--today-b)') + ';' +
+    'color:' + (isErr ? 'var(--expired-t)' : 'var(--today-t)') + ';' +
+    'border-radius:var(--r);padding:12px 16px;margin:8px 16px 0;font-size:0.83rem;' +
+    'line-height:1.7;max-width:608px;margin-left:auto;margin-right:auto;display:block;';
+  el.innerHTML = html;
+}
 
 
 /* ====================================
    ホーム レンダリング（4セクション）
    ==================================== */
 function renderHome() {
-  console.log('[renderHome] start');
+  /* inventoryItems にお気に入り情報をマージ */
+  var items = inventoryItems.map(function(inv) {
+    var food = foodMap[inv.foodId] || {};
+    return Object.assign({}, inv, { favorite: !!food.favorite });
+  });
+
+  var expired  = items.filter(function(i) { return getDaysUntil(i.expiryDate) < 0; });
+  var todayArr = items.filter(function(i) { return getDaysUntil(i.expiryDate) === 0; });
+  var soon     = items.filter(function(i) { var d = getDaysUntil(i.expiryDate); return d > 0 && d <= 3; });
+  var normal   = items.filter(function(i) { return getDaysUntil(i.expiryDate) > 3; });
 
   var main = document.getElementById('mainContent');
+  main.innerHTML =
+    buildSection('expired', '🚨 期限切れ', expired,  '期限切れの食材はありません ✨') +
+    buildSection('today',   '⏰ 今日まで', todayArr, '今日期限の食材はありません') +
+    buildSection('soon',    '📅 ３日以内', soon,     '３日以内に期限が来る食材はありません') +
+    buildSection('normal',  '📦 在庫中',   normal,   '');
 
-  if (!invReady) {
-    main.innerHTML = '<div class="empty-state">Firestore接続中...</div>';
-    return;
-  }
-
-  try {
-    var items = inventoryItems.map(function(inv) {
-      var food = foodMap[inv.foodId] || {};
-      return Object.assign({}, inv, { favorite: !!food.favorite });
+  /* カードクリック → トグルパネルを開いてその食材をセット */
+  main.querySelectorAll('.food-card[data-invid]').forEach(function(card) {
+    card.addEventListener('click', function() {
+      var inv = inventoryItems.find(function(i) { return i.id === card.dataset.invid; });
+      if (inv) { selectHomeFood(normalizeInvItem(inv)); openPanel(); }
     });
-
-    var expired  = items.filter(function(i) { return getDaysUntil(i.expiryDate) < 0; });
-    var todayArr = items.filter(function(i) { return getDaysUntil(i.expiryDate) === 0; });
-    var soon     = items.filter(function(i) {
-      var d = getDaysUntil(i.expiryDate);
-      return d > 0 && d <= 3;
-    });
-    var normal   = items.filter(function(i) { return getDaysUntil(i.expiryDate) > 3; });
-
-    main.innerHTML =
-      buildSection('expired', '🚨 期限切れ', expired, '期限切れの食材はありません ✨') +
-      buildSection('today', '⏰ 今日まで', todayArr, '今日期限の食材はありません') +
-      buildSection('soon', '📅 ３日以内', soon, '3日以内に期限が来る食材はありません') +
-      buildSection('normal', '📦 在庫中', normal, '');
-
-    main.querySelectorAll('.food-card[data-invid]').forEach(function(card) {
-      card.addEventListener('click', function() {
-        var item = inventoryItems.find(function(i) {
-          return i.id === card.dataset.invid;
-        });
-        if (item) {
-          selectHomeFood(item);
-          openPanel();
-        }
-      });
-    });
-
-    main.querySelectorAll('.useup-btn').forEach(function(btn) {
-      btn.addEventListener('click', async function(e) {
-        e.stopPropagation();
-
-        var invId = btn.dataset.id;
-        var item = inventoryItems.find(function(i) {
-          return i.id === invId;
-        });
-
-        if (!item) return;
-
-        var ok = await confirmDialog({
-          title: '在庫から消しますか？',
-          sub: '食材DBと履歴は残ります',
-          detail:
-            '<p><span class="dl">食材</span>' + escapeHtml(item.foodName) + '</p>' +
-            '<p><span class="dl">期限</span>' + formatDate(item.expiryDate) + '</p>',
-          okLabel: '使い切った'
-        });
-
-        if (!ok) return;
-
-        try {
-          await db.collection('inventory').doc(item.id).delete();
-
-inventoryItems = inventoryItems.filter(function(i) {
-  return i.id !== item.id && i.foodId !== item.foodId;
-});
-
-renderHome();
-
-showToast('✅ ' + item.foodName + ' を在庫から消しました');
-        } catch (e) {
-          console.error('在庫削除エラー:', e);
-          showToast('❌ 在庫から消せませんでした');
-        }
-      });
-    });
-
-  } catch (e) {
-    console.error('[renderHome] crash:', e);
-    main.innerHTML =
-      '<div class="empty-state">⚠️ 描画エラー: ' +
-      escapeHtml(e.message || String(e)) +
-      '</div>';
-  }
+  });
 }
 
 function buildSection(status, label, items, emptyMsg) {
-  /* normal セクションは空なら丸ごと非表示 */
   if (status === 'normal' && items.length === 0) return '';
   var inner = items.length === 0
     ? '<div class="empty-card">' + emptyMsg + '</div>'
     : items.map(function(i) { return buildFoodCard(i, status); }).join('');
-  return '<section class="expiry-section">' +
-    '<div class="section-head">' +
-      '<span class="badge ' + status + '">' + label + '</span>' +
-      '<span class="section-count">' + items.length + '件</span>' +
-    '</div>' +
-    '<div class="food-grid">' + inner + '</div>' +
-    '</section>';
+  return (
+    '<section class="expiry-section">' +
+      '<div class="section-head">' +
+        '<span class="badge ' + status + '">' + label + '</span>' +
+        '<span class="section-count">' + items.length + '件</span>' +
+      '</div>' +
+      '<div class="food-grid">' + inner + '</div>' +
+    '</section>'
+  );
 }
 
 function buildFoodCard(item, status) {
-  var days  = getDaysUntil(item.expiryDate);
-  var label = daysLabel(days);
-  return '<div class="food-card ' + status + '" data-invid="' + item.id + '">' +
-    '<span class="food-card-fav">' + (item.favorite ? '⭐' : '') + '</span>' +
-    '<div class="food-card-body">' +
-      '<div class="food-card-name">' + escapeHtml(item.foodName) + '</div>' +
-      (item.memo ? '<div class="food-card-memo">' + escapeHtml(item.memo) + '</div>' : '') +
-    '</div>' +
-    '<div class="food-card-right">' +
-  '<div class="food-card-date">' + formatDate(item.expiryDate) + '</div>' +
-  '<span class="days-chip ' + status + '">' + label + '</span>' +
-  '<button class="mini-action useup-btn" data-action="useup" data-id="' + item.id + '">使い切った</button>' +
-    '</div>' +
-    '</div>';
+  var days = getDaysUntil(item.expiryDate);
+  return (
+    '<div class="food-card ' + status + '" data-invid="' + item.id + '">' +
+      '<span class="food-card-fav">' + (item.favorite ? '⭐' : '') + '</span>' +
+      '<div class="food-card-body">' +
+        '<div class="food-card-name">' + escapeHtml(item.foodName) + '</div>' +
+        (item.memo ? '<div class="food-card-memo">' + escapeHtml(item.memo) + '</div>' : '') +
+      '</div>' +
+      '<div class="food-card-right">' +
+        '<div class="food-card-date">' + formatDate(item.expiryDate) + '</div>' +
+        '<span class="days-chip ' + status + '">' + daysLabel(days) + '</span>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
+/**
+ * inventory アイテム → ホーム操作用に正規化
+ * 必ず { foodId, foodName, expiryDate, memo } を持つオブジェクトを返す
+ */
+function normalizeInvItem(inv) {
+  return {
+    foodId:     inv.foodId  || inv.id,   // inventory の doc ID は foodId
+    foodName:   inv.foodName || inv.name || '',
+    expiryDate: inv.expiryDate || null,
+    memo:       inv.memo || ''
+  };
+}
+
+/**
+ * foods コレクションのアイテム → ホーム操作用に正規化
+ * inventory 未登録の食材を選んだときに使う
+ */
+function normalizeFoodItem(food) {
+  return {
+    foodId:     food.id,
+    foodName:   food.name || '',
+    expiryDate: null,
+    memo:       ''
+  };
 }
 
 
 /* ====================================
-   トグルパネル
+   トグルパネル開閉
    ==================================== */
 var toggleBtn  = document.getElementById('toggleBtn');
 var inputPanel = document.getElementById('inputPanel');
@@ -388,101 +324,91 @@ toggleBtn.addEventListener('click', function() {
 
 /* ====================================
    トグルパネル：検索サジェスト
+
+   ★ 修正箇所:
+      inventory（期限登録済み） + foods（DB登録のみ・未在庫）を
+      両方サジェスト候補に含める
    ==================================== */
 var homeSearchEl    = document.getElementById('homeSearch');
 var homeSuggestList = document.getElementById('homeSuggestList');
 var selFoodInfo     = document.getElementById('selectedFoodInfo');
 var selFoodName     = document.getElementById('selectedFoodName');
 
-function selectHomeFood(item) {
-  var foodId =
-    item.foodId || item.id;
-
-  var foodName =
-    item.foodName || item.name;
-
-  if (!foodId || !foodName) {
-    console.warn('[selectHomeFood] invalid item:', item);
-    showToast('❌ 食材データが壊れています');
-    return;
-  }
-
-  homeSelectedFood = {
-    foodId: foodId,
-    foodName: foodName,
-    favorite: !!item.favorite
-  };
-
-  homeSearchEl.value = foodName;
-  selFoodName.textContent = foodName;
+function selectHomeFood(normalized) {
+  /* normalized = { foodId, foodName, expiryDate, memo } */
+  homeSelectedFood        = normalized;
+  homeSearchEl.value      = normalized.foodName;
+  selFoodName.textContent = normalized.foodName;
   selFoodInfo.style.display = 'block';
   homeSuggestList.classList.remove('show');
-
-  console.log('[selectHomeFood] selected:', homeSelectedFood);
 }
 
 var homeSearchTimer;
-
 homeSearchEl.addEventListener('input', function() {
   clearTimeout(homeSearchTimer);
-
   homeSearchTimer = setTimeout(function() {
-
     homeSelectedFood = null;
     selFoodInfo.style.display = 'none';
 
-    var foodList = Object.values(foodMap);
-
-    var candidates = suggestSort(
-      homeSearchEl.value,
-      foodList,
-      'name',
-      8
-    );
-
+    var q = homeSearchEl.value.trim();
     homeSuggestList.innerHTML = '';
+    if (!q) { homeSuggestList.classList.remove('show'); return; }
 
-    if (!candidates.length || !homeSearchEl.value.trim()) {
-      homeSuggestList.classList.remove('show');
-      return;
+    /* ── inventory 候補（期限登録済み） ── */
+    var invCandidates = suggestSort(q, inventoryItems, 'foodName', 8);
+
+    /* ── foods-only 候補（DBにはあるが inventory 未登録） ── */
+    /* inventory に既に入っている foodId を除外する */
+    var invFoodIds = {};
+    inventoryItems.forEach(function(i) { invFoodIds[i.foodId] = true; });
+
+    var foodsOnly = Object.values(foodMap).filter(function(f) {
+      return !invFoodIds[f.id];  // inventory に無いものだけ
+    });
+    var foodCandidates = suggestSort(q, foodsOnly, 'name', 8 - invCandidates.length);
+
+    if (!invCandidates.length && !foodCandidates.length) {
+      homeSuggestList.classList.remove('show'); return;
     }
 
-    candidates.forEach(function(food) {
-
+    /* inventory 候補を表示 */
+    invCandidates.forEach(function(inv) {
       var div = document.createElement('div');
-
       div.className = 'suggest-item';
-
+      var isFav = !!(foodMap[inv.foodId] && foodMap[inv.foodId].favorite);
       div.innerHTML =
-        '<span class="suggest-fav">' +
-          (food.favorite ? '⭐' : '') +
-        '</span>' +
-
-        '<span class="suggest-name">' +
-          escapeHtml(food.name) +
-        '</span>' +
-
-        '<span class="suggest-badge">食材DB</span>';
-
+        '<span class="suggest-fav">' + (isFav ? '⭐' : '') + '</span>' +
+        '<span class="suggest-name">' + escapeHtml(inv.foodName) + '</span>' +
+        '<span class="suggest-badge">' + formatDate(inv.expiryDate) + '</span>';
       div.addEventListener('mousedown', function(e) {
         e.preventDefault();
-        selectHomeFood(food);
+        selectHomeFood(normalizeInvItem(inv));
       });
-
       homeSuggestList.appendChild(div);
+    });
 
+    /* foods-only 候補を表示（「未登録」バッジ付き） */
+    foodCandidates.forEach(function(food) {
+      var div = document.createElement('div');
+      div.className = 'suggest-item';
+      div.innerHTML =
+        '<span class="suggest-fav">' + (food.favorite ? '⭐' : '') + '</span>' +
+        '<span class="suggest-name">' + escapeHtml(food.name) + '</span>' +
+        '<span class="suggest-badge" style="color:var(--accent);">未登録</span>';
+      div.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        selectHomeFood(normalizeFoodItem(food));
+      });
+      homeSuggestList.appendChild(div);
     });
 
     homeSuggestList.classList.add('show');
-
   }, 150);
 });
-
 homeSearchEl.addEventListener('blur', function() {
-  setTimeout(function() {
-    homeSuggestList.classList.remove('show');
-  }, 200);
+  setTimeout(function() { homeSuggestList.classList.remove('show'); }, 200);
 });
+
 
 /* ====================================
    トグルパネル：日数テンプレート
@@ -510,68 +436,57 @@ homeManualDate.addEventListener('change', function() {
 
 /* ====================================
    トグルパネル：期限登録
+
+   ★ homeSelectedFood は必ず { foodId, foodName } を持っている
+      （normalizeInvItem / normalizeFoodItem で正規化済み）
    ==================================== */
-   
 document.getElementById('homeRegisterBtn').addEventListener('click', async function() {
   if (!homeSelectedFood) {
-    showToast('⚠️ 食材を選択してください');
-    homeSearchEl.focus();
-    return;
+    showToast('⚠️ 食材を選択してください'); homeSearchEl.focus(); return;
   }
   if (!homeExpiryDate) {
-    showToast('⚠️ 期限日を選択してください');
-    return;
+    showToast('⚠️ 期限日を選択してください'); return;
   }
-  
-     
-  var food = homeSelectedFood;
 
-console.log('[register] homeSelectedFood:', food);
-
-if (!food || !food.foodId || !food.foodName) {
-  showToast('❌ データが壊れています');
-  console.warn('[register] invalid selected food:', food);
-  return;
-}
-
-  var food  = homeSelectedFood;
-  var date  = homeExpiryDate;
-  var memo  = document.getElementById('homeMemo').value.trim();
+  var food = homeSelectedFood;  /* { foodId, foodName } */
+  var date = homeExpiryDate;
+  var memo = document.getElementById('homeMemo').value.trim();
 
   var ok = await confirmDialog({
     title:   '期限を登録しますか？',
-    detail:  '<p><span class="dl">食材</span>' + escapeHtml(food.foodName) + '</p>' +
-             '<p><span class="dl">期限</span>' + formatDate(date) + '</p>' +
+    detail:  '<p><span class="dl">食材</span>'  + escapeHtml(food.foodName) + '</p>' +
+             '<p><span class="dl">期限</span>'  + formatDate(date) + '</p>' +
              (memo ? '<p><span class="dl">メモ</span>' + escapeHtml(memo) + '</p>' : ''),
     okLabel: '登録する'
   });
   if (!ok) return;
 
   try {
-    /* ★ inventory のドキュメントIDは foodId 固定（upsert） */
-    var docId = food.foodId || food.id;
-
-await db.collection('inventory').doc(docId).set({
-      foodId:    docId,
-      foodName:  food.foodName,
+    /* inventory に upsert（doc ID = foodId で統一） */
+    await db.collection('inventory').doc(food.foodId).set({
+      foodId:     food.foodId,
+      foodName:   food.foodName,
       expiryDate: date,
-      memo:      memo,
-      updatedAt: new Date()
+      memo:       memo,
+      updatedAt:  new Date()
     });
-    /* 履歴を追加 */
+    /* 履歴に追記 */
     await db.collection('history').add({
-      foodId:      food.foodId,
-      foodName:    food.foodName,
-      expiryDate:  date,
-      memo:        memo,
+      foodId:       food.foodId,
+      foodName:     food.foodName,
+      expiryDate:   date,
+      memo:         memo,
       registeredAt: new Date()
     });
     showToast('✅ ' + food.foodName + ' の期限を登録しました');
     resetPanel();
     closePanel();
   } catch (e) {
-    console.error('期限登録エラー:', e.code, e.message, e);
-    showToast('❌ 登録に失敗しました（' + (e.code || e.message) + '）');
+    console.error('[期限登録エラー]', e.code, e.message, e);
+    showBanner('error',
+      '❌ 書き込みに失敗しました<br>' +
+      'エラー: <code>' + (e.code || 'unknown') + '</code> — ' + e.message
+    );
   }
 });
 
@@ -598,20 +513,18 @@ var newFoodManualDate = document.getElementById('newFoodManualDate');
 var newFoodFavBtn     = document.getElementById('newFoodFavBtn');
 
 function openNewFoodModal() {
-  /* 状態リセット */
-  newFoodNameEl.value   = '';
-  newFoodIsFav          = false;
-  newFoodExpiry         = null;
-  newFoodExistingId     = null;
+  newFoodNameEl.value       = '';
+  newFoodIsFav              = false;
+  newFoodExpiry             = null;
+  newFoodExistingId         = null;
   newFoodFavBtn.textContent = '☆';
   newFoodFavBtn.classList.remove('active');
-  newFoodManualDate.value = '';
+  newFoodManualDate.value   = '';
   newFoodManualWrap.classList.remove('show');
   newFoodSuggestEl.innerHTML = '';
   newFoodSuggestEl.classList.remove('show');
   document.getElementById('newFoodMemo').value = '';
   document.querySelectorAll('#newFoodDateBtns .date-btn').forEach(function(b) { b.classList.remove('active'); });
-
   newFoodOverlay.classList.add('show');
   setTimeout(function() { newFoodNameEl.focus(); }, 300);
 }
@@ -624,26 +537,23 @@ document.getElementById('newFoodClose').addEventListener('click', closeNewFoodMo
 newFoodOverlay.addEventListener('click', function(e) {
   if (e.target === newFoodOverlay) closeNewFoodModal();
 });
-
-/* お気に入りトグル */
 newFoodFavBtn.addEventListener('click', function() {
   newFoodIsFav = !newFoodIsFav;
   newFoodFavBtn.textContent = newFoodIsFav ? '⭐' : '☆';
   newFoodFavBtn.classList.toggle('active', newFoodIsFav);
 });
 
-/* 食材名サジェスト（foods コレクションから） */
-var nfSearchTimer;
+/* 食材名サジェスト（foods から） */
+var nfTimer;
 newFoodNameEl.addEventListener('input', function() {
-  clearTimeout(nfSearchTimer);
+  clearTimeout(nfTimer);
   newFoodExistingId = null;
-  nfSearchTimer = setTimeout(function() {
+  nfTimer = setTimeout(function() {
     var foodList = Object.values(foodMap);
     var candidates = suggestSort(newFoodNameEl.value, foodList, 'name', 8);
     newFoodSuggestEl.innerHTML = '';
     if (!candidates.length || !newFoodNameEl.value.trim()) {
-      newFoodSuggestEl.classList.remove('show');
-      return;
+      newFoodSuggestEl.classList.remove('show'); return;
     }
     candidates.forEach(function(food) {
       var div = document.createElement('div');
@@ -690,7 +600,7 @@ newFoodManualDate.addEventListener('change', function() {
 
 /* 新規食材 登録ボタン */
 document.getElementById('newFoodRegisterBtn').addEventListener('click', async function() {
-  var name  = newFoodNameEl.value.trim();
+  var name = newFoodNameEl.value.trim();
   if (!name) { showToast('⚠️ 食材名を入力してください'); newFoodNameEl.focus(); return; }
   if (!newFoodExpiry) { showToast('⚠️ 期限日を選択してください'); return; }
 
@@ -710,14 +620,13 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', async fu
   });
   if (!ok) return;
 
-  /* ★ 確認OK → 即モーダルを閉じる */
   closeNewFoodModal();
 
   try {
     var foodId = existId;
 
     if (!foodId) {
-      /* 新規食材をDBに追加 */
+      /* 新規食材を foods に追加 */
       var ref = await db.collection('foods').add({
         name:      name,
         favorite:  isFav,
@@ -729,7 +638,7 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', async fu
       await db.collection('foods').doc(foodId).update({ favorite: isFav });
     }
 
-    /* 在庫を登録（doc ID = foodId で upsert） */
+    /* inventory に upsert（doc ID = foodId） */
     await db.collection('inventory').doc(foodId).set({
       foodId:     foodId,
       foodName:   name,
@@ -738,7 +647,7 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', async fu
       updatedAt:  new Date()
     });
 
-    /* 履歴を追加 */
+    /* 履歴に追記 */
     await db.collection('history').add({
       foodId:       foodId,
       foodName:     name,
@@ -749,11 +658,13 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', async fu
 
     showToast('✅ ' + name + ' を追加しました');
   } catch (e) {
-    console.error('新規食材追加エラー:', e.code, e.message, e);
-    showToast('❌ 追加に失敗しました（' + (e.code || e.message) + '）');
+    console.error('[新規食材エラー]', e.code, e.message, e);
+    showBanner('error',
+      '❌ 追加に失敗しました<br>' +
+      'エラー: <code>' + (e.code || 'unknown') + '</code> — ' + e.message
+    );
   }
 });
-console.log('[index] script end');
 </script>
 </body>
 </html>
