@@ -159,8 +159,7 @@ db.collection('inventory').onSnapshot(function(snap) {
     return Object.assign({ id: d.id }, d.data());
   });
   inventoryItems.sort(function(a, b) {
-  return toDateStr(a.expiryDate)
-    .localeCompare(toDateStr(b.expiryDate));
+  return toDateStr(a.expiryDate).localeCompare(toDateStr(b.expiryDate));
 });
   invReady = true;
   renderHome();
@@ -182,12 +181,32 @@ db.collection('foods').onSnapshot(function(snap) {
   console.warn('foods onSnapshot error:', err.code);
 });
 
+setTimeout(function() {
+  if (!invReady) {
+    invReady = true;
+    renderHome();
+    showToast('⚠️ Firestoreの初回応答がありません');
+    console.warn('inventory onSnapshot did not respond');
+  }
+}, 5000);
+
 
 /* ====================================
    ホーム レンダリング（4セクション）
    ==================================== */
 function renderHome() {
-  if (!invReady) return;
+  var main = document.getElementById('mainContent');
+
+  if (!invReady) {
+    main.innerHTML =
+      '<div class="empty-state">' +
+      '<div class="empty-state-icon">⏳</div>' +
+      'Firestoreに接続中です…' +
+      '</div>';
+    return;
+  }
+
+  // 以降は今の renderHome の中身
 
   /* お気に入り情報をマージ */
   var items = inventoryItems.map(function(inv) {

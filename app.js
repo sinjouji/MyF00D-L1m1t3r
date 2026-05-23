@@ -71,12 +71,6 @@ function daysLabel(days) {
   return 'あと' + days + '日';
 }
 
-/** "YYYY-MM-DD" → "YYYY/MM/DD" */
-function formatDate(s) {
-  if (!s) return '';
-  var p = s.split('-');
-  return p[0] + '/' + p[1] + '/' + p[2];
-}
 
 /**
  * Firestore Timestamp / Date / 数値秒 → "YYYY/MM/DD HH:MM"
