@@ -193,11 +193,13 @@ db.collection('inventory').onSnapshot(
   }
 );
 /* 食材マスタ（お気に入りフラグ取得用） */
+var allFoods = [];
+
 db.collection('foods').onSnapshot(function(snap) {
-  foodMap = {};
-  snap.docs.forEach(function(d) {
-    foodMap[d.id] = Object.assign({ id: d.id }, d.data());
+  allFoods = snap.docs.map(function(d) {
+    return Object.assign({ id: d.id }, d.data());
   });
+});
   if (invReady) renderHome();
 }, function(err) {
   console.warn('foods onSnapshot error:', err.code);
@@ -382,10 +384,15 @@ var homeSuggestList = document.getElementById('homeSuggestList');
 var selFoodInfo     = document.getElementById('selectedFoodInfo');
 var selFoodName     = document.getElementById('selectedFoodName');
 
-function selectHomeFood(item) {
-  homeSelectedFood        = item;
-  homeSearchEl.value      = item.foodName;
-  selFoodName.textContent = item.foodName;
+function selectHomeFood(food) {
+  homeSelectedFood = {
+    foodId: food.id,
+    foodName: food.name,
+    favorite: !!food.favorite
+  };
+
+  homeSearchEl.value = food.name;
+  selFoodName.textContent = food.name;
   selFoodInfo.style.display = 'block';
   homeSuggestList.classList.remove('show');
 }
@@ -397,25 +404,32 @@ homeSearchEl.addEventListener('input', function() {
     homeSelectedFood = null;
     selFoodInfo.style.display = 'none';
 
-    var candidates = suggestSort(homeSearchEl.value, inventoryItems, 'foodName', 8);
+    var foodList = Object.values(foodMap);
+    var candidates = suggestSort(homeSearchEl.value, foodList, 'name', 8);
+
     homeSuggestList.innerHTML = '';
+
     if (!candidates.length || !homeSearchEl.value.trim()) {
       homeSuggestList.classList.remove('show');
       return;
     }
-    candidates.forEach(function(item) {
+
+    candidates.forEach(function(food) {
       var div = document.createElement('div');
       div.className = 'suggest-item';
       div.innerHTML =
-        '<span class="suggest-fav">' + (foodMap[item.foodId] && foodMap[item.foodId].favorite ? '⭐' : '') + '</span>' +
-        '<span class="suggest-name">' + escapeHtml(item.foodName) + '</span>' +
-        '<span class="suggest-badge">' + formatDate(item.expiryDate) + '</span>';
+        '<span class="suggest-fav">' + (food.favorite ? '⭐' : '') + '</span>' +
+        '<span class="suggest-name">' + escapeHtml(food.name) + '</span>' +
+        '<span class="suggest-badge">食材DB</span>';
+
       div.addEventListener('mousedown', function(e) {
         e.preventDefault();
-        selectHomeFood(item);
+        selectHomeFood(food);
       });
+
       homeSuggestList.appendChild(div);
     });
+
     homeSuggestList.classList.add('show');
   }, 150);
 });
