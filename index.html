@@ -293,7 +293,7 @@ function renderHome() {
         if (!ok) return;
 
         try {
-          await db.collection('inventory').doc(item.foodId || item.id).delete();
+          await db.collection('inventory').doc(item.id).delete();
 
 inventoryItems = inventoryItems.filter(function(i) {
   return i.id !== item.id && i.foodId !== item.foodId;
