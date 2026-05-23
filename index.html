@@ -154,22 +154,42 @@ var newFoodExistingId = null;  // 既存食材を選んだ場合の foodId
    ==================================== */
 
 /* 在庫 */
-db.collection('inventory').onSnapshot(function(snap) {
+/* 在庫：まず get() で確実に表示 → その後 onSnapshot */
+function loadInventorySnap(snap) {
   inventoryItems = snap.docs.map(function(d) {
     return Object.assign({ id: d.id }, d.data());
   });
-  inventoryItems.sort(function(a, b) {
-  return toDateStr(a.expiryDate).localeCompare(toDateStr(b.expiryDate));
-});
-  invReady = true;
-  renderHome();
-}, function(err) {
-  console.error('inventory onSnapshot error:', err.code, err.message);
-  invReady = true;
-  renderHome();
-  showToast('⚠️ 在庫の読み込みに失敗: ' + err.code);
-});
 
+  inventoryItems.sort(function(a, b) {
+    return toDateStr(a.expiryDate).localeCompare(toDateStr(b.expiryDate));
+  });
+
+  invReady = true;
+  renderHome();
+}
+
+db.collection('inventory').get()
+  .then(function(snap) {
+    console.log('[inventory get] OK:', snap.size);
+    loadInventorySnap(snap);
+  })
+  .catch(function(e) {
+    console.error('[inventory get] NG:', e.code, e.message, e);
+    invReady = true;
+    inventoryItems = [];
+    renderHome();
+    showToast('❌ 在庫読み込み失敗: ' + (e.code || e.message));
+  });
+
+db.collection('inventory').onSnapshot(
+  function(snap) {
+    console.log('[inventory snapshot] OK:', snap.size);
+    loadInventorySnap(snap);
+  },
+  function(err) {
+    console.error('[inventory snapshot] error:', err.code, err.message);
+  }
+);
 /* 食材マスタ（お気に入りフラグ取得用） */
 db.collection('foods').onSnapshot(function(snap) {
   foodMap = {};
