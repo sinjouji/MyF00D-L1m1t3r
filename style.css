@@ -312,7 +312,7 @@ main {
   border-top: 2px solid var(--border);
   padding: 0 16px;
   max-height: 0;
-  overflow: hidden;
+  overflow: visible;
   transition: max-height 0.35s ease, padding 0.35s ease;
   box-shadow: 0 -4px 20px rgba(100,80,40,0.1);
 }
@@ -354,7 +354,7 @@ main {
   border-radius: var(--r);
   max-height: 160px;   /* 約3〜5件でスクロール */
   overflow-y: auto;
-  z-index: 400;
+  z-index: 9999;
   box-shadow: var(--shadow-lg);
   display: none;
 }
@@ -417,6 +417,7 @@ main {
 
 input[type="date"] {
   width: 100%;
+  min-width: 0;
   padding: 8px 12px;
   border: 2px solid var(--border);
   border-radius: var(--r-sm);
