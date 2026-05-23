@@ -159,7 +159,8 @@ db.collection('inventory').onSnapshot(function(snap) {
     return Object.assign({ id: d.id }, d.data());
   });
   inventoryItems.sort(function(a, b) {
-  return toDateStr(a.expiryDate).localeCompare(toDateStr(b.expiryDate));
+  return toDateStr(a.expiryDate)
+    .localeCompare(toDateStr(b.expiryDate));
 });
   invReady = true;
   renderHome();

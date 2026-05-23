@@ -105,13 +105,12 @@ function formatDateTime(val) {
 function toDateStr(value) {
   if (!value) return '';
 
-  if (typeof value === 'string') return value.slice(0, 10);
+  if (typeof value === 'string') {
+    return value.slice(0, 10);
+  }
 
   if (typeof value.toDate === 'function') {
-    var d = value.toDate();
-    return d.getFullYear() + '-' +
-      String(d.getMonth() + 1).padStart(2, '0') + '-' +
-      String(d.getDate()).padStart(2, '0');
+    value = value.toDate();
   }
 
   if (value instanceof Date) {
