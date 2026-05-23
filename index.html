@@ -391,9 +391,18 @@ homeSearchEl.addEventListener('input', function() {
     homeSuggestList.innerHTML = '';
     if (!q) { homeSuggestList.classList.remove('show'); return; }
 
-    var exact   = inventoryItems.filter(function(i) { return i.foodName.toLowerCase() === q; });
-    var prefix  = inventoryItems.filter(function(i) { return i.foodName.toLowerCase().startsWith(q) && i.foodName.toLowerCase() !== q; });
-    var partial = inventoryItems.filter(function(i) { return i.foodName.toLowerCase().includes(q) && !i.foodName.toLowerCase().startsWith(q); });
+    var exact   = inventoryItems.filter(function(i) {
+  return i.foodName &&
+         i.foodName.toLowerCase().startsWith(q);
+})
+    var prefix  = inventoryItems.filter(function(i) {
+  return i.foodName &&
+         i.foodName.toLowerCase().startsWith(q);
+})
+    var partial = inventoryItems.filter(function(i) {
+  return i.foodName &&
+         i.foodName.toLowerCase().startsWith(q);
+})
     var candidates = exact.concat(prefix).concat(partial).slice(0, 8);
 
     if (!candidates.length) { homeSuggestList.classList.remove('show'); return; }
@@ -471,7 +480,7 @@ document.getElementById('homeRegisterBtn').addEventListener('click', async funct
   if (!ok) return;
 
   try {
-    await registerInventory(food.foodId, food.foodName, date, memo, food.favorite);
+    await registerInventory(food.foodId || food.id, food.foodName, date, memo, food.favorite);
     showToast('✅ ' + food.foodName + ' の期限を登録しました');
     resetHomePanel();
     closeTogglePanel();
