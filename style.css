@@ -436,14 +436,16 @@ input[type="date"]:focus { border-color: var(--primary); }
 .manual-wrap {
   width: 100%;
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .manual-wrap input[type="date"] {
   height: 42px;
 
-  width: 100%;
+  width: calc(100% - 4px);
   min-width: 0;
-  max-width: 100%;
+  max-width: calc(100% - 4px);
   padding: 0 12px;
   box-sizing: border-box;
 
