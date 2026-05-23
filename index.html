@@ -181,6 +181,18 @@ db.collection('foods').onSnapshot(function(snap) {
   console.warn('foods onSnapshot error:', err.code);
 });
 
+
+db.collection('inventory').get()
+  .then(function(snap) {
+    console.log('[inventory get] OK:', snap.size);
+    showToast('✅ inventory 読み取りOK: ' + snap.size + '件');
+  })
+  .catch(function(e) {
+    console.error('[inventory get] NG:', e.code, e.message, e);
+    showToast('❌ inventory 読み取り失敗: ' + e.code);
+  });
+
+
 setTimeout(function() {
   if (!invReady) {
     invReady = true;
