@@ -210,72 +210,88 @@
 
 <script>
 /* ============================================================
-   history.js  —  履歴ページのロジック
+   history.html — 履歴ページ ロジック（全面書き直し版）
    ============================================================ */
 
-// ===== 状態管理 =====
-let allHistory     = [];   // Firestoreリアルタイム（全履歴）
-let filteredHistory = [];  // フィルター済みリスト
-
-let searchQuery = '';
-let filterFav   = false;
-let dateFrom    = '';
-let dateTo      = '';
-
-const PAGE_SIZE    = 20;   // 1ページあたりの表示件数
-let   currentPage  = 1;
-
-let confirmCallback = null;
+var allHistory      = [];
+var filteredHistory = [];
+var searchQuery = '';
+var filterFav   = false;
+var dateFrom    = '';
+var dateTo      = '';
+var currentPage = 1;
+var PAGE_SIZE   = 20;
 
 
 /* ====================================
-   リアルタイム監視：履歴
+   Promise ベースの確認ダイアログ
    ==================================== */
+var _confirmResolve = null;
 
-// 即座に空表示でローディングを解除
-applyFiltersAndRender();
+function confirmDialog(opts) {
+  return new Promise(function(resolve) {
+    _confirmResolve = resolve;
+    document.getElementById('confirmTitle').textContent = opts.title  || '';
+    document.getElementById('confirmSub').textContent   = opts.sub    || '';
+    document.getElementById('confirmDetail').innerHTML  = opts.detail || '';
+    document.getElementById('confirmOk').textContent    = opts.okLabel || '削除する';
+    document.getElementById('confirmOverlay').classList.add('show');
+  });
+}
+function _closeConfirm(result) {
+  document.getElementById('confirmOverlay').classList.remove('show');
+  if (_confirmResolve) { var fn = _confirmResolve; _confirmResolve = null; fn(result); }
+}
+document.getElementById('confirmOk').addEventListener('click', function() { _closeConfirm(true); });
+document.getElementById('confirmCancel').addEventListener('click', function() { _closeConfirm(false); });
+document.getElementById('confirmOverlay').addEventListener('click', function(e) {
+  if (e.target === document.getElementById('confirmOverlay')) _closeConfirm(false);
+});
 
-onHistorySnapshot(
-  items => {
-    allHistory = items;
+
+/* ====================================
+   履歴リアルタイム監視（orderBy なし → JS でソート）
+   ==================================== */
+applyFiltersAndRender(); // 即座に空表示
+
+db.collection('history').onSnapshot(
+  function(snap) {
+    allHistory = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+    // 登録日の新しい順
+    allHistory.sort(function(a, b) {
+      var ta = a.registeredAt instanceof Date ? a.registeredAt.getTime()
+             : (a.registeredAt?.seconds || 0) * 1000;
+      var tb = b.registeredAt instanceof Date ? b.registeredAt.getTime()
+             : (b.registeredAt?.seconds || 0) * 1000;
+      return tb - ta;
+    });
     applyFiltersAndRender();
   },
-  err => {
-    console.warn('Firebase未接続:', err.message);
-    showHistWarning();
-  }
+  function(err) { console.warn('history エラー:', err.code, err.message); showHistWarning(err.message); }
 );
 
 
 /* ====================================
    フィルター入力イベント
    ==================================== */
-document.getElementById('histSearch').addEventListener('input', e => {
+document.getElementById('histSearch').addEventListener('input', function(e) {
   searchQuery = e.target.value.trim().toLowerCase();
   currentPage = 1;
   applyFiltersAndRender();
 });
-
-document.getElementById('histFavFilter').addEventListener('click', () => {
+document.getElementById('histFavFilter').addEventListener('click', function() {
   filterFav = !filterFav;
-  document.getElementById('histFavFilter').classList.toggle('active', filterFav);
+  this.classList.toggle('active', filterFav);
   currentPage = 1;
   applyFiltersAndRender();
 });
-
-document.getElementById('dateFrom').addEventListener('change', e => {
-  dateFrom = e.target.value;
-  currentPage = 1;
-  applyFiltersAndRender();
+document.getElementById('dateFrom').addEventListener('change', function(e) {
+  dateFrom = e.target.value; currentPage = 1; applyFiltersAndRender();
 });
-
-document.getElementById('dateTo').addEventListener('change', e => {
-  dateTo = e.target.value;
-  currentPage = 1;
-  applyFiltersAndRender();
+document.getElementById('dateTo').addEventListener('change', function(e) {
+  dateTo = e.target.value; currentPage = 1; applyFiltersAndRender();
 });
-
-document.getElementById('clearDateBtn').addEventListener('click', () => {
+document.getElementById('clearDateBtn').addEventListener('click', function() {
   dateFrom = dateTo = '';
   document.getElementById('dateFrom').value = '';
   document.getElementById('dateTo').value   = '';
@@ -288,46 +304,34 @@ document.getElementById('clearDateBtn').addEventListener('click', () => {
    フィルター適用
    ==================================== */
 function applyFiltersAndRender() {
-  let list = [...allHistory];
+  var list = allHistory.slice();
 
-  // キーワード（食材名 or メモ）
   if (searchQuery) {
-    const exact   = list.filter(h =>
-      h.foodName?.toLowerCase() === searchQuery ||
-      h.memo?.toLowerCase() === searchQuery
-    );
-    const prefix  = list.filter(h =>
-      (h.foodName?.toLowerCase().startsWith(searchQuery) && h.foodName?.toLowerCase() !== searchQuery) ||
-      (h.memo?.toLowerCase().startsWith(searchQuery) && h.memo?.toLowerCase() !== searchQuery)
-    );
-    const partial = list.filter(h =>
-      !exact.includes(h) && !prefix.includes(h) && (
-        h.foodName?.toLowerCase().includes(searchQuery) ||
-        h.memo?.toLowerCase().includes(searchQuery)
-      )
-    );
-    list = [...exact, ...prefix, ...partial];
+    var q = searchQuery;
+    var exact   = list.filter(function(h) { return h.foodName?.toLowerCase() === q || h.memo?.toLowerCase() === q; });
+    var prefix  = list.filter(function(h) {
+      return !exact.includes(h) && (h.foodName?.toLowerCase().startsWith(q) || h.memo?.toLowerCase().startsWith(q));
+    });
+    var partial = list.filter(function(h) {
+      return !exact.includes(h) && !prefix.includes(h) &&
+             (h.foodName?.toLowerCase().includes(q) || h.memo?.toLowerCase().includes(q));
+    });
+    list = exact.concat(prefix).concat(partial);
   }
-
-  // お気に入り絞り込み
-  if (filterFav) {
-    list = list.filter(h => h.favorite);
-  }
-
-  // 登録日フィルター
+  if (filterFav) list = list.filter(function(h) { return h.favorite; });
   if (dateFrom) {
-    list = list.filter(h => {
+    var from = new Date(dateFrom);
+    list = list.filter(function(h) {
       if (!h.registeredAt) return false;
-      const d = h.registeredAt.toDate ? h.registeredAt.toDate() : new Date(h.registeredAt);
-      return d >= new Date(dateFrom);
+      var d = h.registeredAt instanceof Date ? h.registeredAt : new Date((h.registeredAt.seconds || 0) * 1000);
+      return d >= from;
     });
   }
   if (dateTo) {
-    list = list.filter(h => {
+    var to = new Date(dateTo); to.setHours(23, 59, 59, 999);
+    list = list.filter(function(h) {
       if (!h.registeredAt) return false;
-      const d = h.registeredAt.toDate ? h.registeredAt.toDate() : new Date(h.registeredAt);
-      const to = new Date(dateTo);
-      to.setHours(23, 59, 59, 999);
+      var d = h.registeredAt instanceof Date ? h.registeredAt : new Date((h.registeredAt.seconds || 0) * 1000);
       return d <= to;
     });
   }
@@ -341,204 +345,143 @@ function applyFiltersAndRender() {
    履歴レンダリング
    ==================================== */
 function renderHistory() {
-  const total    = filteredHistory.length;
-  const totalPgs = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  var total    = filteredHistory.length;
+  var totalPgs = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  currentPage  = Math.min(currentPage, totalPgs);
 
-  // ページ番号を範囲内に収める
-  currentPage = Math.min(currentPage, totalPgs);
+  document.getElementById('histCount').textContent = total + ' 件';
 
-  document.getElementById('histCount').textContent = `${total} 件`;
-
-  const start   = (currentPage - 1) * PAGE_SIZE;
-  const paginated = filteredHistory.slice(start, start + PAGE_SIZE);
-
-  const container = document.getElementById('histList');
+  var start     = (currentPage - 1) * PAGE_SIZE;
+  var paginated = filteredHistory.slice(start, start + PAGE_SIZE);
+  var container = document.getElementById('histList');
 
   if (total === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">📋</div>
-        条件に一致する履歴はありません
-      </div>
-    `;
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div>条件に一致する履歴はありません</div>';
     document.getElementById('pagination').style.display = 'none';
     return;
   }
 
   container.innerHTML = '';
-  paginated.forEach(item => {
-    container.appendChild(renderHistItem(item));
-  });
+  paginated.forEach(function(item) { container.appendChild(renderHistItem(item)); });
 
-  // ページネーション
-  const paginationEl = document.getElementById('pagination');
+  var pEl = document.getElementById('pagination');
   if (totalPgs > 1) {
-    paginationEl.style.display = 'flex';
-    document.getElementById('pageInfo').textContent = `${currentPage} / ${totalPgs}`;
+    pEl.style.display = 'flex';
+    document.getElementById('pageInfo').textContent = currentPage + ' / ' + totalPgs;
     document.getElementById('prevPage').disabled = currentPage === 1;
     document.getElementById('nextPage').disabled = currentPage === totalPgs;
   } else {
-    paginationEl.style.display = 'none';
+    pEl.style.display = 'none';
   }
 }
 
-/** ページ移動 */
-document.getElementById('prevPage').addEventListener('click', () => {
+document.getElementById('prevPage').addEventListener('click', function() {
   if (currentPage > 1) { currentPage--; renderHistory(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 });
-document.getElementById('nextPage').addEventListener('click', () => {
-  const totalPgs = Math.ceil(filteredHistory.length / PAGE_SIZE);
-  if (currentPage < totalPgs) { currentPage++; renderHistory(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+document.getElementById('nextPage').addEventListener('click', function() {
+  if (currentPage < Math.ceil(filteredHistory.length / PAGE_SIZE)) {
+    currentPage++; renderHistory(); window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 });
 
 
 /* ====================================
-   履歴アイテム生成
+   履歴アイテム DOM 生成
    ==================================== */
 function renderHistItem(item) {
-  const wrapper = document.createElement('div');
+  var wrap = document.createElement('div');
+  var status  = item.expiryDate ? getExpiryStatus(item.expiryDate) : 'ok';
+  var regDate = formatDateTime(item.registeredAt);
 
-  // 登録当時の期限ステータスを計算（現在時点から）
-  const expiryStatus = item.expiryDate ? getExpiryStatus(item.expiryDate) : 'ok';
-  const regDate      = formatDateTime(item.registeredAt);
-
-  // キーワードハイライト
-  const hl = (str) => {
+  var hl = function(str) {
     if (!searchQuery || !str) return escapeHtml(str || '');
-    const esc = escapeHtml(searchQuery).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return escapeHtml(str).replace(
-      new RegExp(`(${esc})`, 'gi'),
-      '<span class="highlight">$1</span>'
-    );
+    var pattern = escapeHtml(searchQuery).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return escapeHtml(str).replace(new RegExp('(' + pattern + ')', 'gi'), '<span class="highlight">$1</span>');
   };
 
-  wrapper.innerHTML = `
-    <div class="hist-item">
-      <div class="hist-left">
-        <div class="hist-name">
-          ${item.favorite ? '<span title="お気に入り">⭐</span>' : ''}
-          <span>${hl(item.foodName)}</span>
-          ${item.expiryDate
-            ? `<span class="hist-expiry-chip ${expiryStatus}">${formatDate(item.expiryDate)}</span>`
-            : ''}
-        </div>
-        ${item.memo
-          ? `<div class="hist-memo">💬 ${hl(item.memo)}</div>`
-          : ''}
-        <div class="hist-meta">
-          <span>📅 登録：${regDate}</span>
-        </div>
-      </div>
-      <div class="hist-right">
-        <button class="icon-btn del" data-id="${item.id}" title="削除">🗑️</button>
-      </div>
-    </div>
-  `;
+  wrap.innerHTML =
+    '<div class="hist-item">' +
+      '<div class="hist-left">' +
+        '<div class="hist-name">' +
+          (item.favorite ? '<span>⭐</span>' : '') +
+          '<span>' + hl(item.foodName) + '</span>' +
+          (item.expiryDate ? '<span class="hist-expiry-chip ' + status + '">' + formatDate(item.expiryDate) + '</span>' : '') +
+        '</div>' +
+        (item.memo ? '<div class="hist-memo">💬 ' + hl(item.memo) + '</div>' : '') +
+        '<div class="hist-meta"><span>📅 登録：' + regDate + '</span></div>' +
+      '</div>' +
+      '<div class="hist-right">' +
+        '<button class="icon-btn del" title="削除">🗑️</button>' +
+      '</div>' +
+    '</div>';
 
-  // 削除ボタン
-  wrapper.querySelector('.icon-btn.del').addEventListener('click', () => {
-    showConfirm({
+  wrap.querySelector('.icon-btn.del').addEventListener('click', async function() {
+    var ok = await confirmDialog({
       title:   '履歴を削除しますか？',
       sub:     'この操作は取り消せません',
-      detail:  `
-        <p><span class="dl">食材名</span>${escapeHtml(item.foodName || '')}</p>
-        <p><span class="dl">期限</span>${formatDate(item.expiryDate)}</p>
-        ${item.memo ? `<p><span class="dl">メモ</span>${escapeHtml(item.memo)}</p>` : ''}
-        <p><span class="dl">登録日時</span>${regDate}</p>
-      `,
-      callback: async () => {
-        try {
-          await deleteHistoryItem(item.id);
-          showToast('🗑️ 履歴を削除しました');
-        } catch (e) {
-          handleFirebaseError(e, '削除');
-        }
-      }
+      detail:  '<p><span class="dl">食材名</span>' + escapeHtml(item.foodName || '') + '</p>' +
+               '<p><span class="dl">期限</span>' + formatDate(item.expiryDate) + '</p>' +
+               (item.memo ? '<p><span class="dl">メモ</span>' + escapeHtml(item.memo) + '</p>' : '') +
+               '<p><span class="dl">登録日時</span>' + regDate + '</p>',
+      okLabel: '削除する'
     });
-  });
-
-  return wrapper;
-}
-
-
-/* ====================================
-   一括削除ボタン
-   ==================================== */
-document.getElementById('bulkDeleteBtn').addEventListener('click', () => {
-  if (filteredHistory.length === 0) {
-    showToast('⚠️ 削除する履歴がありません');
-    return;
-  }
-
-  // フィルターが何も掛かっていない場合は全削除の警告を出す
-  const isFiltered = searchQuery || filterFav || dateFrom || dateTo;
-  const label = isFiltered
-    ? `現在の絞り込み条件に一致する ${filteredHistory.length} 件`
-    : `全履歴 ${filteredHistory.length} 件`;
-
-  showConfirm({
-    title:   `${label}を削除しますか？`,
-    sub:     'この操作は取り消せません。削除後は復元できません。',
-    detail:  `<p style="color:var(--expired-t); font-weight:700;">${label}を一括削除します</p>`,
-    callback: async () => {
-      try {
-        // バッチ削除（Firestoreは1バッチ500件制限）
-        const ids  = filteredHistory.map(h => h.id);
-        const SIZE = 400;
-        for (let i = 0; i < ids.length; i += SIZE) {
-          const batch = db.batch();
-          ids.slice(i, i + SIZE).forEach(id => {
-            batch.delete(db.collection('history').doc(id));
-          });
-          await batch.commit();
-        }
-        showToast(`🗑️ ${ids.length} 件の履歴を削除しました`);
-      } catch (e) {
-        handleFirebaseError(e, '一括削除');
-      }
+    if (!ok) return;
+    try {
+      await db.collection('history').doc(item.id).delete();
+      showToast('🗑️ 履歴を削除しました');
+    } catch (e) {
+      showToast('❌ 削除失敗（' + (e.code || e.message) + '）');
     }
   });
+
+  return wrap;
+}
+
+
+/* ====================================
+   一括削除
+   ==================================== */
+document.getElementById('bulkDeleteBtn').addEventListener('click', async function() {
+  if (filteredHistory.length === 0) { showToast('⚠️ 削除する履歴がありません'); return; }
+
+  var isFiltered = searchQuery || filterFav || dateFrom || dateTo;
+  var label = (isFiltered ? '現在の絞り込み条件に一致する ' : '全履歴 ') + filteredHistory.length + ' 件';
+
+  var ok = await confirmDialog({
+    title:   label + 'を削除しますか？',
+    sub:     'この操作は取り消せません',
+    detail:  '<p style="color:var(--expired-t);font-weight:700;">' + label + 'を一括削除します</p>',
+    okLabel: '一括削除する'
+  });
+  if (!ok) return;
+
+  try {
+    var ids = filteredHistory.map(function(h) { return h.id; });
+    for (var i = 0; i < ids.length; i += 400) {
+      var batch = db.batch();
+      ids.slice(i, i + 400).forEach(function(id) {
+        batch.delete(db.collection('history').doc(id));
+      });
+      await batch.commit();
+    }
+    showToast('🗑️ ' + ids.length + ' 件の履歴を削除しました');
+  } catch (e) {
+    showToast('❌ 削除失敗（' + (e.code || e.message) + '）');
+  }
 });
 
 
 /* ====================================
-   確認モーダル（共通）
+   Firebase 警告バナー
    ==================================== */
-const confirmOverlay = document.getElementById('confirmOverlay');
-
-function showConfirm({ title, sub, detail, callback }) {
-  document.getElementById('confirmTitle').textContent = title;
-  document.getElementById('confirmSub').textContent   = sub;
-  document.getElementById('confirmDetail').innerHTML  = detail;
-  confirmCallback = callback;
-  confirmOverlay.classList.add('show');
-}
-
-function hideConfirm() {
-  confirmOverlay.classList.remove('show');
-  confirmCallback = null;
-}
-
-document.getElementById('confirmCancel').addEventListener('click', hideConfirm);
-document.getElementById('confirmOk').addEventListener('click', async () => {
-  // ★ hideConfirm() は confirmCallback を null にするため、先に参照を保存する
-  const cb = confirmCallback;
-  hideConfirm();
-  if (cb) await cb();
-});
-confirmOverlay.addEventListener('click', e => {
-  if (e.target === confirmOverlay) hideConfirm();
-});
-
-/* Firebase未設定警告 */
-let histWarningShown = false;
-function showHistWarning() {
-  if (histWarningShown) return;
-  histWarningShown = true;
-  const el = document.createElement('div');
-  el.style.cssText = `background:var(--today-bg);border:2px solid var(--today-b);color:var(--today-t);border-radius:var(--r);padding:11px 14px;margin-bottom:10px;font-size:0.82rem;line-height:1.6;`;
-  el.innerHTML = `⚠️ <strong>Firebase未設定</strong>：<code>firebase-config.js</code> を設定してください。`;
-  document.querySelector('.list-wrap').insertBefore(el, document.getElementById('histCount'));
+var _warnShown = false;
+function showHistWarning(msg) {
+  if (_warnShown) return; _warnShown = true;
+  var el = document.createElement('div');
+  el.style.cssText = 'background:var(--today-bg);border:2px solid var(--today-b);color:var(--today-t);border-radius:var(--r);padding:11px 14px;margin-bottom:10px;font-size:0.82rem;';
+  el.innerHTML = '⚠️ <strong>Firebase エラー</strong>：' + escapeHtml(msg || '') + '　<code>firebase-config.js</code> を確認してください。';
+  var wrap = document.querySelector('.list-wrap');
+  wrap.insertBefore(el, document.getElementById('histCount'));
 }
 
 </script>

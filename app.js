@@ -54,7 +54,7 @@ async function addFood(name, favorite = false) {
   return await db.collection('foods').add({
     name,
     favorite,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    createdAt: new Date()   // ★ serverTimestamp() の代わりに new Date()（Firestoreが自動変換）
   });
 }
 
@@ -155,7 +155,7 @@ async function registerInventory(foodId, foodName, expiryDate, memo = '', favori
     expiryDate,
     memo,
     favorite,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    updatedAt: new Date()   // ★ serverTimestamp() の代わりに new Date()
   };
 
   // foodId をドキュメントIDとして set()：食材1件につき在庫1件を保証
@@ -195,7 +195,7 @@ async function addHistory(foodId, foodName, expiryDate, memo = '', favorite = fa
     expiryDate,
     memo,
     favorite,
-    registeredAt: firebase.firestore.FieldValue.serverTimestamp()
+    registeredAt: new Date()   // ★ serverTimestamp() の代わりに new Date()
   });
 }
 
