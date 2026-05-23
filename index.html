@@ -269,23 +269,40 @@ db.collection('inventory').onSnapshot(
    ホーム画面レンダリング
    ==================================== */
 function renderHome() {
-  var main    = document.getElementById('mainContent');
-  var expired = inventoryItems.filter(function(i) { return getDaysUntil(i.expiryDate) < 0; });
-  var todayArr = inventoryItems.filter(function(i) { return getDaysUntil(i.expiryDate) === 0; });
-  var soonArr  = inventoryItems.filter(function(i) {
+  var main = document.getElementById('mainContent');
+
+  var validItems = inventoryItems.filter(function(i) {
+    return i && i.foodName && i.expiryDate;
+  });
+
+  var expired = validItems.filter(function(i) {
+    return getDaysUntil(i.expiryDate) < 0;
+  });
+
+  var todayArr = validItems.filter(function(i) {
+    return getDaysUntil(i.expiryDate) === 0;
+  });
+
+  var soonArr = validItems.filter(function(i) {
     var d = getDaysUntil(i.expiryDate);
     return d > 0 && d <= 3;
   });
 
-  main.innerHTML =
-    renderSection('expired', '🚨 期限切れ', expired,  '期限切れの食材はありません ✨') +
-    renderSection('today',   '⏰ 今日まで', todayArr, '今日期限の食材はありません') +
-    renderSection('soon',    '📅 ３日以内', soonArr,  '3日以内に期限が来る食材はありません');
+  var laterArr = validItems.filter(function(i) {
+    return getDaysUntil(i.expiryDate) > 3;
+  });
 
-  // カードクリック → そのままトグルパネルを開いて食材をセット
+  main.innerHTML =
+    renderSection('expired', '🚨 期限切れ', expired, '期限切れの食材はありません ✨') +
+    renderSection('today', '⏰ 今日まで', todayArr, '今日期限の食材はありません') +
+    renderSection('soon', '📅 ３日以内', soonArr, '3日以内に期限が来る食材はありません') +
+    renderSection('ok', '🧊 その他', laterArr, 'その他の登録食材はありません');
+
   main.querySelectorAll('.food-card[data-invid]').forEach(function(card) {
     card.addEventListener('click', function() {
-      var item = inventoryItems.find(function(i) { return i.id === card.dataset.invid; });
+      var item = inventoryItems.find(function(i) {
+        return i.id === card.dataset.invid;
+      });
       if (!item) return;
       selectHomeFood(item);
       openTogglePanel();

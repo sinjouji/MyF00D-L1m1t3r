@@ -262,10 +262,20 @@ renderDb(); // 即座に空表示
 
 db.collection('foods').onSnapshot(
   function(snap) {
-    allFoods = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+    allFoods = snap.docs
+      .map(function(d) {
+        return Object.assign({ id: d.id }, d.data());
+      })
+      .filter(function(f) {
+        return f && typeof f.name === 'string' && f.name.trim();
+      });
+
     renderDb();
   },
-  function(err) { console.warn('foods エラー:', err.code, err.message); showDbWarning(err.message); }
+  function(err) {
+    console.warn('foods エラー:', err.code, err.message);
+    showDbWarning(err.message);
+  }
 );
 
 db.collection('inventory').onSnapshot(
