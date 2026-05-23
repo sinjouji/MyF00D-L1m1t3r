@@ -129,6 +129,110 @@
       align-self: center;
       margin-right: auto;
     }
+    
+    
+/* ===== 買い物アイテム ===== */
+
+.shop-item {
+  display: grid;
+  grid-template-columns: 34px 1fr 30px;
+
+  align-items: center;
+  gap: 10px;
+
+  background: var(--surface);
+  border-radius: var(--r);
+
+  padding: 10px 12px;
+  margin-bottom: 8px;
+
+  box-shadow: var(--shadow);
+}
+
+.shop-check {
+  width: 26px;
+  height: 26px;
+
+  border-radius: 50%;
+
+  border: 2px solid var(--border);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: 800;
+  font-size: 0.9rem;
+
+  color: white;
+  background: var(--surface-2);
+
+  transition: all 0.18s;
+}
+
+.shop-item.is-checked .shop-check {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.shop-item-body {
+  min-width: 0;
+}
+
+.shop-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  flex-wrap: wrap;
+}
+
+.shop-item.is-checked .shop-name {
+  text-decoration: line-through;
+  color: var(--text-3);
+}
+
+.shop-memo {
+  margin-top: 2px;
+
+  font-size: 0.75rem;
+  color: var(--text-3);
+}
+
+.shop-item.is-checked .shop-memo {
+  opacity: 0.7;
+}
+
+.cat-label {
+  font-size: 0.68rem;
+  padding: 1px 7px;
+
+  border-radius: var(--r-full);
+
+  white-space: nowrap;
+}
+
+.cat-label.food {
+  background: var(--primary-l);
+  color: var(--primary-d);
+}
+
+.cat-label.misc {
+  background: #EBE4F5;
+  color: #5A4480;
+}
+
+.shop-item .icon-btn.del {
+  width: 26px;
+  height: 26px;
+
+  font-size: 0.75rem;
+}
+    
+    
   </style>
 </head>
 <body>
