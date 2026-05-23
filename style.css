@@ -312,7 +312,7 @@ main {
   border-top: 2px solid var(--border);
   padding: 0 16px;
   max-height: 0;
-  overflow: visible;
+  overflow: hidden;
   transition: max-height 0.35s ease, padding 0.35s ease;
   box-shadow: 0 -4px 20px rgba(100,80,40,0.1);
 }
@@ -320,7 +320,7 @@ main {
 .input-panel.open {
   max-height: 480px;
   padding: 16px;
-  overflow-y: auto;
+  overflow: visible;
 }
 
 /* ===== 検索バー ===== */
@@ -412,12 +412,15 @@ main {
 .date-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
 
 /* 手動入力（date-btn.manualを押したとき表示） */
-.manual-wrap { margin-bottom: 10px; display: none; }
+.manual-wrap { width: 100%;max-width: 100%;overflow: hidden;margin-bottom: 10px; display: none; }
 .manual-wrap.show { display: block; }
 
 input[type="date"] {
+  display: block;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
+  box-sizing: border-box;
   padding: 8px 12px;
   border: 2px solid var(--border);
   border-radius: var(--r-sm);
