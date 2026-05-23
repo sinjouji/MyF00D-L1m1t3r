@@ -20,17 +20,19 @@ if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
-// Firestoreインスタンスをグローバル変数として公開
 const db = firebase.firestore();
 
+console.log('[firebase-config] loaded');
+console.log('[firebase apps]', firebase.apps.length);
+console.log('[db exists]', !!db);
 // オフライン永続化を有効化（マルチタブ対応で端末ローカルキャッシュ）
 // ※ 同一ブラウザの複数タブで問題が出る場合は experimentalForceOwningTab: true を追加
-db.enablePersistence({ synchronizeTabs: true }).catch(err => {
-  if (err.code === 'failed-precondition') {
+//db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+//  if (err.code === 'failed-precondition') {
     // 複数タブ開いている場合はスキップ（どちらか一方のみ有効）
-    console.warn('[Firestore] 永続化: 複数タブのためスキップ');
-  } else if (err.code === 'unimplemented') {
+//    console.warn('[Firestore] 永続化: 複数タブのためスキップ');
+//  } else if (err.code === 'unimplemented') {
     // ブラウザが永続化非対応の場合はスキップ
-    console.warn('[Firestore] 永続化: このブラウザは非対応');
-  }
-});
+//    console.warn('[Firestore] 永続化: このブラウザは非対応');
+//  }
+//});
