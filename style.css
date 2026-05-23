@@ -441,15 +441,13 @@ input[type="date"]:focus { border-color: var(--primary); }
 }
 
 .manual-wrap input[type="date"] {
-  height: 42px;
-
-  width: calc(100% - 4px);
-  min-width: 0;
-  max-width: calc(100% - 4px);
-  padding: 0 12px;
-  box-sizing: border-box;
-
   display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 0 10px;
+  box-sizing: border-box;
 }
 
 /* ===== メモ入力 ===== */
@@ -611,7 +609,6 @@ input[type="date"]:focus { border-color: var(--primary); }
 .bottom-bar-inner {
   min-width: 0;
   max-width: 100%;
-  overflow-x: visible;
 }
 
 /* ===== 食材名入力行（名前＋お気に入り） ===== */
