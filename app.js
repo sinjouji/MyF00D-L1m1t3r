@@ -254,11 +254,23 @@ function getToday() { return getDateStr(0); }
  * @param {string} expiryDate  "YYYY-MM-DD"
  */
 function getDaysUntil(expiryDate) {
-  const today  = new Date(getToday());
-  const expiry = new Date(expiryDate);
+  if (!expiryDate) return 9999;
+
+  var expiry;
+
+  if (expiryDate.toDate) {
+    expiry = expiryDate.toDate();
+  } else {
+    expiry = new Date(expiryDate);
+  }
+
+  var today = new Date(getToday());
+
+  expiry.setHours(0,0,0,0);
+  today.setHours(0,0,0,0);
+
   return Math.floor((expiry - today) / (1000 * 60 * 60 * 24));
 }
-
 /**
  * 期限ステータスを返す
  * @param {string} expiryDate
