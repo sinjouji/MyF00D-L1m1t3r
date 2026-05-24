@@ -621,6 +621,20 @@ async function addItem() {
   var name = shopNameInput.value.trim();
   if (!name) { showToast('⚠️ アイテム名を入力してください'); shopNameInput.focus(); return; }
 
+  var exists = allItems.some(function(item) {
+  return !item.checked &&
+    item.name.trim().toLowerCase() === name.toLowerCase();
+  });
+
+  if (exists) {
+    showToast('🛒 ' + name + ' は既に買い物リストにあります');
+    shopNameInput.value = '';
+    document.getElementById('shopItemMemo').value = '';
+    shopNameInput.focus();
+    return;
+  }
+
+
   var memo = document.getElementById('shopItemMemo').value.trim();
 
   try {
