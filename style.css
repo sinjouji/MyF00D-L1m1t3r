@@ -27,17 +27,30 @@
   --gold-l:        #FEF5D8;
 
   /* ステータスカラー */
-  --expired-bg:    #FBEBE8;
+  /*期限切れ*/
+  --expired-bg:    #fbe7e7;
+  --expired-border: #e6b7b7;
+  
   --expired-b:     #E8A099;
   --expired-t:     #B44030;
 
-  --today-bg:      #FEF6DF;
+/*今日まで*/
+  --today-bg:      #fff1d8;
+  --today-border: #f2d29b;
+  
   --today-b:       #F0C870;
   --today-t:       #B07820;
 
-  --soon-bg:       #ECF6E5;
+/*３日以内*/
+  --soon-bg:       #e7f6ea;
+  --soon-border: #b7d9be;
+  
   --soon-b:        #A8D090;
   --soon-t:        #4A8030;
+  
+/*在庫*/
+  --normal-bg: #fffffc;
+  --normal-border: #e8e8e8;
 
   /* テキスト */
   --text:          #3A3020;
