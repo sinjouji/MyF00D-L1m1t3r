@@ -354,12 +354,16 @@ db.collection('shoppingItems').onSnapshot(function(snap) {
   allItems = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
   /* 未チェック → チェック済みの順、その中で登録日時順 */
   allItems.sort(function(a, b) {
-    if (a.checked !== b.checked) return (a.checked ? 1 : -1);
+    if (a.checked !== b.checked) {
+  return a.checked ? 1 : -1;
+}
+
+return (a.order || 0) - (b.order || 0);
     var ta = a.createdAt instanceof Date ? a.createdAt.getTime()
            : (a.createdAt && a.createdAt.seconds ? a.createdAt.seconds * 1000 : 0);
     var tb = b.createdAt instanceof Date ? b.createdAt.getTime()
            : (b.createdAt && b.createdAt.seconds ? b.createdAt.seconds * 1000 : 0);
-    return ta - tb;  // 古い順（先に追加したものが上）
+    return (a.order || 0) - (b.order || 0);;  // 古い順（先に追加したものが上）→オーダー順（↑↓変更可能）
   });
   renderShop();
 }, function(err) {
@@ -440,9 +444,88 @@ function buildShopItem(item) {
         (item.memo ? '<div class="shop-memo">' + escapeHtml(item.memo) + '</div>' : '') +
       '</div>' +
       '<div class="list-item-actions">' +
-        '<button class="icon-btn del" title="削除">🗑️</button>' +
-      '</div>' +
+
+  '<button class="icon-btn move-up" title="上へ">↑</button>' +
+  '<button class="icon-btn move-down" title="下へ">↓</button>' +
+
+  '<button class="icon-btn del" title="削除">🗑️</button>' +
+
+'</div>' +
     '</div>';
+    
+    
+  /*↑ボタンの挙動*/
+  wrap.querySelector('.move-up').addEventListener('click', async function(e) {
+  e.stopPropagation();
+
+  var visible = allItems.filter(function(i) {
+    return i.checked === item.checked;
+  });
+
+  var idx = visible.findIndex(function(i) {
+    return i.id === item.id;
+  });
+
+  if (idx <= 0) return;
+
+  var other = visible[idx - 1];
+
+  try {
+    var batch = db.batch();
+
+    batch.update(
+      db.collection('shoppingItems').doc(item.id),
+      { order: other.order || 0 }
+    );
+
+    batch.update(
+      db.collection('shoppingItems').doc(other.id),
+      { order: item.order || 0 }
+    );
+
+    await batch.commit();
+
+  } catch (e) {
+    showToast('❌ 並び替え失敗');
+  }
+});
+
+/*↓ボタンの挙動*/
+wrap.querySelector('.move-down').addEventListener('click', async function(e) {
+  e.stopPropagation();
+
+  var visible = allItems.filter(function(i) {
+    return i.checked === item.checked;
+  });
+
+  var idx = visible.findIndex(function(i) {
+    return i.id === item.id;
+  });
+
+  if (idx === -1 || idx >= visible.length - 1) return;
+
+  var other = visible[idx + 1];
+
+  try {
+    var batch = db.batch();
+
+    batch.update(
+      db.collection('shoppingItems').doc(item.id),
+      { order: other.order || 0 }
+    );
+
+    batch.update(
+      db.collection('shoppingItems').doc(other.id),
+      { order: item.order || 0 }
+    );
+
+    await batch.commit();
+
+  } catch (e) {
+    showToast('❌ 並び替え失敗');
+  }
+});
+
 
   /* チェックトグル */
   wrap.querySelector('.shop-check').addEventListener('click', async function() {
@@ -556,6 +639,9 @@ async function addItem() {
       category:  selCategory,
       memo:      memo,
       checked:   false,
+      
+      order: Date.now(),
+      
       createdAt: new Date()
     });
     /* 入力欄をリセット（カテゴリ選択は維持） */
