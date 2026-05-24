@@ -345,44 +345,55 @@ function renderHome() {
     });
 
     main.querySelectorAll('.useup-btn').forEach(function(btn) {
-      btn.addEventListener('click', async function(e) {
-        e.stopPropagation();
+  btn.addEventListener('click', async function(e) {
 
-        var invId = btn.dataset.id;
-        var item = inventoryItems.find(function(i) {
-          return i.id === invId;
-        });
+    e.stopPropagation();
 
-        if (!item) return;
+    var invId = btn.dataset.id;
 
-        var ok = await confirmDialog({
-          title: '在庫から消しますか？',
-          sub: '食材DBと履歴は残ります',
-          detail:
-            '<p><span class="dl">食材</span>' + escapeHtml(item.foodName) + '</p>' +
-            '<p><span class="dl">期限</span>' + formatDate(item.expiryDate) + '</p>',
-          okLabel: '使い切った'
-        });
+    var inv = inventoryItems.find(function(i) {
+      return i.id === invId;
+    });
 
-        if (!ok) return;
+    if (!inv) return;
 
-        try {
-          await db.collection('inventory').doc(item.id).delete();
-          
-          
-          /* お気に入りは買い物リストへ戻す */
-if (item.favorite) {
+    var food = foodMap[inv.foodId] || {};
 
-  var snap = await db.collection('shoppingItems').get();
+    var item = Object.assign({}, inv, {
+      favorite: !!food.favorite
+    });
 
-  var exists = snap.docs.find(function(d) {
+    var ok = await confirmDialog({
+      title: '在庫から消しますか？',
+      sub: '食材DBと履歴は残ります',
+      detail:
+        '<p><span class="dl">食材</span>' +
+        escapeHtml(item.foodName) +
+        '</p>' +
+        '<p><span class="dl">期限</span>' +
+        formatDate(item.expiryDate) +
+        '</p>',
+      okLabel: '使い切った'
+    });
 
-    var data = d.data();
+    if (!ok) return;
 
-    return (data.name || '').trim().toLowerCase() ===
-      item.foodName.trim().toLowerCase();
+    try {
+
+      await db.collection('inventory')
+        .doc(item.id)
+        .delete();
+
+      /* ここにお気に入り→🛒処理 */
+
+    } catch (e) {
+
+      console.error('在庫削除エラー:', e);
+
+    }
 
   });
+});
 
   if (exists) {
 
