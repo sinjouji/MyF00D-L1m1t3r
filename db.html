@@ -296,11 +296,23 @@ function buildFoodItem(food) {
           '<button class="icon-btn ' + (food.favorite ? 'fav-on' : 'fav-off') + '" data-act="fav">' +
             (food.favorite ? '⭐' : '☆') +
           '</button>' +
+          '<button class="mini-action db-buy-btn">
+  🛒
+</button>' +
           '<button class="icon-btn edit" data-act="edit" title="編集">✏️</button>' +
           '<button class="icon-btn del"  data-act="del"  title="削除">🗑️</button>' +
         '</div>' +
       '</div>';
+      
+      wrap.querySelector('.db-buy-btn')
+  .addEventListener('click', function(e) {
 
+    e.stopPropagation();
+
+    addFoodToShopping(food);
+
+  });
+      
     wrap.querySelectorAll('[data-act]').forEach(function(btn) {
       btn.addEventListener('click', function() { handleAction(btn.dataset.act, food, inv); });
     });
@@ -416,6 +428,64 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', async fu
     showToast('❌ 追加失敗（' + (e.code || e.message) + '）');
   }
 });
+
+
+async function addFoodToShopping(food) {
+
+  try {
+
+    var snap = await db.collection('shoppingItems').get();
+
+    var exists = snap.docs.find(function(d) {
+
+      var data = d.data();
+
+      return (data.name || '').trim().toLowerCase() ===
+        food.name.trim().toLowerCase();
+
+    });
+
+    if (exists) {
+
+      await db.collection('shoppingItems')
+        .doc(exists.id)
+        .update({
+          checked: false,
+          foodId: food.id,
+          order: Date.now()
+        });
+
+      showToast(
+        '🛒 ' + food.name + ' を買い物リストへ戻しました'
+      );
+
+    } else {
+
+      await db.collection('shoppingItems').add({
+        name: food.name,
+        foodId: food.id,
+        category: 'food',
+        memo: '',
+        checked: false,
+        order: Date.now(),
+        createdAt: new Date()
+      });
+
+      showToast(
+        '🛒 ' + food.name + ' を買い物リストへ追加しました'
+      );
+
+    }
+
+  } catch (e) {
+
+    console.error('shopping add error:', e);
+
+    showToast('❌ 買い物リスト追加失敗');
+
+  }
+}
+
 </script>
 </body>
 </html>
