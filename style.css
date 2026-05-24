@@ -1031,3 +1031,27 @@ input.date-filter-input:focus { border-color: var(--primary); }
   .logo { font-size: 1rem; }
   .date-btn { padding: 5px 10px; font-size: 0.78rem; }
 }
+
+
+html {
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+
+body {
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+  position: relative;
+  width: 100%;
+}
+
+body,
+header,
+main,
+.bottom-bar,
+.modal-overlay,
+.page-filter-bar,
+.list-wrap {
+  max-width: 100vw;
+  touch-action: pan-y;
+}
