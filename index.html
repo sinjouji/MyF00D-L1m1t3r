@@ -207,12 +207,12 @@ db.collection('foods').onSnapshot(function(snap) {
     foodMap[food.id] = food;
   });
 
+  applyPendingFoodFromShopping();
+
   if (invReady) renderHome();
 
 }, function(err) {
-
   console.warn('foods onSnapshot error:', err.code);
-
 });
 
 
@@ -465,24 +465,31 @@ var selFoodInfo     = document.getElementById('selectedFoodInfo');
 var selFoodName     = document.getElementById('selectedFoodName');
 
 
-var pendingFoodName =
-  sessionStorage.getItem('pendingFoodName');
+function applyPendingFoodFromShopping() {
+  var pendingFoodId = sessionStorage.getItem('pendingFoodId');
+  var pendingFoodName = sessionStorage.getItem('pendingFoodName');
 
-if (pendingFoodName) {
+  if (!pendingFoodId && !pendingFoodName) return;
 
+  var food = null;
+
+  if (pendingFoodId && foodMap[pendingFoodId]) {
+    food = foodMap[pendingFoodId];
+  } else if (pendingFoodName) {
+    food = Object.values(foodMap).find(function(f) {
+      return f.name === pendingFoodName;
+    });
+  }
+
+  if (!food) return;
+
+  sessionStorage.removeItem('pendingFoodId');
   sessionStorage.removeItem('pendingFoodName');
 
   openPanel();
+  selectHomeFood(food);
 
-  homeSearchEl.value = pendingFoodName;
-
-  homeSearchEl.dispatchEvent(
-    new Event('input')
-  );
-
-  showToast(
-    '📅 期限を登録してください'
-  );
+  showToast('📅 期限を選んで登録してください');
 }
 
 
