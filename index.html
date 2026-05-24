@@ -278,9 +278,9 @@ var normal   = datedItems.filter(function(i) { return getDaysUntil(i.expiryDate)
       buildSection('expired', '🚨 期限切れ', expired, '期限切れの食材はありません ✨') +
       buildSection('today', '⏰ 今日まで', todayArr, '今日期限の食材はありません') +
       buildSection('soon', '📅 ３日以内', soon, '3日以内に期限が来る食材はありません')  +
-      buildSection('normal', '📦 在庫中', normal, '');
+      buildSection('normal', '📦 在庫中', normal, '')
       +
-      buildSection('no-expiry', '🥬 期限なし', noExpiryArr, '期限なしの食材はありません')
+      buildSection('no-expiry', '🥬 期限なし', noExpiryArr, '期限なしの食材はありません');
     
 
        main.querySelectorAll('.food-card[data-invid]').forEach(function(card) {
