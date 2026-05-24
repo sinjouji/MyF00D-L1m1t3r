@@ -294,22 +294,44 @@ function renderHome() {
         if (!item) return;
 
         try {
-          await db.collection('shoppingItems').add({
-            name: item.foodName,
-            category: 'food',
-            memo: '',
-            checked: false,
-            
-            order: Date.now(),
-            
-            createdAt: new Date()
-          });
 
-          showToast('🛒 ' + item.foodName + ' を買い物リストに追加しました');
-        } catch (e) {
-          console.error('買い物追加エラー:', e);
-          showToast('❌ 買い物リストに追加できませんでした');
-        }
+  var exists = allItems.find(function(s) {
+    return s.name.trim().toLowerCase() ===
+      item.foodName.trim().toLowerCase();
+  });
+
+  if (exists) {
+
+    await db.collection('shoppingItems')
+      .doc(exists.id)
+      .update({
+        checked: false,
+        order: Date.now()
+      });
+
+    showToast('🛒 ' + item.foodName + ' を買い物リストへ戻しました');
+
+  } else {
+
+    await db.collection('shoppingItems').add({
+      name: item.foodName,
+      category: 'food',
+      memo: '',
+      checked: false,
+
+      order: Date.now(),
+
+      createdAt: new Date()
+    });
+
+    showToast('🛒 ' + item.foodName + ' を買い物リストに追加しました');
+
+  }
+
+} catch (e) {
+  console.error('買い物追加エラー:', e);
+  showToast('❌ 買い物リストに追加できませんでした');
+}
       });
     });
 
