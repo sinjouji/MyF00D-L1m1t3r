@@ -48,6 +48,7 @@
 
       <!-- 日数テンプレート -->
       <div class="date-templates" id="homeDateBtns">
+        <button class="date-btn" data-days="none">期限なし</button>
         <button class="date-btn" data-days="0">今日</button>
         <button class="date-btn" data-days="1">明日</button>
         <button class="date-btn" data-days="3">３日後</button>
@@ -87,6 +88,7 @@
     </div>
     <div class="suggest-list modal-suggest-list" id="newFoodSuggestList"></div>
     <div class="date-templates" id="newFoodDateBtns">
+      <button class="date-btn" data-days="none">期限なし</button>
       <button class="date-btn" data-days="0">今日</button>
       <button class="date-btn" data-days="1">明日</button>
       <button class="date-btn" data-days="3">３日後</button>
@@ -256,18 +258,28 @@ function renderHome() {
       return Object.assign({}, inv, { favorite: !!food.favorite });
     });
 
-    var expired  = items.filter(function(i) { return getDaysUntil(i.expiryDate) < 0; });
-    var todayArr = items.filter(function(i) { return getDaysUntil(i.expiryDate) === 0; });
-    var soon     = items.filter(function(i) {
-      var d = getDaysUntil(i.expiryDate);
-      return d > 0 && d <= 3;
-    });
-    var normal   = items.filter(function(i) { return getDaysUntil(i.expiryDate) > 3; });
+var noExpiryArr = items.filter(function(i) {
+  return i.noExpiry || !i.expiryDate;
+});
+
+var datedItems = items.filter(function(i) {
+  return !i.noExpiry && i.expiryDate;
+});
+
+    var expired  = datedItems.filter(function(i) { return getDaysUntil(i.expiryDate) < 0; });
+var todayArr = datedItems.filter(function(i) { return getDaysUntil(i.expiryDate) === 0; });
+var soon     = datedItems.filter(function(i) {
+  var d = getDaysUntil(i.expiryDate);
+  return d > 0 && d <= 3;
+});
+var normal   = datedItems.filter(function(i) { return getDaysUntil(i.expiryDate) > 3; });
 
     main.innerHTML =
       buildSection('expired', '🚨 期限切れ', expired, '期限切れの食材はありません ✨') +
       buildSection('today', '⏰ 今日まで', todayArr, '今日期限の食材はありません') +
       buildSection('soon', '📅 ３日以内', soon, '3日以内に期限が来る食材はありません') +
+      buildSection('no-expiry', '🥬 期限なし', noExpiryArr, '')
+     +
       buildSection('normal', '📦 在庫中', normal, '');
 
        main.querySelectorAll('.food-card[data-invid]').forEach(function(card) {
@@ -424,7 +436,14 @@ function buildSection(status, label, items, emptyMsg) {
 
 function buildFoodCard(item, status) {
   var days  = getDaysUntil(item.expiryDate);
-  var label = daysLabel(days);
+  var label = item.noExpiry || !item.expiryDate
+  ? '期限なし'
+  : daysLabel(getDaysUntil(item.expiryDate));
+
+var dateText = item.noExpiry || !item.expiryDate
+  ? ''
+  : formatDate(item.expiryDate);
+  
   return '<div class="food-card ' + status + '" data-invid="' + item.id + '">' +
     '<span class="food-card-fav">' + (item.favorite ? '⭐' : '') + '</span>' +
     '<div class="food-card-body">' +
@@ -434,7 +453,7 @@ function buildFoodCard(item, status) {
     '<div class="food-card-right">' +
 
   '<div class="food-card-top">' +
-    '<div class="food-card-date">' + formatDate(item.expiryDate) + '</div>' +
+    '<div class="food-card-date">' + dateText + '</div>' +
     '<span class="days-chip ' + status + '">' + label + '</span>' +
   '</div>' +
 
@@ -608,23 +627,22 @@ document.querySelectorAll('#homeDateBtns .date-btn').forEach(function(btn) {
   btn.addEventListener('click', function() {
     document.querySelectorAll('#homeDateBtns .date-btn').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
-    if (btn.dataset.days === 'manual') {
-
+    if (btn.dataset.days === 'none') {
+  homeManualWrap.classList.remove('show');
+  homeExpiryDate = 'none';
+} else if (btn.dataset.days === 'manual') {
   homeManualWrap.classList.add('show');
 
   setTimeout(function() {
-
     homeManualDate.showPicker?.();
-
     homeManualDate.focus();
-
     homeManualDate.click();
-
   }, 50);
 
-  homeExpiryDate =
-    homeManualDate.value || null;
-
+  homeExpiryDate = homeManualDate.value || null;
+} else {
+  homeManualWrap.classList.remove('show');
+  homeExpiryDate = getDateStr(Number(btn.dataset.days));
 } else {
       homeManualWrap.classList.remove('show');
       homeExpiryDate = getDateStr(Number(btn.dataset.days));
@@ -678,22 +696,25 @@ if (!food || !food.foodId || !food.foodName) {
   try {
     /* ★ inventory のドキュメントIDは foodId 固定（upsert） */
     var docId = food.foodId || food.id;
+    var noExpiry = date === 'none';
 
 await db.collection('inventory').doc(docId).set({
-      foodId:    docId,
-      foodName:  food.foodName,
-      expiryDate: date,
-      memo:      memo,
-      updatedAt: new Date()
-    });
+  foodId: docId,
+  foodName: food.foodName,
+  expiryDate: noExpiry ? '' : date,
+  noExpiry: noExpiry,
+  memo: memo,
+  updatedAt: new Date()
+});
     /* 履歴を追加 */
     await db.collection('history').add({
-      foodId:      food.foodId,
-      foodName:    food.foodName,
-      expiryDate:  date,
-      memo:        memo,
-      registeredAt: new Date()
-    });
+  foodId: food.foodId,
+  foodName: food.foodName,
+  expiryDate: noExpiry ? '' : date,
+  noExpiry: noExpiry,
+  memo: memo,
+  registeredAt: new Date()
+});
     showToast('✅ ' + food.foodName + ' の期限を登録しました');
     resetPanel();
     closePanel();
@@ -803,23 +824,22 @@ document.querySelectorAll('#newFoodDateBtns .date-btn').forEach(function(btn) {
   btn.addEventListener('click', function() {
     document.querySelectorAll('#newFoodDateBtns .date-btn').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
-    if (btn.dataset.days === 'manual') {
-
+    if (btn.dataset.days === 'none') {
+  newFoodManualWrap.classList.remove('show');
+  newFoodExpiry = 'none';
+} else if (btn.dataset.days === 'manual') {
   newFoodManualWrap.classList.add('show');
 
   setTimeout(function() {
-
     newFoodManualDate.showPicker?.();
-
     newFoodManualDate.focus();
-
     newFoodManualDate.click();
-
   }, 50);
 
-  newFoodExpiry =
-    newFoodManualDate.value || null;
-
+  newFoodExpiry = newFoodManualDate.value || null;
+} else {
+  newFoodManualWrap.classList.remove('show');
+  newFoodExpiry = getDateStr(Number(btn.dataset.days));
 } else {
       newFoodManualWrap.classList.remove('show');
       newFoodExpiry = getDateStr(Number(btn.dataset.days));
@@ -840,6 +860,7 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', async fu
   var isFav   = newFoodIsFav;
   var expiry  = newFoodExpiry;
   var existId = newFoodExistingId;
+  var noExpiry = expiry === 'none';
 
   var ok = await confirmDialog({
     title:   existId ? '期限を登録しますか？' : '新規食材を追加しますか？',
@@ -875,7 +896,8 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', async fu
     await db.collection('inventory').doc(foodId).set({
       foodId:     foodId,
       foodName:   name,
-      expiryDate: expiry,
+      expiryDate: noExpiry ? '' : date,
+      noExpiry:   noExpiry,
       memo:       memo,
       updatedAt:  new Date()
     });
@@ -884,7 +906,8 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', async fu
     await db.collection('history').add({
       foodId:       foodId,
       foodName:     name,
-      expiryDate:   expiry,
+      expiryDate:   noExpiry ? '' : date,
+      noExpiry:     noExpiry,
       memo:         memo,
       registeredAt: new Date()
     });
