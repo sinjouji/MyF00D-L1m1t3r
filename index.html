@@ -368,6 +368,64 @@ function renderHome() {
 
         try {
           await db.collection('inventory').doc(item.id).delete();
+          
+          
+          /* お気に入りは買い物リストへ戻す */
+if (item.favorite) {
+
+  var snap = await db.collection('shoppingItems').get();
+
+  var exists = snap.docs.find(function(d) {
+
+    var data = d.data();
+
+    return (data.name || '').trim().toLowerCase() ===
+      item.foodName.trim().toLowerCase();
+
+  });
+
+  if (exists) {
+
+    await db.collection('shoppingItems')
+      .doc(exists.id)
+      .update({
+        checked: false,
+        order: Date.now(),
+
+        foodId: item.foodId || item.id
+      });
+
+    showToast(
+      '🛒 ' +
+      item.foodName +
+      ' を買い物リストへ戻しました'
+    );
+
+  } else {
+
+    await db.collection('shoppingItems').add({
+      name: item.foodName,
+
+      foodId: item.foodId || item.id,
+
+      category: 'food',
+      memo: '',
+      checked: false,
+
+      order: Date.now(),
+
+      createdAt: new Date()
+    });
+
+    showToast(
+      '🛒 ' +
+      item.foodName +
+      ' を買い物リストへ追加しました'
+    );
+
+  }
+}
+          
 
           inventoryItems = inventoryItems.filter(function(i) {
             return i.id !== item.id && i.foodId !== item.foodId;
@@ -375,7 +433,9 @@ function renderHome() {
 
           renderHome();
 
-          showToast('✅ ' + item.foodName + ' を在庫から消しました');
+          if (!item.favorite) {
+  showToast('✅ ' + item.foodName + ' を在庫から消しました');
+}
         } catch (e) {
           console.error('在庫削除エラー:', e);
           showToast('❌ 在庫から消せませんでした');
