@@ -785,7 +785,11 @@ document.getElementById('homeRegisterBtn').addEventListener('click', async funct
 
 console.log('[register] homeSelectedFood:', food);
 
-if (!food || !food.foodId || !food.foodName) {
+if (
+  !food ||
+  !food.foodName ||
+  (!food.isNew && !food.foodId)
+) {
   showToast('❌ データが壊れています');
   console.warn('[register] invalid selected food:', food);
   return;
