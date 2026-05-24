@@ -502,55 +502,35 @@ function buildShopItem(item) {
 }
 
 async function toggleShoppingChecked(item) {
-
   var nextChecked = !item.checked;
 
-  /* 食材を「買った」にする時だけ確認 */
-  if (
-    item.category === 'food' &&
-    nextChecked
-  ) {
-
-    var ok = await confirmDialog({
-      title: '期限登録しますか？',
-      sub: '買った食材を在庫へ登録できます',
-      detail:
-        '<p><span class="dl">食材</span>' +
-        escapeHtml(item.name) +
-        '</p>',
-      okLabel: '期限登録する'
-    });
-
-    /* OK → ホームへ */
-    if (ok) {
-
-      sessionStorage.setItem(
-        'pendingFoodName',
-        item.name
-      );
-
-      window.location.href = 'index.html';
-
-      return;
-    }
-  }
-
   try {
-
     await db.collection('shoppingItems')
       .doc(item.id)
       .update({
         checked: nextChecked
       });
 
+    if (item.foodId && nextChecked) {
+      var ok = await confirmDialog({
+        title: '期限登録しますか？',
+        sub: '買った食材を在庫へ登録できます',
+        detail:
+          '<p><span class="dl">食材</span>' +
+          escapeHtml(item.name) +
+          '</p>',
+        okLabel: '期限登録する'
+      });
+
+      if (ok) {
+        sessionStorage.setItem('pendingFoodId', item.foodId);
+        sessionStorage.setItem('pendingFoodName', item.name);
+        window.location.href = 'index.html';
+      }
+    }
+
   } catch (e) {
-
-    showToast(
-      '❌ 更新失敗（' +
-      (e.code || e.message) +
-      '）'
-    );
-
+    showToast('❌ 更新失敗（' + (e.code || e.message) + '）');
   }
 }
 

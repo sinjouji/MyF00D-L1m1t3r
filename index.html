@@ -309,26 +309,26 @@ function renderHome() {
   if (exists) {
 
     await db.collection('shoppingItems')
-      .doc(exists.id)
-      .update({
-        checked: false,
-        order: Date.now()
-      });
+  .doc(exists.id)
+  .update({
+    checked: false,
+    foodId: item.foodId || item.id,
+    order: Date.now()
+  });
 
     showToast('🛒 ' + item.foodName + ' を買い物リストへ戻しました');
 
   } else {
 
     await db.collection('shoppingItems').add({
-      name: item.foodName,
-      category: 'food',
-      memo: '',
-      checked: false,
-
-      order: Date.now(),
-
-      createdAt: new Date()
-    });
+  name: item.foodName,
+  foodId: item.foodId || item.id,
+  category: 'food',
+  memo: '',
+  checked: false,
+  order: Date.now(),
+  createdAt: new Date()
+});
 
     showToast('🛒 ' + item.foodName + ' を買い物リストに追加しました');
 
