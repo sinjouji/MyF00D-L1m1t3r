@@ -502,48 +502,55 @@ function buildShopItem(item) {
 }
 
 async function toggleShoppingChecked(item) {
-  try {
-    await db.collection('shoppingItems').doc(item.id).update({
-      checked: !item.checked
+
+  var nextChecked = !item.checked;
+
+  /* 食材を「買った」にする時だけ確認 */
+  if (
+    item.category === 'food' &&
+    nextChecked
+  ) {
+
+    var ok = await confirmDialog({
+      title: '期限登録しますか？',
+      sub: '買った食材を在庫へ登録できます',
+      detail:
+        '<p><span class="dl">食材</span>' +
+        escapeHtml(item.name) +
+        '</p>',
+      okLabel: '期限登録する'
     });
-  } catch (e) {
-    showToast('❌ 更新失敗（' + (e.code || e.message) + '）');
+
+    /* OK → ホームへ */
+    if (ok) {
+
+      sessionStorage.setItem(
+        'pendingFoodName',
+        item.name
+      );
+
+      window.location.href = 'index.html';
+
+      return;
+    }
   }
-}
-
-async function moveShoppingItem(item, direction) {
-  var visible = allItems.filter(function(i) {
-    return i.checked === item.checked &&
-      (filterCat === 'all' || i.category === filterCat);
-  });
-
-  visible.sort(function(a, b) {
-    return (a.order || 0) - (b.order || 0);
-  });
-
-  var idx = visible.findIndex(function(i) {
-    return i.id === item.id;
-  });
-
-  var other = visible[idx + direction];
-
-  if (!other) return;
 
   try {
-    var batch = db.batch();
 
-    batch.update(db.collection('shoppingItems').doc(item.id), {
-      order: other.order || 0
-    });
-
-    batch.update(db.collection('shoppingItems').doc(other.id), {
-      order: item.order || 0
-    });
-
-    await batch.commit();
+    await db.collection('shoppingItems')
+      .doc(item.id)
+      .update({
+        checked: nextChecked
+      });
 
   } catch (e) {
-    showToast('❌ 並び替え失敗');
+
+    showToast(
+      '❌ 更新失敗（' +
+      (e.code || e.message) +
+      '）'
+    );
+
   }
 }
 

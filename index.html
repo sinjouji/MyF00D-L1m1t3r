@@ -464,6 +464,28 @@ var homeSuggestList = document.getElementById('homeSuggestList');
 var selFoodInfo     = document.getElementById('selectedFoodInfo');
 var selFoodName     = document.getElementById('selectedFoodName');
 
+
+var pendingFoodName =
+  sessionStorage.getItem('pendingFoodName');
+
+if (pendingFoodName) {
+
+  sessionStorage.removeItem('pendingFoodName');
+
+  openPanel();
+
+  homeSearchEl.value = pendingFoodName;
+
+  homeSearchEl.dispatchEvent(
+    new Event('input')
+  );
+
+  showToast(
+    '📅 期限を登録してください'
+  );
+}
+
+
 function selectHomeFood(item) {
   var foodId =
     item.foodId || item.id;
