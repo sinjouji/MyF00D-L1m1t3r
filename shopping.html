@@ -231,6 +231,41 @@
 
   font-size: 0.75rem;
 }
+
+/*↑↓入れ替えボタン*/
+.shop-item {
+  grid-template-columns: 34px 1fr auto;
+}
+
+.shop-item .list-item-actions {
+  display: grid;
+  grid-template-columns: 36px 36px;
+  grid-template-rows: 36px 36px;
+  gap: 6px;
+}
+
+.shop-item .move-up,
+.shop-item .move-down,
+.shop-item .icon-btn.del {
+  width: 36px;
+  height: 36px;
+  font-size: 1rem;
+}
+
+.shop-item .move-up {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.shop-item .move-down {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.shop-item .icon-btn.del {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
     
     
   </style>
