@@ -810,7 +810,6 @@ if (!food || !food.foodId || !food.foodName) {
     var docId;
 
 if (food.isNew) {
-
   var ref = await db.collection('foods').add({
     name: food.foodName,
     favorite: false,
@@ -818,11 +817,8 @@ if (food.isNew) {
   });
 
   docId = ref.id;
-
 } else {
-
   docId = food.foodId || food.id;
-
 }
     
     
