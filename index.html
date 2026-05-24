@@ -323,17 +323,7 @@ function renderHome() {
         .delete();
 
       /* ここにお気に入り→🛒処理 */
-      var inv = inventoryItems.find(function(i) {
-  return i.id === invId;
-});
-
-if (!inv) return;
-
-var food = foodMap[inv.foodId] || {};
-
-var item = Object.assign({}, inv, {
-  favorite: !!food.favorite
-});
+      
       
       
 
