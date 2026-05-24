@@ -625,8 +625,7 @@ document.querySelectorAll('#homeDateBtns .date-btn').forEach(function(btn) {
   homeExpiryDate =
     homeManualDate.value || null;
 
-}
-    } else {
+} else {
       homeManualWrap.classList.remove('show');
       homeExpiryDate = getDateStr(Number(btn.dataset.days));
     }
@@ -821,8 +820,7 @@ document.querySelectorAll('#newFoodDateBtns .date-btn').forEach(function(btn) {
   newFoodExpiry =
     newFoodManualDate.value || null;
 
-}
-    } else {
+} else {
       newFoodManualWrap.classList.remove('show');
       newFoodExpiry = getDateStr(Number(btn.dataset.days));
     }
