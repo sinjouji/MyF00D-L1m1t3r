@@ -332,32 +332,7 @@ function renderHome() {
 
   });
 });
-          
 
-          inventoryItems = inventoryItems.filter(function(i) {
-            return i.id !== item.id && i.foodId !== item.foodId;
-          });
-
-          renderHome();
-
-          if (!item.favorite) {
-  showToast('✅ ' + item.foodName + ' を在庫から消しました');
-}
-        } catch (e) {
-          console.error('在庫削除エラー:', e);
-          showToast('❌ 在庫から消せませんでした');
-        }
-      });
-    });
-
-  } catch (e) {
-    console.error('[renderHome] crash:', e);
-    main.innerHTML =
-      '<div class="empty-state">⚠️ 描画エラー: ' +
-      escapeHtml(e.message || String(e)) +
-      '</div>';
-  }
-}
 
 function buildSection(status, label, items, emptyMsg) {
   /* normal セクションは空なら丸ごと非表示 */
