@@ -295,9 +295,15 @@ function renderHome() {
 
         try {
 
-  var exists = allItems.find(function(s) {
-    return s.name.trim().toLowerCase() ===
+  var snap = await db.collection('shoppingItems').get();
+
+  var exists = snap.docs.find(function(d) {
+
+    var data = d.data();
+
+    return (data.name || '').trim().toLowerCase() ===
       item.foodName.trim().toLowerCase();
+
   });
 
   if (exists) {
@@ -329,8 +335,11 @@ function renderHome() {
   }
 
 } catch (e) {
+
   console.error('買い物追加エラー:', e);
+
   showToast('❌ 買い物リストに追加できませんでした');
+
 }
       });
     });
