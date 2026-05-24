@@ -293,6 +293,79 @@ var normal   = datedItems.filter(function(i) { return getDaysUntil(i.expiryDate)
         }
       });
     });
+    
+    
+    main.querySelectorAll('.buy-btn').forEach(function(btn) {
+
+  btn.addEventListener('click', async function(e) {
+
+    e.stopPropagation();
+
+    var invId = btn.dataset.id;
+
+    var item = inventoryItems.find(function(i) {
+      return i.id === invId;
+    });
+
+    if (!item) return;
+
+    try {
+
+      var snap = await db.collection('shoppingItems').get();
+
+      var exists = snap.docs.find(function(d) {
+
+        var data = d.data();
+
+        return (data.name || '').trim().toLowerCase() ===
+          item.foodName.trim().toLowerCase();
+
+      });
+
+      if (exists) {
+
+        await db.collection('shoppingItems')
+          .doc(exists.id)
+          .update({
+            checked: false,
+            foodId: item.foodId || item.id,
+            order: Date.now()
+          });
+
+        showToast(
+          '🛒 ' + item.foodName + ' を買い物リストへ戻しました'
+        );
+
+      } else {
+
+        await db.collection('shoppingItems').add({
+          name: item.foodName,
+          foodId: item.foodId || item.id,
+          category: 'food',
+          memo: '',
+          checked: false,
+          order: Date.now(),
+          createdAt: new Date()
+        });
+
+        showToast(
+          '🛒 ' + item.foodName + ' を買い物リストに追加しました'
+        );
+
+      }
+
+    } catch (e) {
+
+      console.error('買い物追加エラー:', e);
+
+      showToast('❌ 買い物リストに追加できませんでした');
+
+    }
+
+  });
+
+});
+    
 
     main.querySelectorAll('.useup-btn').forEach(function(btn) {
 
@@ -818,28 +891,53 @@ newFoodNameEl.addEventListener('blur', function() {
 
 /* 日数テンプレート */
 document.querySelectorAll('#newFoodDateBtns .date-btn').forEach(function(btn) {
+
   btn.addEventListener('click', function() {
-    document.querySelectorAll('#newFoodDateBtns .date-btn').forEach(function(b) { b.classList.remove('active'); });
+
+    document.querySelectorAll('#newFoodDateBtns .date-btn')
+      .forEach(function(b) {
+        b.classList.remove('active');
+      });
+
     btn.classList.add('active');
+
     if (btn.dataset.days === 'none') {
-  homeManualWrap.classList.remove('show');
-  homeExpiryDate = 'none';
-} else if (btn.dataset.days === 'manual') {
-  homeManualWrap.classList.add('show');
 
-  setTimeout(function() {
-    homeManualDate.showPicker?.();
-    homeManualDate.focus();
-    homeManualDate.click();
-  }, 50);
+      newFoodManualWrap.classList.remove('show');
 
-  homeExpiryDate = homeManualDate.value || null;
-} else {
-  homeManualWrap.classList.remove('show');
-  homeExpiryDate = getDateStr(Number(btn.dataset.days));
-}
+      newFoodExpiry = 'none';
+
+    } else if (btn.dataset.days === 'manual') {
+
+      newFoodManualWrap.classList.add('show');
+
+      setTimeout(function() {
+
+        newFoodManualDate.showPicker?.();
+
+        newFoodManualDate.focus();
+
+        newFoodManualDate.click();
+
+      }, 50);
+
+      newFoodExpiry =
+        newFoodManualDate.value || null;
+
+    } else {
+
+      newFoodManualWrap.classList.remove('show');
+
+      newFoodExpiry =
+        getDateStr(Number(btn.dataset.days));
+
+    }
+
   });
+
 });
+
+
 newFoodManualDate.addEventListener('change', function() {
   newFoodExpiry = newFoodManualDate.value || null;
 });
