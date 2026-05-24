@@ -394,9 +394,7 @@ var normal   = datedItems.filter(function(i) { return getDaysUntil(i.expiryDate)
         '<p><span class="dl">食材</span>' +
         escapeHtml(item.foodName) +
         '</p>' +
-        '<p><span class="dl">期限</span>' +
-        formatDate(item.expiryDate) +
-        '</p>',
+        '<p><span class="dl">期限</span>' + expiryLabel(date) + '</p>',
       okLabel: '使い切った'
     });
 
@@ -757,7 +755,7 @@ if (!food || !food.foodId || !food.foodName) {
   var ok = await confirmDialog({
     title:   '期限を登録しますか？',
     detail:  '<p><span class="dl">食材</span>' + escapeHtml(food.foodName) + '</p>' +
-             '<p><span class="dl">期限</span>' + formatDate(date) + '</p>' +
+             '<p><span class="dl">期限</span>' + expiryLabel(date) + '</p>' +
              (memo ? '<p><span class="dl">メモ</span>' + escapeHtml(memo) + '</p>' : ''),
     okLabel: '登録する'
   });
@@ -958,7 +956,7 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', async fu
     title:   existId ? '期限を登録しますか？' : '新規食材を追加しますか？',
     sub:     existId ? '既存食材の在庫を更新します' : '食材DBに追加して在庫に登録します',
     detail:  '<p><span class="dl">食材名</span>' + escapeHtml(name) + '</p>' +
-             '<p><span class="dl">期限</span>' + formatDate(expiry) + '</p>' +
+             '<p><span class="dl">期限</span>' + expiryLabel(expiry) + '</p>' +
              '<p><span class="dl">お気に入り</span>' + (isFav ? '⭐' : 'なし') + '</p>' +
              (memo ? '<p><span class="dl">メモ</span>' + escapeHtml(memo) + '</p>' : ''),
     okLabel: existId ? '登録する' : '追加する'
@@ -988,7 +986,7 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', async fu
     await db.collection('inventory').doc(foodId).set({
       foodId:     foodId,
       foodName:   name,
-      expiryDate: noExpiry ? '' : date,
+      expiryDate: noExpiry ? '' : expiry,
       noExpiry:   noExpiry,
       memo:       memo,
       updatedAt:  new Date()
@@ -998,7 +996,7 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', async fu
     await db.collection('history').add({
       foodId:       foodId,
       foodName:     name,
-      expiryDate:   noExpiry ? '' : date,
+      expiryDate:   noExpiry ? '' : expiry,
       noExpiry:     noExpiry,
       memo:         memo,
       registeredAt: new Date()

@@ -28,6 +28,14 @@ function getDateStr(offset) {
   return y + '-' + m + '-' + dd;
 }
 
+/** 期限なし用 **/
+function expiryLabel(value) {
+  if (value === 'none') return '期限なし';
+  if (!value) return '期限なし';
+  return formatDate(value);
+}
+
+
 /** 今日の "YYYY-MM-DD" を返す */
 function getToday() { return getDateStr(0); }
 
