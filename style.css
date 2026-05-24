@@ -1045,6 +1045,34 @@ body {
   width: 100%;
 }
 
+
+
+
+.today-box {
+  background: rgba(255,255,255,0.82);
+  border: 2px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.today-year {
+  font-size: 0.78rem;
+  color: var(--text-3);
+  font-weight: 700;
+}
+
+.today-date {
+  font-family: var(--font-head);
+  font-size: 1.7rem;
+  color: var(--primary-d);
+  font-weight: 700;
+}
+
+
+
 body,
 header,
 main,

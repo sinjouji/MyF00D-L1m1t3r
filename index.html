@@ -239,6 +239,18 @@ setTimeout(function() {
 }, 5000);
 
 
+
+/* ====================================
+   ホーム設置用の日付エリア
+   ==================================== */
+function buildTodayBox() {
+  var d = new Date();
+  return '<div class="today-box">' +
+    '<div class="today-year">' + d.getFullYear() + '年</div>' +
+    '<div class="today-date">' + (d.getMonth() + 1) + '月' + d.getDate() + '日</div>' +
+  '</div>';
+}
+
 /* ====================================
    ホーム レンダリング（4セクション）
    ==================================== */
@@ -275,6 +287,7 @@ var soon     = datedItems.filter(function(i) {
 var normal   = datedItems.filter(function(i) { return getDaysUntil(i.expiryDate) > 3; });
 
     main.innerHTML =
+      buildTodayBox() +
       buildSection('expired', '🚨 期限切れ', expired, '期限切れの食材はありません ✨') +
       buildSection('today', '⏰ 今日まで', todayArr, '今日期限の食材はありません') +
       buildSection('soon', '📅 ３日以内', soon, '3日以内に期限が来る食材はありません')  +
