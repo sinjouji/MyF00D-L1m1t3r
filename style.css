@@ -215,19 +215,19 @@ main {
 }
 
 .food-card.today {
-  background: pink !important;/*var(--today-bg);*/
+  background: var(--today-bg);
   border-color: var(--today-border);
   border-left-color: var(--today-t);
 }
 
 .food-card.soon {
-  background: lightgreen !important;/*var(--soon-bg);*/
+  background: var(--soon-bg);
   border-color: var(--soon-border);
   border-left-color: var(--soon-t);
 }
 
 .food-card.normal {
-  background: white important;/*var(--normal-bg);*/
+  background: var(--normal-bg);
   border-color: var(--normal-border);
 }
 
