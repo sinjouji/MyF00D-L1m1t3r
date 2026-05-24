@@ -27,31 +27,30 @@
   --gold-l:        #FEF5D8;
 
   /* ステータスカラー */
-  /*期限切れ*/
+  /* 背景用 */
   --expired-bg:    #fbe7e7;
-  --expired-border: #e6b7b7;
-  
-  --expired-b:     #E8A099;
-  --expired-t:     #B44030;
-
-/*今日まで*/
   --today-bg:      #fff1d8;
-  --today-border: #f2d29b;
-  
-  --today-b:       #F0C870;
-  --today-t:       #B07820;
-
-/*３日以内*/
   --soon-bg:       #e7f6ea;
-  --soon-border: #b7d9be;
-  
-  --soon-b:        #A8D090;
-  --soon-t:        #4A8030;
-  
-/*在庫*/
   --normal-bg: #fffffc;
-  --normal-border: #e8e8e8;
 
+  
+  /* 枠線用 */
+  --expired-border: #e6b7b7;
+  --today-border:   #f2d29b;
+  --soon-border:    #b7d9be;
+  --normal-border:  #e8e8e8;
+
+/* 文字，左線，チップ用*/
+  --expired-t:     #B44030;
+  --today-t:       #B07820;
+  --soon-t:        #4A8030;
+
+/* とりあえず保管？ */
+  --expired-b:     #E8A099;
+  --today-b:       #F0C870;
+  --soon-b:        #A8D090;
+
+  
   /* テキスト */
   --text:          #3A3020;
   --text-2:        #7A6E60;
@@ -206,12 +205,28 @@ main {
 
 .food-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); }
 
-.food-card.expired { 
+.food-card.expired {
   background: var(--expired-bg);
   border-color: var(--expired-border);
-  border-left-color: var(--expired-t); }
-.food-card.today   { border-left-color: var(--today-t); }
-.food-card.soon    { border-left-color: var(--soon-t); }
+  border-left-color: var(--expired-t);
+}
+
+.food-card.today {
+  background: var(--today-bg);
+  border-color: var(--today-border);
+  border-left-color: var(--today-t);
+}
+
+.food-card.soon {
+  background: var(--soon-bg);
+  border-color: var(--soon-border);
+  border-left-color: var(--soon-t);
+}
+
+.food-card.normal {
+  background: var(--normal-bg);
+  border-color: var(--normal-border);
+}
 
 .food-card-fav  { font-size: 1em; flex-shrink: 0; }
 .food-card-body { flex: 1; min-width: 0; }
