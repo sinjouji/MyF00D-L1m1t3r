@@ -92,6 +92,16 @@ body {
   padding-bottom: 130px;
   font-size: 15px;
   line-height: 1.5;
+  
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  touch-action: manipulation;
+  position: relative;
+}
+
+* {
+max-width: 100%;
 }
 
 
