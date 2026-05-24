@@ -383,10 +383,17 @@ function buildFoodCard(item, status) {
       (item.memo ? '<div class="food-card-memo">' + escapeHtml(item.memo) + '</div>' : '') +
     '</div>' +
     '<div class="food-card-right">' +
-  '<div class="food-card-date">' + formatDate(item.expiryDate) + '</div>' +
-  '<span class="days-chip ' + status + '">' + label + '</span>' +
-  '<button class="mini-action buy-btn" data-id="' + item.id + '">🛒</button>' +
-  '<button class="mini-action useup-btn" data-id="' + item.id + '">使い切った</button>' +
+
+  '<div class="food-card-top">' +
+    '<div class="food-card-date">' + formatDate(item.expiryDate) + '</div>' +
+    '<span class="days-chip ' + status + '">' + label + '</span>' +
+  '</div>' +
+
+  '<div class="food-card-actions">' +
+    '<button class="mini-action buy-btn" data-id="' + item.id + '">🛒</button>' +
+    '<button class="mini-action useup-btn" data-id="' + item.id + '">使い切った</button>' +
+  '</div>' +
+
 '</div>'+
     '</div>';
 }
