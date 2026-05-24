@@ -609,8 +609,23 @@ document.querySelectorAll('#homeDateBtns .date-btn').forEach(function(btn) {
     document.querySelectorAll('#homeDateBtns .date-btn').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
     if (btn.dataset.days === 'manual') {
-      homeManualWrap.classList.add('show');
-      homeExpiryDate = homeManualDate.value || null;
+
+  homeManualWrap.classList.add('show');
+
+  setTimeout(function() {
+
+    homeManualDate.showPicker?.();
+
+    homeManualDate.focus();
+
+    homeManualDate.click();
+
+  }, 50);
+
+  homeExpiryDate =
+    homeManualDate.value || null;
+
+}
     } else {
       homeManualWrap.classList.remove('show');
       homeExpiryDate = getDateStr(Number(btn.dataset.days));
@@ -790,8 +805,23 @@ document.querySelectorAll('#newFoodDateBtns .date-btn').forEach(function(btn) {
     document.querySelectorAll('#newFoodDateBtns .date-btn').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
     if (btn.dataset.days === 'manual') {
-      newFoodManualWrap.classList.add('show');
-      newFoodExpiry = newFoodManualDate.value || null;
+
+  newFoodManualWrap.classList.add('show');
+
+  setTimeout(function() {
+
+    newFoodManualDate.showPicker?.();
+
+    newFoodManualDate.focus();
+
+    newFoodManualDate.click();
+
+  }, 50);
+
+  newFoodExpiry =
+    newFoodManualDate.value || null;
+
+}
     } else {
       newFoodManualWrap.classList.remove('show');
       newFoodExpiry = getDateStr(Number(btn.dataset.days));
