@@ -354,11 +354,10 @@ db.collection('shoppingItems').onSnapshot(function(snap) {
   allItems = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
   /* 未チェック → チェック済みの順、その中で登録日時順 */
   allItems.sort(function(a, b) {
-    if (a.checked !== b.checked) {
-  return a.checked ? 1 : -1;
-}
+  if (a.checked !== b.checked) return a.checked ? 1 : -1;
+  return (a.order || 0) - (b.order || 0);
+});
 
-return (a.order || 0) - (b.order || 0);
     var ta = a.createdAt instanceof Date ? a.createdAt.getTime()
            : (a.createdAt && a.createdAt.seconds ? a.createdAt.seconds * 1000 : 0);
     var tb = b.createdAt instanceof Date ? b.createdAt.getTime()
@@ -444,110 +443,35 @@ function buildShopItem(item) {
         (item.memo ? '<div class="shop-memo">' + escapeHtml(item.memo) + '</div>' : '') +
       '</div>' +
       '<div class="list-item-actions">' +
-
-  '<button class="icon-btn move-up" title="上へ">↑</button>' +
-  '<button class="icon-btn move-down" title="下へ">↓</button>' +
-
-  '<button class="icon-btn del" title="削除">🗑️</button>' +
-
-'</div>' +
+        '<button class="icon-btn move-up" title="上へ">↑</button>' +
+        '<button class="icon-btn move-down" title="下へ">↓</button>' +
+        '<button class="icon-btn del" title="削除">🗑️</button>' +
+      '</div>' +
     '</div>';
-    
-    
-  /*↑ボタンの挙動*/
+
   wrap.querySelector('.move-up').addEventListener('click', async function(e) {
-  e.stopPropagation();
-
-  var visible = allItems.filter(function(i) {
-    return i.checked === item.checked;
+    e.stopPropagation();
+    await moveShoppingItem(item, -1);
   });
 
-  var idx = visible.findIndex(function(i) {
-    return i.id === item.id;
+  wrap.querySelector('.move-down').addEventListener('click', async function(e) {
+    e.stopPropagation();
+    await moveShoppingItem(item, 1);
   });
 
-  if (idx <= 0) return;
-
-  var other = visible[idx - 1];
-
-  try {
-    var batch = db.batch();
-
-    batch.update(
-      db.collection('shoppingItems').doc(item.id),
-      { order: other.order || 0 }
-    );
-
-    batch.update(
-      db.collection('shoppingItems').doc(other.id),
-      { order: item.order || 0 }
-    );
-
-    await batch.commit();
-
-  } catch (e) {
-    showToast('❌ 並び替え失敗');
-  }
-});
-
-/*↓ボタンの挙動*/
-wrap.querySelector('.move-down').addEventListener('click', async function(e) {
-  e.stopPropagation();
-
-  var visible = allItems.filter(function(i) {
-    return i.checked === item.checked;
+  wrap.querySelector('.shop-check').addEventListener('click', async function(e) {
+    e.stopPropagation();
+    await toggleShoppingChecked(item);
   });
 
-  var idx = visible.findIndex(function(i) {
-    return i.id === item.id;
+  wrap.querySelector('.shop-item-body').addEventListener('click', async function(e) {
+    e.stopPropagation();
+    await toggleShoppingChecked(item);
   });
 
-  if (idx === -1 || idx >= visible.length - 1) return;
-
-  var other = visible[idx + 1];
-
-  try {
-    var batch = db.batch();
-
-    batch.update(
-      db.collection('shoppingItems').doc(item.id),
-      { order: other.order || 0 }
-    );
-
-    batch.update(
-      db.collection('shoppingItems').doc(other.id),
-      { order: item.order || 0 }
-    );
-
-    await batch.commit();
-
-  } catch (e) {
-    showToast('❌ 並び替え失敗');
-  }
-});
-
-
-  /* チェックトグル */
-  wrap.querySelector('.shop-check').addEventListener('click', async function() {
-    try {
-      await db.collection('shoppingItems').doc(item.id).update({ checked: !item.checked });
-    } catch (e) {
-      showToast('❌ 更新失敗（' + (e.code || e.message) + '）');
-    }
-  });
-
-  /* アイテム本体クリックでもチェックトグル */
-  wrap.querySelector('.shop-item-body').addEventListener('click', async function() {
-    try {
-      await db.collection('shoppingItems').doc(item.id).update({ checked: !item.checked });
-    } catch (e) {
-      showToast('❌ 更新失敗（' + (e.code || e.message) + '）');
-    }
-  });
-
-  /* 削除ボタン */
   wrap.querySelector('.icon-btn.del').addEventListener('click', async function(e) {
     e.stopPropagation();
+
     try {
       await db.collection('shoppingItems').doc(item.id).delete();
       showToast('🗑️ 削除しました');
@@ -558,6 +482,57 @@ wrap.querySelector('.move-down').addEventListener('click', async function(e) {
 
   return wrap;
 }
+
+async function toggleShoppingChecked(item) {
+  try {
+    await db.collection('shoppingItems').doc(item.id).update({
+      checked: !item.checked
+    });
+  } catch (e) {
+    showToast('❌ 更新失敗（' + (e.code || e.message) + '）');
+  }
+}
+
+
+
+async function moveShoppingItem(item, direction) {
+  var visible = allItems.filter(function(i) {
+    return i.checked === item.checked &&
+      (filterCat === 'all' || i.category === filterCat);
+  });
+
+  visible.sort(function(a, b) {
+    return (a.order || 0) - (b.order || 0);
+  });
+
+  var idx = visible.findIndex(function(i) {
+    return i.id === item.id;
+  });
+
+  var other = visible[idx + direction];
+
+  if (!other) return;
+
+  try {
+    var batch = db.batch();
+
+    batch.update(db.collection('shoppingItems').doc(item.id), {
+      order: other.order || 0
+    });
+
+    batch.update(db.collection('shoppingItems').doc(other.id), {
+      order: item.order || 0
+    });
+
+    await batch.commit();
+
+  } catch (e) {
+    showToast('❌ 並び替え失敗');
+  }
+}
+
+
+
 
 
 /* ====================================
