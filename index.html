@@ -270,7 +270,7 @@ function renderHome() {
       buildSection('soon', '📅 ３日以内', soon, '3日以内に期限が来る食材はありません') +
       buildSection('normal', '📦 在庫中', normal, '');
 
-    main.querySelectorAll('.food-card[data-invid]').forEach(function(card) {
+       main.querySelectorAll('.food-card[data-invid]').forEach(function(card) {
       card.addEventListener('click', function() {
         var item = inventoryItems.find(function(i) {
           return i.id === card.dataset.invid;
@@ -278,6 +278,34 @@ function renderHome() {
         if (item) {
           selectHomeFood(item);
           openPanel();
+        }
+      });
+    });
+
+    main.querySelectorAll('.buy-btn').forEach(function(btn) {
+      btn.addEventListener('click', async function(e) {
+        e.stopPropagation();
+
+        var invId = btn.dataset.id;
+        var item = inventoryItems.find(function(i) {
+          return i.id === invId;
+        });
+
+        if (!item) return;
+
+        try {
+          await db.collection('shoppingItems').add({
+            name: item.foodName,
+            category: 'food',
+            memo: '',
+            checked: false,
+            createdAt: new Date()
+          });
+
+          showToast('🛒 ' + item.foodName + ' を買い物リストに追加しました');
+        } catch (e) {
+          console.error('買い物追加エラー:', e);
+          showToast('❌ 買い物リストに追加できませんでした');
         }
       });
     });
@@ -306,45 +334,14 @@ function renderHome() {
 
         try {
           await db.collection('inventory').doc(item.id).delete();
-          
-          
-          main.querySelectorAll('.buy-btn').forEach(function(btn) {
-  btn.addEventListener('click', async function(e) {
-    e.stopPropagation();
 
-    var invId = btn.dataset.id;
-    var item = inventoryItems.find(function(i) {
-      return i.id === invId;
-    });
+          inventoryItems = inventoryItems.filter(function(i) {
+            return i.id !== item.id && i.foodId !== item.foodId;
+          });
 
-    if (!item) return;
+          renderHome();
 
-    try {
-      await db.collection('shoppingItems').add({
-        name: item.foodName,
-        category: 'food',
-        memo: '',
-        checked: false,
-        createdAt: new Date()
-      });
-
-      showToast('🛒 ' + item.foodName + ' を買い物リストに追加しました');
-    } catch (e) {
-      console.error('買い物追加エラー:', e);
-      showToast('❌ 買い物リストに追加できませんでした');
-    }
-  });
-});
-          
-          
-
-inventoryItems = inventoryItems.filter(function(i) {
-  return i.id !== item.id && i.foodId !== item.foodId;
-});
-
-renderHome();
-
-showToast('✅ ' + item.foodName + ' を在庫から消しました');
+          showToast('✅ ' + item.foodName + ' を在庫から消しました');
         } catch (e) {
           console.error('在庫削除エラー:', e);
           showToast('❌ 在庫から消せませんでした');
