@@ -646,10 +646,53 @@ homeSearchEl.addEventListener('input', function() {
 
     homeSuggestList.innerHTML = '';
 
-    if (!candidates.length || !homeSearchEl.value.trim()) {
-      homeSuggestList.classList.remove('show');
-      return;
-    }
+    var keyword = homeSearchEl.value.trim();
+
+if (!keyword) {
+  homeSuggestList.classList.remove('show');
+  return;
+}
+
+if (!candidates.length) {
+
+  var div = document.createElement('div');
+
+  div.className =
+    'suggest-item suggest-create';
+
+  div.innerHTML =
+    '<span class="suggest-name">＋ 「' +
+    escapeHtml(keyword) +
+    '」を新規食材として追加</span>';
+
+  div.addEventListener('mousedown', function(e) {
+
+    e.preventDefault();
+
+    homeSelectedFood = {
+      isNew: true,
+      foodName: keyword,
+      favorite: false
+    };
+
+    homeSearchEl.value = keyword;
+
+    selFoodName.textContent = keyword;
+
+    selFoodInfo.style.display = 'block';
+
+    homeSuggestList.classList.remove('show');
+
+  });
+
+  homeSuggestList.innerHTML = '';
+
+  homeSuggestList.appendChild(div);
+
+  homeSuggestList.classList.add('show');
+
+  return;
+}
 
     candidates.forEach(function(food) {
 
@@ -763,7 +806,27 @@ if (!food || !food.foodId || !food.foodName) {
 
   try {
     /* ★ inventory のドキュメントIDは foodId 固定（upsert） */
-    var docId = food.foodId || food.id;
+    
+    var docId;
+
+if (food.isNew) {
+
+  var ref = await db.collection('foods').add({
+    name: food.foodName,
+    favorite: false,
+    createdAt: new Date()
+  });
+
+  docId = ref.id;
+
+} else {
+
+  docId = food.foodId || food.id;
+
+}
+    
+    
+    
     var noExpiry = date === 'none';
 
 await db.collection('inventory').doc(docId).set({
