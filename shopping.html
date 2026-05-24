@@ -351,21 +351,17 @@ var selCategory = 'food'; // 入力パネルで選択中のカテゴリ
 
 /* 買い物メモ */
 db.collection('shoppingItems').onSnapshot(function(snap) {
-  allItems = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
-  /* 未チェック → チェック済みの順、その中で登録日時順 */
-  
-  allItems.sort(function(a, b) {
-  if (a.checked !== b.checked) return a.checked ? 1 : -1;
-  return (a.order || 0) - (b.order || 0);
-});
-
-    var ta = a.createdAt instanceof Date ? a.createdAt.getTime()
-           : (a.createdAt && a.createdAt.seconds ? a.createdAt.seconds * 1000 : 0);
-    var tb = b.createdAt instanceof Date ? b.createdAt.getTime()
-           : (b.createdAt && b.createdAt.seconds ? b.createdAt.seconds * 1000 : 0);
-    return (a.order || 0) - (b.order || 0);;  // 古い順（先に追加したものが上）→オーダー順（↑↓変更可能）
+  allItems = snap.docs.map(function(d) {
+    return Object.assign({ id: d.id }, d.data());
   });
+
+  allItems.sort(function(a, b) {
+    if (a.checked !== b.checked) return a.checked ? 1 : -1;
+    return (a.order || 0) - (b.order || 0);
+  });
+
   renderShop();
+
 }, function(err) {
   console.error('shoppingItems error:', err.code, err.message);
   showToast('⚠️ 読み込みエラー: ' + err.code);
