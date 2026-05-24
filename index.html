@@ -839,7 +839,7 @@ await db.collection('inventory').doc(docId).set({
 });
     /* 履歴を追加 */
     await db.collection('history').add({
-  foodId: food.foodId,
+  foodId: docId,
   foodName: food.foodName,
   expiryDate: noExpiry ? '' : date,
   noExpiry: noExpiry,
