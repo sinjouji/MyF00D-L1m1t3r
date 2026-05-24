@@ -201,6 +201,9 @@ main {
   gap: 10px;
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
+  
+  border: 2px solid var(--normal-border);
+  border-left: 4px solid transparent;
 }
 
 .food-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); }
@@ -212,19 +215,19 @@ main {
 }
 
 .food-card.today {
-  background: var(--today-bg);
+  background: pink !important;/*var(--today-bg);*/
   border-color: var(--today-border);
   border-left-color: var(--today-t);
 }
 
 .food-card.soon {
-  background: var(--soon-bg);
+  background: lightgreen !important;/*var(--soon-bg);*/
   border-color: var(--soon-border);
   border-left-color: var(--soon-t);
 }
 
 .food-card.normal {
-  background: var(--normal-bg);
+  background: white important;/*var(--normal-bg);*/
   border-color: var(--normal-border);
 }
 
