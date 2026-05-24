@@ -206,7 +206,10 @@ main {
 
 .food-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); }
 
-.food-card.expired { border-left-color: var(--expired-t); }
+.food-card.expired { 
+  background: var(--expired-bg);
+  border-color: var(--expired-border);
+  border-left-color: var(--expired-t); }
 .food-card.today   { border-left-color: var(--today-t); }
 .food-card.soon    { border-left-color: var(--soon-t); }
 
