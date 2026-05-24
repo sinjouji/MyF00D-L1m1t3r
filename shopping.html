@@ -535,6 +535,63 @@ async function toggleShoppingChecked(item) {
 }
 
 
+async function moveShoppingItem(item, direction) {
+
+  var visible = allItems.filter(function(i) {
+
+    return i.checked === item.checked &&
+      (filterCat === 'all' || i.category === filterCat);
+
+  });
+
+  visible.sort(function(a, b) {
+
+    return (a.order || 0) -
+      (b.order || 0);
+
+  });
+
+  var idx = visible.findIndex(function(i) {
+
+    return i.id === item.id;
+
+  });
+
+  var other = visible[idx + direction];
+
+  if (!other) return;
+
+  try {
+
+    var batch = db.batch();
+
+    batch.update(
+      db.collection('shoppingItems').doc(item.id),
+      {
+        order: other.order || 0
+      }
+    );
+
+    batch.update(
+      db.collection('shoppingItems').doc(other.id),
+      {
+        order: item.order || 0
+      }
+    );
+
+    await batch.commit();
+
+  } catch (e) {
+
+    console.error('move error:', e);
+
+    showToast('❌ 並び替え失敗');
+
+  }
+
+}
+
+
 
 
 /* ====================================
