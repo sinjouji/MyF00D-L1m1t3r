@@ -1100,23 +1100,26 @@ body {
 
 
 /*ヘッダーメニュー固定用*/
- body {
-  padding-top: 0;
-}
-
 header {
-  position: fixed;
+  position: fixed !important;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 3000;
 }
 
 .page-filter-bar {
-  position: fixed;
-  top: 56px; /* headerの高さに合わせて調整 */
+  position: fixed !important;
+  top: 56px; /* header高さに合わせて調整 */
+  left: 0;
+  right: 0;
   z-index: 2500;
   background: var(--bg);
 }
 
+body {
+  padding-top: 116px; /* header + filter分 */
+}
 
 
 body,
