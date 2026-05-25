@@ -212,6 +212,19 @@ main {
   z-index: 9999;
 }
 
+.suggest-list {
+  max-height: 132px;
+  overflow-y: auto;
+
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+#homeExpiryOverlay .suggest-list {
+  max-height: 132px;
+  overflow-y: auto;
+}
+
 
 
 /* ====================================
