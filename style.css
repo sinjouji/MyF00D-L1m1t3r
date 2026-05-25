@@ -98,6 +98,7 @@ body {
   overflow-x: hidden;
   touch-action: manipulation;
   position: relative;
+  scroll-padding-top: 72px;
 }
 
 * {
