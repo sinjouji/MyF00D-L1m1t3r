@@ -1237,3 +1237,26 @@ input[type="date"] {
   font-size: 16px;
   line-height: 1.4;
 }
+
+//モーダルちゃん強化（一番前にくる）
+#homeExpiryOverlay {
+  z-index: 5000;
+}
+
+#homeExpiryOverlay .modal {
+  position: relative;
+  z-index: 5100;
+  overflow: visible;
+}
+
+#homeExpiryOverlay .search-wrap {
+  position: relative;
+  z-index: 5200;
+}
+
+#homeExpiryOverlay .suggest-list {
+  position: absolute;
+  z-index: 5300;
+  max-height: 132px;
+  overflow-y: auto;
+}
