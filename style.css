@@ -1144,7 +1144,7 @@ header {
   top: 56px; /* header高さ */
   left: 0;
   right: 0;
-  z-index: 2500;
+  z-index: 2000;
   background: var(--bg);
   display: flex;
   align-items: center;
@@ -1260,4 +1260,10 @@ input[type="date"] {
 #homeExpiryOverlay .search-wrap {
   position: relative;
   z-index: 5200;
+}
+
+#homeExpiryOverlay,
+#homeExpiryOverlay .modal,
+#homeExpiryOverlay .search-wrap {
+  overflow: visible !important;
 }
