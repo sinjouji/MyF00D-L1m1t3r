@@ -558,6 +558,106 @@ modalHomeSearchEl.addEventListener('input', function() {
   }, 150);
 });
 
+//モーダル日付ボタン処理
+document.querySelectorAll('#modalHomeDateBtns .date-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('#modalHomeDateBtns .date-btn').forEach(function(b) {
+      b.classList.remove('active');
+    });
+
+    btn.classList.add('active');
+
+    if (btn.dataset.days === 'none') {
+      modalHomeManualWrap.classList.remove('show');
+      modalExpiryDate = 'none';
+    } else if (btn.dataset.days === 'manual') {
+      modalHomeManualWrap.classList.add('show');
+      openDatePicker(modalHomeManualDate);
+      modalExpiryDate = modalHomeManualDate.value || null;
+    } else {
+      modalHomeManualWrap.classList.remove('show');
+      modalExpiryDate = getDateStr(Number(btn.dataset.days));
+    }
+  });
+});
+
+modalHomeManualDate.addEventListener('change', function() {
+  modalExpiryDate = modalHomeManualDate.value || null;
+});
+
+//モーダル登録ボタン処理
+document.getElementById('modalHomeOk').addEventListener('click', async function() {
+  if (!modalSelectedFood) {
+    var keyword = modalHomeSearchEl.value.trim();
+
+    var matchedFood = Object.values(foodMap).find(function(food) {
+      return food.name.trim().toLowerCase() === keyword.toLowerCase();
+    });
+
+    if (matchedFood) {
+      selectModalHomeFood(matchedFood);
+    }
+  }
+
+  if (!modalSelectedFood) {
+    showToast('⚠️ 食材を選択してください');
+    modalHomeSearchEl.focus();
+    return;
+  }
+
+  if (!modalExpiryDate) {
+    showToast('⚠️ 期限日を選択してください');
+    return;
+  }
+
+  var food = modalSelectedFood;
+  var date = modalExpiryDate;
+  var memo = modalHomeMemo.value.trim();
+  var noExpiry = date === 'none';
+
+  try {
+    var docId;
+
+    if (food.isNew) {
+      var ref = await db.collection('foods').add({
+        name: food.foodName,
+        favorite: false,
+        createdAt: new Date()
+      });
+
+      docId = ref.id;
+    } else {
+      docId = food.foodId || food.id;
+    }
+
+    await db.collection('inventory').doc(docId).set({
+      foodId: docId,
+      foodName: food.foodName,
+      expiryDate: noExpiry ? '' : date,
+      noExpiry: noExpiry,
+      memo: memo,
+      updatedAt: new Date()
+    });
+
+    await db.collection('history').add({
+      foodId: docId,
+      foodName: food.foodName,
+      expiryDate: noExpiry ? '' : date,
+      noExpiry: noExpiry,
+      memo: memo,
+      favorite: !!(foodMap[docId] && foodMap[docId].favorite),
+      registeredAt: new Date()
+    });
+
+    showToast('✅ ' + food.foodName + ' の期限を登録しました');
+    closeHomeExpiryModal();
+
+  } catch (e) {
+    console.error('modal home expiry error:', e);
+    showToast('❌ 登録に失敗しました');
+  }
+});
+
 
 
 /* ====================================
