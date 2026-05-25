@@ -1099,6 +1099,17 @@ body {
 }
 
 
+/*ヘッダーメニュー固定用*/
+body {
+  padding-top: 0;
+}
+
+header {
+  position: sticky !important;
+  top: 0;
+  z-index: 3000;
+}
+
 
 body,
 header,
