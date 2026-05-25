@@ -1089,14 +1089,14 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', async fu
 
     /* 履歴を追加 */
     await db.collection('history').add({
-      foodId:       foodId,
-      foodName:     name,
-      favorite:     !!food.favorite,
-      expiryDate:   noExpiry ? '' : expiry,
-      noExpiry:     noExpiry,
-      memo:         memo,
-      registeredAt: new Date()
-    });
+  foodId: docId,
+  foodName: food.foodName,
+  expiryDate: noExpiry ? '' : date,
+  noExpiry: noExpiry,
+  memo: memo,
+  favorite: !!food.favorite,
+  registeredAt: new Date()
+});
 
     showToast('✅ ' + name + ' を追加しました');
   } catch (e) {
