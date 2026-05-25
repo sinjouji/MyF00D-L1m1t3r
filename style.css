@@ -1105,11 +1105,25 @@ body {
 }
 
 header {
-  position: fixed !important;
+  position: sticky;
   top: 0;
-/*  left: 0;
-  right: 0; fixedの時いる？*/
   z-index: 3000;
+}
+
+.page-filter-bar {
+  position: sticky;
+  top: 56px; /* headerの高さに合わせて調整 */
+  z-index: 2500;
+  background: var(--bg);
+}
+
+.shop-bottom,
+.shop-actions,
+.shopping-toolbar {
+  position: sticky;
+  top: 56px;
+  z-index: 2500;
+  background: var(--bg);
 }
 
 
