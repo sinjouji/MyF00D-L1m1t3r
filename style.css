@@ -197,6 +197,24 @@ main {
 
 
 /* ====================================
+   期限登録モーダル（ホーム）
+   ==================================== */
+#homeExpiryOverlay .modal {
+  overflow: visible;
+}
+
+#homeExpiryOverlay .search-wrap {
+  position: relative;
+  z-index: 20;
+}
+
+#homeExpiryOverlay .suggest-list {
+  z-index: 9999;
+}
+
+
+
+/* ====================================
    食材カード（ホーム）
    ==================================== */
 .food-grid { display: flex; flex-direction: column; gap: 6px; }
