@@ -495,10 +495,12 @@ document.getElementById('modalHomeCancel').addEventListener('click', function() 
   closeHomeExpiryModal();
 });
 
-homeExpiryOverlay.addEventListener('click', function(e) {
-  if (e.target === homeExpiryOverlay) {
-    closeHomeExpiryModal();
-  }
+modalHomeSuggestList.addEventListener('click', function(e) {
+  e.stopPropagation();
+});
+
+modalHomeSuggestList.addEventListener('touchstart', function(e) {
+  e.stopPropagation();
 });
 
 //モーダルサジェスト
@@ -549,6 +551,13 @@ modalHomeSearchEl.addEventListener('input', function() {
         '<span class="suggest-fav">' + (food.favorite ? '⭐' : '') + '</span>' +
         '<span class="suggest-name">' + escapeHtml(food.name) + '</span>' +
         '<span class="suggest-badge">食材DB</span>';
+
+div.addEventListener('click', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  selectModalHomeFood(food);
+});
+
 
       div.addEventListener('mousedown', function(e) {
         e.preventDefault();
