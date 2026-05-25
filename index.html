@@ -782,7 +782,9 @@ homeManualDate.addEventListener('change', function() {
 /* ====================================
    トグルパネル：期限登録
    ==================================== */
-   /*完全一致は選択しなくてOKなやつ*/
+document.getElementById('homeRegisterBtn').addEventListener('click', async function() {
+
+ /*完全一致は選択しなくてOKなやつ*/
    if (!homeSelectedFood) {
   var keyword = homeSearchEl.value.trim();
 
@@ -795,8 +797,8 @@ homeManualDate.addEventListener('change', function() {
   }
 }
    
-   
-document.getElementById('homeRegisterBtn').addEventListener('click', async function() {
+
+
   if (!homeSelectedFood) {
     showToast('⚠️ 食材を選択してください');
     homeSearchEl.focus();
