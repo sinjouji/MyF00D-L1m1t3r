@@ -486,6 +486,79 @@ function closeHomeExpiryModal() {
   homeExpiryOverlay.classList.remove('show');
 }
 
+//モーダル閉じる
+document.getElementById('modalHomeCancel').addEventListener('click', function() {
+  closeHomeExpiryModal();
+});
+
+homeExpiryOverlay.addEventListener('click', function(e) {
+  if (e.target === homeExpiryOverlay) {
+    closeHomeExpiryModal();
+  }
+});
+
+//モーダルサジェスト
+function selectModalHomeFood(item) {
+  var foodId = item.foodId || item.id;
+  var foodName = item.foodName || item.name;
+  var master = foodMap[foodId] || item;
+
+  modalSelectedFood = {
+    foodId: foodId,
+    foodName: foodName,
+    favorite: !!master.favorite,
+    isNew: !!item.isNew
+  };
+
+  modalHomeSearchEl.value = foodName;
+  modalSelectedFoodName.textContent = foodName;
+  modalSelectedFoodInfo.style.display = 'block';
+  modalHomeSuggestList.classList.remove('show');
+}
+
+
+//モーダルinput用イベント
+var modalHomeSearchTimer;
+
+modalHomeSearchEl.addEventListener('input', function() {
+  clearTimeout(modalHomeSearchTimer);
+
+  modalHomeSearchTimer = setTimeout(function() {
+    modalSelectedFood = null;
+    modalSelectedFoodInfo.style.display = 'none';
+
+    var keyword = modalHomeSearchEl.value.trim();
+    var foodList = Object.values(foodMap);
+    var candidates = suggestSort(keyword, foodList, 'name', 8);
+
+    modalHomeSuggestList.innerHTML = '';
+
+    if (!keyword) {
+      modalHomeSuggestList.classList.remove('show');
+      return;
+    }
+
+    candidates.forEach(function(food) {
+      var div = document.createElement('div');
+      div.className = 'suggest-item';
+      div.innerHTML =
+        '<span class="suggest-fav">' + (food.favorite ? '⭐' : '') + '</span>' +
+        '<span class="suggest-name">' + escapeHtml(food.name) + '</span>' +
+        '<span class="suggest-badge">食材DB</span>';
+
+      div.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        selectModalHomeFood(food);
+      });
+
+      modalHomeSuggestList.appendChild(div);
+    });
+
+    modalHomeSuggestList.classList.toggle('show', candidates.length > 0);
+  }, 150);
+});
+
+
 
 /* ====================================
    トグルパネル
