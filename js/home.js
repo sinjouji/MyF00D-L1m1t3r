@@ -124,9 +124,13 @@ setTimeout(function() {
    ==================================== */
 function buildTodayBox() {
   var d = new Date();
+
   return '<div class="today-box">' +
-    '<div class="today-year">' + d.getFullYear() + '年</div>' +
-    '<div class="today-date">' + (d.getMonth() + 1) + '月' + d.getDate() + '日</div>' +
+    '<div class="today-box-date">' +
+      '<div class="today-year">' + d.getFullYear() + '年</div>' +
+      '<div class="today-date">' + (d.getMonth() + 1) + '月' + d.getDate() + '日</div>' +
+    '</div>' +
+    '<button class="today-register-btn" id="todayRegisterBtn">＋ 期限登録</button>' +
   '</div>';
 }
 
@@ -173,6 +177,15 @@ var normal   = datedItems.filter(function(i) { return getDaysUntil(i.expiryDate)
       buildSection('normal', '📦 在庫中', normal, '')
       +
       buildSection('no-expiry', '🥬 期限なし', noExpiryArr, '期限なしの食材はありません');
+    
+    
+    var todayRegisterBtn = document.getElementById('todayRegisterBtn');
+
+if (todayRegisterBtn) {
+  todayRegisterBtn.addEventListener('click', function() {
+    openPanel();
+  });
+}
     
 
        main.querySelectorAll('.food-card[data-invid]').forEach(function(card) {
