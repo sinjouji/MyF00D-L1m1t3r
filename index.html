@@ -617,14 +617,11 @@ function applyPendingFoodFromShopping() {
 
 
 function selectHomeFood(item) {
-  var foodId =
-    item.foodId || item.id;
-
-  var foodName =
-    item.foodName || item.name;
+  var foodId = item.foodId || item.id;
+  var foodName = item.foodName || item.name;
+  var master = foodMap[foodId] || item;
 
   if (!foodId || !foodName) {
-    console.warn('[selectHomeFood] invalid item:', item);
     showToast('❌ 食材データが壊れています');
     return;
   }
@@ -632,15 +629,14 @@ function selectHomeFood(item) {
   homeSelectedFood = {
     foodId: foodId,
     foodName: foodName,
-    favorite: !!item.favorite
+    favorite: !!master.favorite,
+    isNew: !!item.isNew
   };
 
   homeSearchEl.value = foodName;
   selFoodName.textContent = foodName;
   selFoodInfo.style.display = 'block';
   homeSuggestList.classList.remove('show');
-
-  console.log('[selectHomeFood] selected:', homeSelectedFood);
 }
 
 var homeSearchTimer;
@@ -791,7 +787,7 @@ homeManualDate.addEventListener('change', function() {
   var keyword = homeSearchEl.value.trim();
 
   var matchedFood = Object.values(foodMap).find(function(food) {
-    return food.name === keyword;
+    return food.name.trim().toLowerCase() === keyword.toLowerCase();
   });
 
   if (matchedFood) {
@@ -872,7 +868,7 @@ await db.collection('inventory').doc(docId).set({
     await db.collection('history').add({
   foodId: docId,
   foodName: food.foodName,
-  favorite: !!food.favorite,
+  favorite: !!(foodMap[docId] && foodMap[docId].favorite),
   expiryDate: noExpiry ? '' : date,
   noExpiry: noExpiry,
   memo: memo,
