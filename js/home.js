@@ -1,6 +1,5 @@
-<script>
-console.log('[index] script start');
 
+console.log('[index] script start');
 /* ============================================================
    index.html — ホームページ スクリプト
 
@@ -974,4 +973,3 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', async fu
   }
 });
 console.log('[index] script end');
-</script>
