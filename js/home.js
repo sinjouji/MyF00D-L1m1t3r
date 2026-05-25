@@ -183,7 +183,11 @@ var normal   = datedItems.filter(function(i) { return getDaysUntil(i.expiryDate)
 
 if (todayRegisterBtn) {
   todayRegisterBtn.addEventListener('click', function() {
-    openPanel();
+    if (inputPanel.classList.contains('open')) {
+      closePanel();
+    } else {
+      openPanel();
+    }
   });
 }
     
