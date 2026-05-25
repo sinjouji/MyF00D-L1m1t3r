@@ -98,7 +98,7 @@ body {
   overflow-x: hidden;
   touch-action: manipulation;
   position: relative;
-  scroll-padding-top: 72px;
+/*  scroll-padding-top: 72px;*/
 }
 
 * {
@@ -1100,15 +1100,15 @@ body {
 
 
 /*ヘッダーメニュー固定用*/
-body {
-  padding-top: 72px;
+ body {
+  padding-top: 0;
 }
 
 header {
-  position: fixed !important;
+  position: sticky !important;
   top: 0;
-  left: 0;
-  right: 0;
+/*  left: 0;
+  right: 0; fixedの時いる？*/
   z-index: 3000;
 }
 
