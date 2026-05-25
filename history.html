@@ -118,23 +118,63 @@
 
 <div class="page-filter-bar">
   <div class="page-filter-inner">
-    <p class="page-title">📋 登録履歴</p>
-    <div class="filter-row">
-      <input type="text" class="filter-input" id="histSearch"
-             placeholder="🔍 食材名・メモで検索…">
-      <button class="filter-chip" id="histFavFilter">⭐ お気に入り</button>
-      <button class="bulk-delete-btn" id="bulkDeleteBtn">🗑️ 絞込を削除</button>
+
+    <button class="filter-toggle-btn" id="historyFilterToggle">
+      🔍 検索・絞り込み
+      <span id="historyFilterArrow">▼</span>
+    </button>
+
+    <div class="filter-panel" id="historyFilterPanel">
+
+      <p class="page-title">📋 登録履歴</p>
+
+      <div class="filter-row">
+        <input type="text"
+               class="filter-input"
+               id="histSearch"
+               placeholder="🔍 食材名・メモで検索…">
+
+        <button class="filter-chip"
+                id="histFavFilter">
+          ⭐ お気に入り
+        </button>
+
+        <button class="bulk-delete-btn"
+                id="bulkDeleteBtn">
+          🗑️ 絞込を削除
+        </button>
+      </div>
+
+      <div class="date-filter-row">
+
+        <label>登録日：</label>
+
+        <input type="date"
+               class="date-filter-input"
+               id="dateFrom">
+
+        <span style="color:var(--text-3);font-size:0.85rem;">
+          〜
+        </span>
+
+        <input type="date"
+               class="date-filter-input"
+               id="dateTo">
+
+        <button id="clearDateBtn"
+          style="font-size:0.75rem;
+                 color:var(--text-3);
+                 background:none;
+                 border:none;
+                 text-decoration:underline;
+                 cursor:pointer;">
+          クリア
+        </button>
+
+      </div>
+
     </div>
-    <div class="date-filter-row">
-      <label>登録日：</label>
-      <input type="date" class="date-filter-input" id="dateFrom">
-      <span style="color:var(--text-3);font-size:0.85rem;">〜</span>
-      <input type="date" class="date-filter-input" id="dateTo">
-      <button id="clearDateBtn"
-        style="font-size:0.75rem;color:var(--text-3);background:none;border:none;text-decoration:underline;cursor:pointer;">
-        クリア
-      </button>
-    </div>
+
   </div>
 </div>
 
@@ -243,6 +283,16 @@ document.getElementById('clearDateBtn').addEventListener('click', function() {
   document.getElementById('dateTo').value   = '';
   currentPage = 1;
   applyAndRender();
+});
+
+/*トグル収納するやつ*/
+var historyFilterOpen = false;
+
+document.getElementById('historyFilterToggle').addEventListener('click', function() {
+  historyFilterOpen = !historyFilterOpen;
+
+  document.getElementById('historyFilterPanel').classList.toggle('open', historyFilterOpen);
+  document.getElementById('historyFilterArrow').textContent = historyFilterOpen ? '▲' : '▼';
 });
 
 
