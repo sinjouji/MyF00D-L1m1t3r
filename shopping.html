@@ -337,6 +337,36 @@
   </div>
 </div>
 
+
+<div class="modal-overlay center" id="shopExpiryOverlay">
+  <div class="modal confirm-modal">
+    <p class="confirm-head">📅 期限を登録</p>
+    <p class="confirm-sub" id="shopExpiryFoodName"></p>
+
+    <div class="date-templates" id="shopExpiryDateBtns">
+      <button class="date-btn" data-days="none">期限なし</button>
+      <button class="date-btn" data-days="0">今日</button>
+      <button class="date-btn" data-days="1">明日</button>
+      <button class="date-btn" data-days="3">３日後</button>
+      <button class="date-btn" data-days="7">７日後</button>
+      <button class="date-btn" data-days="manual">手動入力</button>
+    </div>
+
+    <div class="manual-wrap" id="shopExpiryManualWrap">
+      <input type="date" id="shopExpiryManualDate">
+    </div>
+
+    <input type="text" class="memo-input" id="shopExpiryMemo"
+           placeholder="メモ（任意）" maxlength="100">
+
+    <div class="confirm-btns">
+      <button class="btn-cancel" id="shopExpiryCancel">キャンセル</button>
+      <button class="btn-confirm" id="shopExpiryOk">登録する</button>
+    </div>
+  </div>
+</div>
+
+
 <div class="toast" id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
