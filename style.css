@@ -1083,7 +1083,6 @@ body {
   margin-bottom: 16px;
   box-shadow: var(--shadow);
   text-align: center;
-  position: sticky;
 }
 
 .today-year {
@@ -1108,6 +1107,20 @@ header {
   right: 0;
   z-index: 3000;
 }
+
+.today-box {
+  position: fixed;
+  top: 30px; /* header高さ */
+  left: 0;
+  right: 0;
+  z-index: 2500;
+  background: var(--bg);
+}
+
+body.home-page {
+  padding-top: 150px;
+}
+
 
 .page-filter-bar {
   position: fixed !important;
