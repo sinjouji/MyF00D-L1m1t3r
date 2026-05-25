@@ -30,6 +30,19 @@ var newFoodIsFav      = false;
 var newFoodExpiry     = null;
 var newFoodExistingId = null;  // 既存食材を選んだ場合の foodId
 
+//期限登録モーダルちゃん
+var homeExpiryOverlay = document.getElementById('homeExpiryOverlay');
+var modalHomeSearchEl = document.getElementById('modalHomeSearch');
+var modalHomeSuggestList = document.getElementById('modalHomeSuggestList');
+var modalSelectedFoodInfo = document.getElementById('modalSelectedFoodInfo');
+var modalSelectedFoodName = document.getElementById('modalSelectedFoodName');
+var modalHomeManualWrap = document.getElementById('modalHomeManualWrap');
+var modalHomeManualDate = document.getElementById('modalHomeManualDate');
+var modalHomeMemo = document.getElementById('modalHomeMemo');
+
+var modalSelectedFood = null;
+var modalExpiryDate = null;
+
 
 /* ====================================
    Firestore リスナー
@@ -183,11 +196,7 @@ var normal   = datedItems.filter(function(i) { return getDaysUntil(i.expiryDate)
 
 if (todayRegisterBtn) {
   todayRegisterBtn.addEventListener('click', function() {
-    if (inputPanel.classList.contains('open')) {
-      closePanel();
-    } else {
-      openPanel();
-    }
+    openHomeExpiryModal();
   });
 }
     
@@ -445,6 +454,36 @@ var dateText = item.noExpiry || !item.expiryDate
 
 '</div>'+
     '</div>';
+}
+
+
+//modal
+function openHomeExpiryModal() {
+  modalSelectedFood = null;
+  modalExpiryDate = null;
+
+  modalHomeSearchEl.value = '';
+  modalHomeSuggestList.innerHTML = '';
+  modalHomeSuggestList.classList.remove('show');
+  modalSelectedFoodInfo.style.display = 'none';
+
+  modalHomeManualDate.value = '';
+  modalHomeManualWrap.classList.remove('show');
+  modalHomeMemo.value = '';
+
+  document.querySelectorAll('#modalHomeDateBtns .date-btn').forEach(function(b) {
+    b.classList.remove('active');
+  });
+
+  homeExpiryOverlay.classList.add('show');
+
+  setTimeout(function() {
+    modalHomeSearchEl.focus();
+  }, 100);
+}
+
+function closeHomeExpiryModal() {
+  homeExpiryOverlay.classList.remove('show');
 }
 
 
