@@ -185,11 +185,7 @@ document.querySelectorAll('#shopExpiryDateBtns .date-btn').forEach(function(btn)
     } else if (btn.dataset.days === 'manual') {
       shopExpiryManualWrap.classList.add('show');
 
-      setTimeout(function() {
-        shopExpiryManualDate.showPicker?.();
-        shopExpiryManualDate.focus();
-        shopExpiryManualDate.click();
-      }, 50);
+      openDatePicker(shopExpiryManualDate);
 
       shopExpiryDate = shopExpiryManualDate.value || null;
     } else {

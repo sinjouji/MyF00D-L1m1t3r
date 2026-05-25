@@ -615,9 +615,9 @@ if (!candidates.length) {
 });
 
 homeSearchEl.addEventListener('blur', function() {
-  setTimeout(function() {
-    homeSuggestList.classList.remove('show');
-  }, 200);
+  
+  openDatePicker(homeManualDate);
+  
 });
 
 /* ====================================
@@ -798,7 +798,7 @@ function openNewFoodModal() {
   document.querySelectorAll('#newFoodDateBtns .date-btn').forEach(function(b) { b.classList.remove('active'); });
 
   newFoodOverlay.classList.add('show');
-  setTimeout(function() { newFoodNameEl.focus(); }, 300);
+  openDatePicker(newFoodManualDate);
 }
 function closeNewFoodModal() {
   newFoodOverlay.classList.remove('show');
