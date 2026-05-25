@@ -23,6 +23,15 @@ var filterCat   = 'all';  // 'all' | 'food' | 'misc'
 var foodNames   = [];   // foods の name 一覧（サジェスト用）
 var selCategory = 'food'; // 入力パネルで選択中のカテゴリ
 
+var shopExpiryItem = null; //チェックしてその場で期限モーダルここから
+var shopExpiryDate = null;
+
+var shopExpiryOverlay = document.getElementById('shopExpiryOverlay');
+var shopExpiryFoodName = document.getElementById('shopExpiryFoodName');
+var shopExpiryManualWrap = document.getElementById('shopExpiryManualWrap');
+var shopExpiryManualDate = document.getElementById('shopExpiryManualDate');
+var shopExpiryMemo = document.getElementById('shopExpiryMemo'); //期限モーダルここまで
+
 
 /* ====================================
    Firestore リスナー
@@ -159,6 +168,125 @@ function buildShopItem(item) {
   return wrap;
 }
 
+
+
+//日付ボタンイベント
+document.querySelectorAll('#shopExpiryDateBtns .date-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('#shopExpiryDateBtns .date-btn').forEach(function(b) {
+      b.classList.remove('active');
+    });
+
+    btn.classList.add('active');
+
+    if (btn.dataset.days === 'none') {
+      shopExpiryManualWrap.classList.remove('show');
+      shopExpiryDate = 'none';
+    } else if (btn.dataset.days === 'manual') {
+      shopExpiryManualWrap.classList.add('show');
+
+      setTimeout(function() {
+        shopExpiryManualDate.showPicker?.();
+        shopExpiryManualDate.focus();
+        shopExpiryManualDate.click();
+      }, 50);
+
+      shopExpiryDate = shopExpiryManualDate.value || null;
+    } else {
+      shopExpiryManualWrap.classList.remove('show');
+      shopExpiryDate = getDateStr(Number(btn.dataset.days));
+    }
+  });
+});
+
+shopExpiryManualDate.addEventListener('change', function() {
+  shopExpiryDate = shopExpiryManualDate.value || null;
+});
+
+
+//モーダル開閉
+function openShopExpiryModal(item) {
+  shopExpiryItem = item;
+  shopExpiryDate = null;
+
+  shopExpiryFoodName.textContent = item.name;
+  shopExpiryMemo.value = '';
+  shopExpiryManualDate.value = '';
+  shopExpiryManualWrap.classList.remove('show');
+
+  document.querySelectorAll('#shopExpiryDateBtns .date-btn').forEach(function(b) {
+    b.classList.remove('active');
+  });
+
+  shopExpiryOverlay.classList.add('show');
+}
+
+function closeShopExpiryModal() {
+  shopExpiryOverlay.classList.remove('show');
+  shopExpiryItem = null;
+  shopExpiryDate = null;
+}
+
+//キャンセルと登録ボタン
+document.getElementById('shopExpiryCancel').addEventListener('click', function() {
+  closeShopExpiryModal();
+});
+
+shopExpiryOverlay.addEventListener('click', function(e) {
+  if (e.target === shopExpiryOverlay) {
+    closeShopExpiryModal();
+  }
+});
+
+document.getElementById('shopExpiryOk').addEventListener('click', async function() {
+  if (!shopExpiryItem) return;
+
+  if (!shopExpiryDate) {
+    showToast('⚠️ 期限日を選択してください');
+    return;
+  }
+
+  var item = shopExpiryItem;
+  var noExpiry = shopExpiryDate === 'none';
+  var memo = shopExpiryMemo.value.trim();
+
+  try {
+    await db.collection('inventory').doc(item.foodId).set({
+      foodId: item.foodId,
+      foodName: item.name,
+      expiryDate: noExpiry ? '' : shopExpiryDate,
+      noExpiry: noExpiry,
+      memo: memo,
+      updatedAt: new Date()
+    });
+
+    await db.collection('history').add({
+      foodId: item.foodId,
+      foodName: item.name,
+      expiryDate: noExpiry ? '' : shopExpiryDate,
+      noExpiry: noExpiry,
+      memo: memo,
+      favorite: true,
+      registeredAt: new Date()
+    });
+
+    await db.collection('shoppingItems').doc(item.id).update({
+      checked: true
+    });
+
+    showToast('✅ ' + item.name + ' の期限を登録しました');
+    closeShopExpiryModal();
+
+  } catch (e) {
+    console.error('shop expiry register error:', e);
+    showToast('❌ 期限登録に失敗しました');
+  }
+});
+
+
+
+
+//期限入力のやつ
 async function toggleShoppingChecked(item) {
   var nextChecked = !item.checked;
 
@@ -170,22 +298,9 @@ async function toggleShoppingChecked(item) {
       });
 
     if (item.foodId && nextChecked) {
-      var ok = await confirmDialog({
-        title: '期限登録しますか？',
-        sub: '買った食材を在庫へ登録できます',
-        detail:
-          '<p><span class="dl">食材</span>' +
-          escapeHtml(item.name) +
-          '</p>',
-        okLabel: '期限登録する'
-      });
-
-      if (ok) {
-        sessionStorage.setItem('pendingFoodId', item.foodId);
-        sessionStorage.setItem('pendingFoodName', item.name);
-        window.location.href = 'index.html';
-      }
-    }
+  openShopExpiryModal(item);
+    return;
+  }
 
   } catch (e) {
     showToast('❌ 更新失敗（' + (e.code || e.message) + '）');
