@@ -786,6 +786,19 @@ homeManualDate.addEventListener('change', function() {
 /* ====================================
    トグルパネル：期限登録
    ==================================== */
+   /*完全一致は選択しなくてOKなやつ*/
+   if (!homeSelectedFood) {
+  var keyword = homeSearchEl.value.trim();
+
+  var matchedFood = Object.values(foodMap).find(function(food) {
+    return food.name === keyword;
+  });
+
+  if (matchedFood) {
+    selectHomeFood(matchedFood);
+  }
+}
+   
    
 document.getElementById('homeRegisterBtn').addEventListener('click', async function() {
   if (!homeSelectedFood) {
@@ -859,6 +872,7 @@ await db.collection('inventory').doc(docId).set({
     await db.collection('history').add({
   foodId: docId,
   foodName: food.foodName,
+  favorite: !!food.favorite,
   expiryDate: noExpiry ? '' : date,
   noExpiry: noExpiry,
   memo: memo,
@@ -1077,6 +1091,7 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', async fu
     await db.collection('history').add({
       foodId:       foodId,
       foodName:     name,
+      favorite:     !!food.favorite,
       expiryDate:   noExpiry ? '' : expiry,
       noExpiry:     noExpiry,
       memo:         memo,
