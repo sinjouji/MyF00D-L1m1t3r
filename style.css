@@ -1150,9 +1150,9 @@ body.home-page {
   background: var(--bg);
 }
 
-/*body {
-  padding-top: 116px;  header + filter分 
-}*/
+body {
+  padding-top: 60px; /* header + filter分 */
+}
 
 body.db-page,
 body.history-page {
