@@ -1110,7 +1110,7 @@ header {
 
 .today-box {
   position: fixed;
-  top: 30px; /* header高さ */
+  top: 56px; /* header高さ */
   left: 0;
   right: 0;
   z-index: 2500;
