@@ -138,11 +138,15 @@
                 id="histFavFilter">
           ⭐ お気に入り
         </button>
-
-        <button class="bulk-delete-btn"
-                id="bulkDeleteBtn">
-          🗑️ 絞込を削除
+        
+        <button id="clearDateBtn"
+          style="font-size:0.75rem;
+                 color:var(--text-3);
+                 text-decoration:underline;
+                 cursor:pointer;">
+          クリア
         </button>
+        
       </div>
 
       <div class="date-filter-row">
@@ -161,14 +165,10 @@
                class="date-filter-input"
                id="dateTo">
 
-        <button id="clearDateBtn"
-          style="font-size:0.75rem;
-                 color:var(--text-3);
-                 background:none;
-                 border:none;
-                 text-decoration:underline;
-                 cursor:pointer;">
-          クリア
+
+<button class="bulk-delete-btn"
+                id="bulkDeleteBtn">
+          🗑️ 全ての履歴を削除
         </button>
 
       </div>
