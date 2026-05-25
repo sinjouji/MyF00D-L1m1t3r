@@ -1108,6 +1108,19 @@ header {
   z-index: 3000;
 }
 
+.page-filter-bar {
+  position: fixed !important;
+  top: 52px; /* header高さに合わせて調整 */
+  left: 0;
+  right: 0;
+  z-index: 2500;
+  background: var(--bg);
+}
+
+body {
+  padding-top: 116px; /* header + filter分 */
+}
+
 body.db-page,
 body.history-page {
   padding-top: 116px;
