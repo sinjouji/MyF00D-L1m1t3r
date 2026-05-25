@@ -1,5 +1,10 @@
+/* ============================================================
+   home.js — ホーム・在庫管理
+   ============================================================ */
+
 
 console.log('[index] script start');
+
 /* ============================================================
    index.html — ホームページ スクリプト
 
@@ -957,12 +962,12 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', async fu
 
     /* 履歴を追加 */
     await db.collection('history').add({
-  foodId: docId,
-  foodName: food.foodName,
-  expiryDate: noExpiry ? '' : date,
+  foodId: foodId,
+  foodName: name,
+  expiryDate: noExpiry ? '' : expiry,
   noExpiry: noExpiry,
   memo: memo,
-  favorite: !!food.favorite,
+  favorite: !!isFav,
   registeredAt: new Date()
 });
 
