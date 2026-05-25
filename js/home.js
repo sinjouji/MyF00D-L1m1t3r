@@ -615,9 +615,9 @@ if (!candidates.length) {
 });
 
 homeSearchEl.addEventListener('blur', function() {
-  
-  openDatePicker(homeManualDate);
-  
+  setTimeout(function() {
+    homeSuggestList.classList.remove('show');
+  }, 200);
 });
 
 /* ====================================
@@ -636,11 +636,7 @@ document.querySelectorAll('#homeDateBtns .date-btn').forEach(function(btn) {
 } else if (btn.dataset.days === 'manual') {
   homeManualWrap.classList.add('show');
 
-  setTimeout(function() {
-    homeManualDate.showPicker?.();
-    homeManualDate.focus();
-    homeManualDate.click();
-  }, 50);
+  openDatePicker(homeManualDate);
 
   homeExpiryDate = homeManualDate.value || null;
 } else {
@@ -798,7 +794,7 @@ function openNewFoodModal() {
   document.querySelectorAll('#newFoodDateBtns .date-btn').forEach(function(b) { b.classList.remove('active'); });
 
   newFoodOverlay.classList.add('show');
-  openDatePicker(newFoodManualDate);
+  
 }
 function closeNewFoodModal() {
   newFoodOverlay.classList.remove('show');
@@ -875,7 +871,7 @@ document.querySelectorAll('#newFoodDateBtns .date-btn').forEach(function(btn) {
 
     } else if (btn.dataset.days === 'manual') {
 
-      newFoodManualWrap.classList.add('show');
+  newFoodManualWrap.classList.add('show');
 
       setTimeout(function() {
 
