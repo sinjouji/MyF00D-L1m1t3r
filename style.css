@@ -1109,6 +1109,12 @@ header {
 }
 
 .today-box {
+  position: fixed;
+  top: 56px; /* header高さ */
+  left: 0;
+  right: 0;
+  z-index: 2500;
+  background: var(--bg);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1129,7 +1135,6 @@ header {
   font-family: var(--font-body);
   box-shadow: var(--shadow);
 }
-
 body.home-page {
   padding-top: 150px;
 }
