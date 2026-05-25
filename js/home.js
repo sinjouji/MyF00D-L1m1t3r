@@ -459,6 +459,8 @@ var dateText = item.noExpiry || !item.expiryDate
 
 //modal
 function openHomeExpiryModal() {
+  document.body.classList.add('modal-open');
+
   modalSelectedFood = null;
   modalExpiryDate = null;
 
@@ -483,6 +485,8 @@ function openHomeExpiryModal() {
 }
 
 function closeHomeExpiryModal() {
+  document.body.classList.remove('modal-open');
+  
   homeExpiryOverlay.classList.remove('show');
 }
 
