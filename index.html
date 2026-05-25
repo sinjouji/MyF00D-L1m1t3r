@@ -121,6 +121,47 @@
   </div>
 </div>
 
+<!--登録モーダル-->
+<div class="modal-overlay center" id="homeExpiryOverlay">
+  <div class="modal confirm-modal">
+    <p class="confirm-head">📅 期限を登録</p>
+
+    <div class="search-wrap">
+      <input type="text" class="search-input" id="modalHomeSearch"
+             placeholder="🔍 食材名を検索…" autocomplete="off">
+      <div class="suggest-list" id="modalHomeSuggestList"></div>
+    </div>
+
+    <div id="modalSelectedFoodInfo" style="display:none; margin:10px 0;">
+      <span style="font-size:0.82rem; color:var(--text-3);">選択中：</span>
+      <strong id="modalSelectedFoodName" style="color:var(--primary-d);"></strong>
+    </div>
+
+    <div class="date-templates" id="modalHomeDateBtns">
+      <button class="date-btn" data-days="none">期限なし</button>
+      <button class="date-btn" data-days="0">今日</button>
+      <button class="date-btn" data-days="1">明日</button>
+      <button class="date-btn" data-days="3">３日後</button>
+      <button class="date-btn" data-days="7">７日後</button>
+      <button class="date-btn" data-days="manual">手動入力</button>
+    </div>
+
+    <div class="manual-wrap" id="modalHomeManualWrap">
+      <input type="date" id="modalHomeManualDate">
+    </div>
+
+    <input type="text" class="memo-input" id="modalHomeMemo"
+           placeholder="メモ（任意）" maxlength="100">
+
+    <div class="confirm-btns">
+      <button class="btn-cancel" id="modalHomeCancel">キャンセル</button>
+      <button class="btn-confirm" id="modalHomeOk">登録する</button>
+    </div>
+  </div>
+</div>
+
+
+
 <div class="toast" id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
