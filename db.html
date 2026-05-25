@@ -51,17 +51,24 @@
 
 <div class="page-filter-bar">
   <div class="page-filter-inner">
-    <p class="page-title">📚 食材データベース</p>
-    <div class="filter-row">
-      <input type="text" class="filter-input" id="dbSearch" placeholder="🔍 食材名で検索…">
-      <button class="filter-chip" id="dbFavFilter">⭐ お気に入り</button>
-      <button class="filter-chip" id="dbStockFilter">📦 在庫あり</button>
-    </div>
-    <div class="sort-tabs">
-      <button class="sort-tab active" data-sort="name">名前順</button>
-      <button class="sort-tab" data-sort="fav">お気に入り優先</button>
-      <button class="sort-tab" data-sort="expiry">期限順</button>
-      <button class="sort-tab" data-sort="created">登録順</button>
+    <button class="filter-toggle-btn" id="dbFilterToggle">
+      🔍 検索・絞り込み
+      <span id="dbFilterArrow">▼</span>
+    </button>
+
+    <div class="filter-panel" id="dbFilterPanel">
+      <p class="page-title">📚 食材データベース</p>
+      <div class="filter-row">
+        <input type="text" class="filter-input" id="dbSearch" placeholder="🔍 食材名で検索…">
+        <button class="filter-chip" id="dbFavFilter">⭐ お気に入り</button>
+        <button class="filter-chip" id="dbStockFilter">📦 在庫あり</button>
+      </div>
+      <div class="sort-tabs">
+        <button class="sort-tab active" data-sort="name">名前順</button>
+        <button class="sort-tab" data-sort="fav">お気に入り優先</button>
+        <button class="sort-tab" data-sort="expiry">期限順</button>
+        <button class="sort-tab" data-sort="created">登録順</button>
+      </div>
     </div>
   </div>
 </div>
@@ -178,6 +185,17 @@ document.querySelectorAll('.sort-tab').forEach(function(tab) {
     currentSort = tab.dataset.sort;
     renderDb();
   });
+});
+
+
+/*トグルで開くエリア*/
+var dbFilterOpen = false;
+
+document.getElementById('dbFilterToggle').addEventListener('click', function() {
+  dbFilterOpen = !dbFilterOpen;
+
+  document.getElementById('dbFilterPanel').classList.toggle('open', dbFilterOpen);
+  document.getElementById('dbFilterArrow').textContent = dbFilterOpen ? '▲' : '▼';
 });
 
 
