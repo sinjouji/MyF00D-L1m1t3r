@@ -235,3 +235,19 @@ function initConfirmDialog() {
     if (e.target === overlay) _closeConfirm(false);
   });
 }
+
+
+//日付の手動入力時にカレンダー開こうZE⭐︎
+function openDatePicker(input) {
+  input.focus();
+
+  if (input.showPicker) {
+    try {
+      input.showPicker();
+    } catch (e) {
+      input.click();
+    }
+  } else {
+    input.click();
+  }
+}
