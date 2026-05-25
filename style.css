@@ -1267,3 +1267,8 @@ input[type="date"] {
 #homeExpiryOverlay .search-wrap {
   overflow: visible !important;
 }
+
+body.modal-open .today-box {
+  z-index: 1 !important;
+  opacity: 0.25;
+}
