@@ -1117,14 +1117,6 @@ header {
   background: var(--bg);
 }
 
-.shop-bottom,
-.shop-actions,
-.shopping-toolbar {
-  position: sticky;
-  top: 56px;
-  z-index: 2500;
-  background: var(--bg);
-}
 
 
 body,
