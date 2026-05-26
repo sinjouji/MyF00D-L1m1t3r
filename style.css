@@ -1130,6 +1130,35 @@ body {
 }
 
 
+/* 買い物メモ内の区切り線用 */
+.shop-divider {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 8px;
+  padding: 6px 4px;
+}
+
+.shop-divider-line {
+  height: 1px;
+  background: var(--border);
+}
+
+.shop-divider-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.shop-divider .list-item-actions {
+  display: flex;
+  gap: 6px;
+}
+
+
+
 /*ヘッダーメニュー固定用*/
 header {
   position: fixed !important;
