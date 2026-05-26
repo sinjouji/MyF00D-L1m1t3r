@@ -108,8 +108,12 @@ function renderShop() {
   container.innerHTML = '';
   /* 未チェック → チェック済みの順で表示 */
   unchecked.concat(checked).forEach(function(item) {
+  if (item.type === 'divider') {
+    container.appendChild(buildShopDivider(item));
+  } else {
     container.appendChild(buildShopItem(item));
-  });
+  }
+});
 }
 
 function buildShopItem(item) {
@@ -167,6 +171,42 @@ function buildShopItem(item) {
 
   return wrap;
 }
+
+//区切り線の表示
+function buildShopDivider(item) {
+  var wrap = document.createElement('div');
+
+  wrap.innerHTML =
+    '<div class="shop-divider" data-id="' + item.id + '">' +
+      '<span class="shop-divider-line"></span>' +
+      '<span class="shop-divider-label">' + escapeHtml(item.label || '区切り') + '</span>' +
+      '<div class="list-item-actions">' +
+        '<button class="icon-btn move-up" title="上へ">↑</button>' +
+        '<button class="icon-btn move-down" title="下へ">↓</button>' +
+        '<button class="icon-btn del" title="削除">🗑️</button>' +
+      '</div>' +
+    '</div>';
+
+  wrap.querySelector('.move-up').addEventListener('click', function(e) {
+    e.stopPropagation();
+    moveShoppingItem(item, -1);
+  });
+
+  wrap.querySelector('.move-down').addEventListener('click', function(e) {
+    e.stopPropagation();
+    moveShoppingItem(item, 1);
+  });
+
+  wrap.querySelector('.icon-btn.del').addEventListener('click', async function(e) {
+    e.stopPropagation();
+
+    await db.collection('shoppingItems').doc(item.id).delete();
+    showToast('🗑️ 区切り線を削除しました');
+  });
+
+  return wrap;
+}
+
 
 
 
@@ -471,6 +511,33 @@ async function addItem() {
     showToast('❌ 追加失敗（' + (e.code || e.message) + '）');
   }
 }
+
+
+
+
+/* ====================================
+   区切り線の挿入
+   ==================================== */
+document.getElementById('addDividerBtn').addEventListener('click', async function() {
+  var label = prompt('区切り名を入力してください', 'メモ');
+
+  if (!label || !label.trim()) return;
+
+  try {
+    await db.collection('shoppingItems').add({
+      type: 'divider',
+      label: label.trim(),
+      checked: false,
+      order: Date.now(),
+      createdAt: new Date()
+    });
+
+    showToast('➖ 区切り線を追加しました');
+  } catch (e) {
+    console.error('divider add error:', e);
+    showToast('❌ 区切り線を追加できませんでした');
+  }
+});
 
 
 /* ====================================
