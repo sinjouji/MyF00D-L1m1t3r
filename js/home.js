@@ -543,6 +543,67 @@ modalHomeSearchEl.addEventListener('input', function() {
       modalHomeSuggestList.classList.remove('show');
       return;
     }
+    
+    //候補になければ新規追加
+    if (!candidates.length) {
+
+  var div = document.createElement('div');
+
+  div.className =
+    'suggest-item suggest-create';
+
+  div.innerHTML =
+    '<span class="suggest-name">＋ 「' +
+    escapeHtml(keyword) +
+    '」を新規食材として追加</span>';
+
+  div.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    modalSelectedFood = {
+      isNew: true,
+      foodName: keyword,
+      favorite: false
+    };
+
+    modalHomeSearchEl.value = keyword;
+
+    modalSelectedFoodName.textContent = keyword;
+
+    modalSelectedFoodInfo.style.display = 'block';
+
+    modalHomeSuggestList.classList.remove('show');
+  });
+
+  div.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    modalSelectedFood = {
+      isNew: true,
+      foodName: keyword,
+      favorite: false
+    };
+
+    modalHomeSearchEl.value = keyword;
+
+    modalSelectedFoodName.textContent = keyword;
+
+    modalSelectedFoodInfo.style.display = 'block';
+
+    modalHomeSuggestList.classList.remove('show');
+  });
+
+  modalHomeSuggestList.innerHTML = '';
+
+  modalHomeSuggestList.appendChild(div);
+
+  modalHomeSuggestList.classList.add('show');
+
+  return;
+}
+    
 
     candidates.forEach(function(food) {
       var div = document.createElement('div');
