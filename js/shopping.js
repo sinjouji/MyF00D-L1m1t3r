@@ -475,9 +475,10 @@ async function addItem() {
   if (!name) { showToast('⚠️ アイテム名を入力してください'); shopNameInput.focus(); return; }
 
   var exists = allItems.some(function(item) {
-  return !item.checked &&
+  return item.type !== 'divider' &&
+    item.name &&
     item.name.trim().toLowerCase() === name.toLowerCase();
-  });
+});
 
   if (exists) {
     showToast('🛒 ' + name + ' は既に買い物リストにあります');
