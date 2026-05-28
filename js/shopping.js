@@ -45,7 +45,7 @@ db.collection('shoppingItems').onSnapshot(function(snap) {
 
   allItems.sort(function(a, b) {
     if (a.checked !== b.checked) return a.checked ? 1 : -1;
-    return (a.order || 0) - (b.order || 0);
+    return (b.order || 0) - (a.order || 0);
   });
 
   renderShop();
