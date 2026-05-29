@@ -366,7 +366,7 @@ async function moveShoppingItem(item, direction) {
 
   });
 
-  var other = visible[idx + direction];
+  var other = visible[idx - direction];
 
   if (!other) return;
 
