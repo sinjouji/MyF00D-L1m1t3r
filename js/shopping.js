@@ -32,6 +32,8 @@ var shopExpiryManualWrap = document.getElementById('shopExpiryManualWrap');
 var shopExpiryManualDate = document.getElementById('shopExpiryManualDate');
 var shopExpiryMemo = document.getElementById('shopExpiryMemo'); //期限モーダルここまで
 
+enhanceDateButtons();
+
 
 /* ====================================
    Firestore リスナー

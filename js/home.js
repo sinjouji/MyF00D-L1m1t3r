@@ -43,6 +43,8 @@ var modalHomeMemo = document.getElementById('modalHomeMemo');
 var modalSelectedFood = null;
 var modalExpiryDate = null;
 
+enhanceDateButtons();
+
 
 /* ====================================
    Firestore リスナー
