@@ -125,6 +125,38 @@ function toDateStr(value) {
 }
 
 
+/*
+日付テンプレボタン＝⚪︎月⚪︎日表示
+*/
+function enhanceDateButtons(root) {
+  var target = root || document;
+
+  target.querySelectorAll('.date-btn[data-days]').forEach(function(btn) {
+    var days = btn.dataset.days;
+
+    if (days === 'manual' || days === 'none') return;
+
+    var d = new Date();
+    d.setDate(d.getDate() + Number(days));
+
+    var mainLabel =
+      days === '0' ? '今日' :
+      days === '1' ? '明日' :
+      days === '2' ? '２日後' :
+      days === '3' ? '３日後' :
+      days === '7' ? '７日後' :
+      days + '日後';
+
+    btn.innerHTML =
+      '<span class="date-btn-main">' + mainLabel + '</span>' +
+      '<span class="date-btn-sub">' +
+        (d.getMonth() + 1) + '/' + d.getDate() +
+      '</span>';
+  });
+}
+
+
+
 
 /* ====================================
    DOM ユーティリティ
