@@ -194,6 +194,14 @@ var normal   = datedItems.filter(function(i) { return getDaysUntil(i.expiryDate)
       buildSection('no-expiry', '🥬 期限なし', noExpiryArr, '期限なしの食材はありません');
     
     
+    main.querySelectorAll('.expiry-section.is-collapsible .section-head')
+  .forEach(function(head) {
+    head.addEventListener('click', function() {
+      var section = head.closest('.expiry-section');
+      section.classList.toggle('is-closed');
+    });
+  });
+    
     var todayRegisterBtn = document.getElementById('todayRegisterBtn');
 
 if (todayRegisterBtn) {
@@ -417,10 +425,16 @@ function buildSection(status, label, items, emptyMsg) {
   var inner = items.length === 0
     ? '<div class="empty-card">' + emptyMsg + '</div>'
     : items.map(function(i) { return buildFoodCard(i, status); }).join('');
-  return '<section class="expiry-section section-' + status + '">' +
-    '<div class="section-head">' +
+ 
+  var collapsible =
+    status === 'normal' || status === 'no-expiry';
+  return '<section class="expiry-section section-' + status +
+    (collapsible ? ' is-collapsible is-closed' : '') +
+    '">' +
+    '<div class="section-head" data-status="' + status + '">' +
       '<span class="badge ' + status + '">' + label + '</span>' +
       '<span class="section-count">' + items.length + '件</span>' +
+      (collapsible ? '<span class="section-arrow">▼</span>' : '') +
     '</div>' +
     '<div class="food-grid">' + inner + '</div>' +
     '</section>';
