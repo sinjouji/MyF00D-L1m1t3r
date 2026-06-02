@@ -179,7 +179,7 @@ main {
 .section-expired .food-grid,
 .section-today .food-grid,
 .section-soon .food-grid {
-  max-height: 330px;
+  max-height: 200px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
