@@ -417,7 +417,7 @@ function buildSection(status, label, items, emptyMsg) {
   var inner = items.length === 0
     ? '<div class="empty-card">' + emptyMsg + '</div>'
     : items.map(function(i) { return buildFoodCard(i, status); }).join('');
-  return '<section class="expiry-section">' +
+  return '<section class="expiry-section section-' + status + '">' +
     '<div class="section-head">' +
       '<span class="badge ' + status + '">' + label + '</span>' +
       '<span class="section-count">' + items.length + '件</span>' +
