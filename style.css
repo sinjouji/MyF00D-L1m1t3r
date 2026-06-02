@@ -185,6 +185,31 @@ main {
 }
 
 
+.expiry-section.is-collapsible .section-head {
+  cursor: pointer;
+}
+
+.expiry-section.is-collapsible.is-closed .food-grid {
+  display: none;
+}
+
+.expiry-section.is-collapsible:not(.is-closed) .food-grid {
+  max-height: 420px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.expiry-section.is-collapsible.is-closed .section-arrow {
+  transform: rotate(-90deg);
+}
+
+.section-arrow {
+  display: inline-block;
+  margin-left: 6px;
+  transition: transform 0.18s;
+}s
+
+
 .section-head {
   display: flex;
   align-items: center;
