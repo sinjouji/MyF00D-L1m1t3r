@@ -172,6 +172,19 @@ main {
    ==================================== */
 .expiry-section { margin-bottom: 20px; }
 
+.expiry-section .food-grid {
+  max-height: none;
+}
+
+.section-expired .food-grid,
+.section-today .food-grid,
+.section-soon .food-grid {
+  max-height: 330px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+
 .section-head {
   display: flex;
   align-items: center;
