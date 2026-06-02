@@ -207,7 +207,11 @@ main {
   display: inline-block;
   margin-left: 6px;
   transition: transform 0.18s;
-}s
+}
+
+#mainContent {
+  padding-bottom: 120px;
+}
 
 
 .section-head {
