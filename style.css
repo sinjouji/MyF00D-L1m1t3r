@@ -420,6 +420,17 @@ main {
   border-color: var(--primary);
 }
 
+.section-pinned .food-grid {
+  max-height: 260px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.food-card.pinned {
+  background: #fff8dc;
+  border-color: #e8d48a;
+  border-left-color: #c49a2c;
+}
 
 .buy-btn {
   font-size: 0.95rem;
