@@ -223,6 +223,29 @@ if (todayRegisterBtn) {
       });
     });
     
+    main.querySelectorAll('.pin-btn').forEach(function(btn) {
+  btn.addEventListener('click', async function(e) {
+    e.stopPropagation();
+
+    var foodId = btn.dataset.id;
+    var food = foodMap[foodId];
+
+    if (!food) return;
+
+    try {
+      await db.collection('foods').doc(foodId).update({
+        pinned: !food.pinned
+      });
+
+      showToast(food.pinned ? '📍 ピンを外しました' : '📌 ピン留めしました');
+
+    } catch (e) {
+      console.error('pin update error:', e);
+      showToast('❌ ピン更新に失敗しました');
+    }
+  });
+});
+    
     
     main.querySelectorAll('.buy-btn').forEach(function(btn) {
 
@@ -313,7 +336,8 @@ if (todayRegisterBtn) {
     var food = foodMap[inv.foodId] || {};
 
     var item = Object.assign({}, inv, {
-      favorite: !!food.favorite
+      favorite: !!food.favorite,
+      pinned: !food.pinned
     });
 
     var ok = await confirmDialog({
@@ -464,6 +488,10 @@ var dateText = item.noExpiry || !item.expiryDate
   '</div>' +
 
   '<div class="food-card-actions">' +
+    '<button class="mini-action pin-btn ' + (item.pinned ? 'is-pinned' : '') +
+    '" data-id="' + item.foodId + '">' +
+      (item.pinned ? '📌' : '📍') +
+    '</button>' +
     '<button class="mini-action buy-btn" data-id="' + item.id + '">🛒</button>' +
     '<button class="mini-action useup-btn" data-id="' + item.id + '">使い切った</button>' +
   '</div>' +
