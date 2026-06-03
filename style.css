@@ -415,6 +415,12 @@ main {
 }
 
 
+.pin-btn.is-pinned {
+  font-weight: 900;
+  border-color: var(--primary);
+}
+
+
 .buy-btn {
   font-size: 0.95rem;
 }
