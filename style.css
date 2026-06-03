@@ -1324,6 +1324,9 @@ input,
 input[type="date"] {
   font-size: 16px;
   line-height: 1.4;
+  -webkit-appearance:none;
+  box-sizing:border-box;
+  padding:5px;
 }
 
 //モーダルちゃん強化（一番前にくる）
