@@ -165,8 +165,15 @@ function renderHome() {
   try {
     var items = inventoryItems.map(function(inv) {
       var food = foodMap[inv.foodId] || {};
-      return Object.assign({}, inv, { favorite: !!food.favorite });
+      return Object.assign({}, inv, {
+        favorite: !!food.favorite,
+        pinned: !!food.pinned
+      });
     });
+
+var pinnedArr = items.filter(function(i) {
+  return i.pinned;
+});
 
 var noExpiryArr = items.filter(function(i) {
   return i.noExpiry || !i.expiryDate;
@@ -186,6 +193,7 @@ var normal   = datedItems.filter(function(i) { return getDaysUntil(i.expiryDate)
 
     main.innerHTML =
       buildTodayBox() +
+      buildSection('pinned', '📌 ピン留め', pinnedArr, '') +
       buildSection('expired', '🚨 期限切れ', expired, '期限切れの食材はありません ✨') +
       buildSection('today', '⏰ 今日まで', todayArr, '今日期限の食材はありません') +
       buildSection('soon', '📅 ３日以内', soon, '3日以内に期限が来る食材はありません')  +
@@ -337,7 +345,6 @@ if (todayRegisterBtn) {
 
     var item = Object.assign({}, inv, {
       favorite: !!food.favorite,
-      pinned: !food.pinned
     });
 
     var ok = await confirmDialog({
@@ -446,6 +453,7 @@ if (todayRegisterBtn) {
 function buildSection(status, label, items, emptyMsg) {
   /* normal セクションは空なら丸ごと非表示 */
   if (status === 'normal' && items.length === 0) return '';
+  if (status === 'pinned' && items.length === 0) return '';
   var inner = items.length === 0
     ? '<div class="empty-card">' + emptyMsg + '</div>'
     : items.map(function(i) { return buildFoodCard(i, status); }).join('');
