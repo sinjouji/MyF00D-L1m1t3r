@@ -47,10 +47,10 @@ if (shoppingStartToggle) {
   shoppingStartToggle.addEventListener('change', function() {
     if (shoppingStartToggle.checked) {
       localStorage.setItem('foodStartPage', 'shopping.html');
-      showToast('🛒 次回は買い物ページから開きます');
+      showToast('🛒 次回もここから開く');
     } else {
       localStorage.removeItem('foodStartPage');
-      showToast('🏠 次回はホームから開きます');
+      showToast('🏠 ホームから開く');
     }
   });
 }
