@@ -1381,3 +1381,18 @@ body.modal-open .today-box {
 }
 
 
+/*開始ページ制御トグル*/
+.start-page-setting {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 10px;
+  font-size: 0.82rem;
+  color: var(--text-2);
+  font-weight: 700;
+}
+
+.start-page-setting input {
+  width: 18px;
+  height: 18px;
+}
