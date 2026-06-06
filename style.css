@@ -1396,3 +1396,13 @@ body.modal-open .today-box {
   width: 18px;
   height: 10px;
 }
+
+.start-page-setting input[type="checkbox"] {
+  display: inline-block !important;
+  appearance: auto !important;
+  -webkit-appearance: checkbox !important;
+  opacity: 1 !important;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
