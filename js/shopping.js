@@ -47,7 +47,7 @@ if (shoppingStartToggle) {
   shoppingStartToggle.addEventListener('change', function() {
     if (shoppingStartToggle.checked) {
       localStorage.setItem('foodStartPage', 'shopping.html');
-      showToast('🛒 次回もここから開く');
+      showToast('🛒 買い物メモから開く');
     } else {
       localStorage.removeItem('foodStartPage');
       showToast('🏠 ホームから開く');
@@ -112,7 +112,7 @@ function renderShop() {
 
   /* カウント表示 */
   document.getElementById('shopCount').textContent =
-    unchecked.length + ' 件' + (checked.length ? '（チェック済み ' + checked.length + ' 件）' : '');
+    unchecked.length + ' 件' + (checked.length ? '（✅済み ' + checked.length + ' 件）' : '');
 
   var container = document.getElementById('shopList');
 
