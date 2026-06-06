@@ -1385,8 +1385,8 @@ body.modal-open .today-box {
 .start-page-setting {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin: 8px 0 10px;
+  gap: 4px;
+  margin: 5px 0 7px;
   font-size: 0.82rem;
   color: var(--text-2);
   font-weight: 700;
@@ -1394,5 +1394,5 @@ body.modal-open .today-box {
 
 .start-page-setting input {
   width: 18px;
-  height: 18px;
+  height: 10px;
 }
