@@ -5,6 +5,16 @@
 
 console.log('[index] script start');
 
+var startPage = localStorage.getItem('foodStartPage');
+
+if (
+  startPage &&
+  !sessionStorage.getItem('redirectedStartPage')
+) {
+  sessionStorage.setItem('redirectedStartPage', 'true');
+  location.href = startPage;
+}
+
 /* ============================================================
    index.html — ホームページ スクリプト
 
