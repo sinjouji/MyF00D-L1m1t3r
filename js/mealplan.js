@@ -42,12 +42,17 @@ function renderMealPlan() {
 
   var plan = loadMealPlan();
 
+  var updatedEl =
+    document.getElementById('mealPlanUpdated');
+
   var content =
-    document.getElementById(
-      'mealPlanContent'
-    );
+    document.getElementById('mealPlanContent');
 
   if (!plan.meals || plan.meals.length === 0) {
+
+    if (updatedEl) {
+      updatedEl.textContent = '最終更新：-';
+    }
 
     content.innerHTML =
       '<div class="empty-card">献立データがありません</div>';
@@ -55,5 +60,24 @@ function renderMealPlan() {
     return;
   }
 
+  if (updatedEl) {
+
+    var updatedText = '-';
+
+    if (plan.updatedAt) {
+      updatedText =
+        new Date(plan.updatedAt)
+          .toLocaleString('ja-JP');
+    }
+
+    updatedEl.textContent =
+      '最終更新：' + updatedText;
+  }
+
   content.innerHTML = '読込成功';
 }
+
+
+
+
+
