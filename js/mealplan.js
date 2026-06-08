@@ -87,9 +87,28 @@ function renderMealPlan() {
     })
     .join('');
 
+var ingredientsHtml =
+  (plan.ingredients || [])
+    .map(function(food) {
+
+      return (
+        '<div class="ingredient-chip">' +
+          food +
+        '</div>'
+      );
+
+    })
+    .join('');
+
 content.innerHTML =
   '<h3>計画中の献立</h3>' +
-  mealsHtml;
+  mealsHtml +
+
+  '<h3>🥕 必要食材</h3>' +
+
+  '<div class="ingredient-list">' +
+    ingredientsHtml +
+  '</div>';
 }
 
 
