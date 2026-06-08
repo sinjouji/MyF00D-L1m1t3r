@@ -10,21 +10,26 @@
 <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
 <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
   <style>
-  
+  <!--更新日時-->
+  .meal-plan-updated {
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: var(--text-3);
+}
+
+
   </style>
 </head>
 <body>
 
-<header>
 <div class="page-header">
   <h2>🍛 献立計画</h2>
+  <p class="meal-plan-updated" id="mealPlanUpdated">最終更新：-</p>
 </div>
-</header>
 
 <div id="mealPlanContent">
   読み込み中...
 </div>
-
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
