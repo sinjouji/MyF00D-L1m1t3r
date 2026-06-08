@@ -90,13 +90,11 @@ function renderMealPlan() {
 var ingredientsHtml =
   (plan.ingredients || [])
     .map(function(food) {
-
       return (
-        '<div class="ingredient-chip">' +
+        '<span class="mealplan-ingredient-chip">' +
           food +
-        '</div>'
+        '</span>'
       );
-
     })
     .join('');
 
@@ -106,7 +104,7 @@ content.innerHTML =
 
   '<h3>🥕 必要食材</h3>' +
 
-  '<div class="ingredient-list">' +
+  '<div class="mealplan-ingredient-list">' +
     ingredientsHtml +
   '</div>';
 }
