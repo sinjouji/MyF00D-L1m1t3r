@@ -74,7 +74,22 @@ function renderMealPlan() {
       '最終更新：' + updatedText;
   }
 
-  content.innerHTML = '読込成功';
+  var mealsHtml =
+  (plan.meals || [])
+    .map(function(meal) {
+
+      return (
+        '<div class="meal-card">' +
+          '🍛 ' + meal.name +
+        '</div>'
+      );
+
+    })
+    .join('');
+
+content.innerHTML =
+  '<h3>計画中の献立</h3>' +
+  mealsHtml;
 }
 
 
