@@ -107,7 +107,7 @@ function renderMealPlan() {
     
     //食材リスト50音順ソート
     var sortedIngredients =
-  (sortedIngredients || [])
+  (plan.ingredients || [])
     .slice()
     .sort(function(a, b) {
       return normalizeIngredientName(a).localeCompare(
@@ -117,7 +117,7 @@ function renderMealPlan() {
     });
 
 var ingredientsHtml =
-  (plan.ingredients || [])
+  sortedIngredients
     .filter(function(food) {
       return !excludedMenuFoods.includes(normalizeIngredientName(food));
     })
