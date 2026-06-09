@@ -243,7 +243,6 @@ async function handleAction(act, food, inv) {
     } catch (e) { showToast('❌ 更新失敗（' + (e.code || e.message) + '）'); }
 
   } else if (act === 'exclude') {
-  e.stopPropagation();
 
   var next = !food.excludeFromMenu;
 
@@ -260,7 +259,7 @@ async function handleAction(act, food, inv) {
         : '🍛 献立提案に含めます'
     );
 
-    renderFoods();
+    renderDb();
 
   } catch (err) {
     console.error('excludeFromMenu update error:', err);
