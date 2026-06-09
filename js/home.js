@@ -74,6 +74,7 @@ function loadInventorySnap(snap) {
 
   invReady = true;
   renderHome();
+  exportInventoryForMenu();
 }
 
 db.collection('inventory').get()
@@ -1338,4 +1339,28 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', async fu
     showToast('❌ 追加に失敗しました（' + (e.code || e.message) + '）');
   }
 });
+
+
+
+
+//在庫の食材データを渡すやつ
+function exportInventoryForMenu() {
+
+  var names = inventoryItems
+    .map(function(item) {
+      return item.foodName;
+    })
+    .filter(Boolean);
+
+  var uniqueNames =
+    Array.from(new Set(names));
+    
+  console.log('[food] exportInventoryForMenu:', uniqueNames);
+
+  localStorage.setItem(
+    'foodInventoryForMenu',
+    JSON.stringify(uniqueNames)
+  );
+}
+
 console.log('[index] script end');
