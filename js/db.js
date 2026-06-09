@@ -49,6 +49,11 @@ document.getElementById('dbFavFilter').addEventListener('click', function() {
   this.classList.toggle('active', filterFav);
   renderDb();
 });
+document.getElementById('dbExcludeFilter').addEventListener('click', function() {
+  filterExclude = !filterExclude;
+  this.classList.toggle('active', filterExclude);
+  renderDb();
+});
 document.getElementById('dbStockFilter').addEventListener('click', function() {
   filterStock = !filterStock;
   this.classList.toggle('active', filterStock);
@@ -66,6 +71,7 @@ document.querySelectorAll('.sort-tab').forEach(function(tab) {
 
 /*トグルで開くエリア*/
 var dbFilterOpen = false;
+var filterExclude = false;
 
 document.getElementById('dbFilterToggle').addEventListener('click', function() {
   dbFilterOpen = !dbFilterOpen;
@@ -84,6 +90,11 @@ function renderDb() {
   /* フィルター */
   if (searchQuery) list = suggestSort(searchQuery, list, 'name', 999);
   if (filterFav)   list = list.filter(function(f) { return f.favorite; });
+  if (filterExclude) {
+  list = list.filter(function(f) {
+    return f.excludeFromMenu;
+  });
+}
   if (filterStock) list = list.filter(function(f) { return !!inventoryMap[f.id]; });
 
   /* ソート */
