@@ -175,25 +175,33 @@ function renderHome() {
 
   try {
     var items = inventoryItems.map(function(inv) {
-      var food = foodMap[inv.foodId] || {};
-      return Object.assign({}, inv, {
-        favorite: !!food.favorite,
-        pinned: !!food.pinned
-      });
-    });
+  var food = foodMap[inv.foodId] || {};
+  return Object.assign({}, inv, {
+    favorite: !!food.favorite,
+    pinned: !!food.pinned,
+    excludeFromMenu: !!food.excludeFromMenu
+  });
+});
 
-var pinnedArr = items.filter(function(i) {
+var excludedArr = items.filter(function(i) {
+  return i.excludeFromMenu;
+});
+
+var visibleItems = items.filter(function(i) {
+  return !i.excludeFromMenu;
+});
+
+var pinnedArr = visibleItems.filter(function(i) {
   return i.pinned;
 });
 
-var noExpiryArr = items.filter(function(i) {
+var noExpiryArr = visibleItems.filter(function(i) {
   return i.noExpiry || !i.expiryDate;
 });
 
-var datedItems = items.filter(function(i) {
+var datedItems = visibleItems.filter(function(i) {
   return !i.noExpiry && i.expiryDate;
 });
-
     var expired  = datedItems.filter(function(i) { return getDaysUntil(i.expiryDate) < 0; });
 var todayArr = datedItems.filter(function(i) { return getDaysUntil(i.expiryDate) === 0; });
 var soon     = datedItems.filter(function(i) {
@@ -203,14 +211,14 @@ var soon     = datedItems.filter(function(i) {
 var normal   = datedItems.filter(function(i) { return getDaysUntil(i.expiryDate) > 3; });
 
     main.innerHTML =
-      buildTodayBox() +
-      buildSection('pinned', '📌 ピン留め', pinnedArr, '') +
-      buildSection('expired', '🚨 期限切れ', expired, '期限切れの食材はありません ✨') +
-      buildSection('today', '⏰ 今日まで', todayArr, '今日期限の食材はありません') +
-      buildSection('soon', '📅 ３日以内', soon, '3日以内に期限が来る食材はありません')  +
-      buildSection('normal', '📦 在庫中', normal, '')
-      +
-      buildSection('no-expiry', '🥬 期限なし', noExpiryArr, '期限なしの食材はありません');
+  buildTodayBox() +
+  buildSection('pinned', '📌 ピン留め', pinnedArr, '') +
+  buildSection('expired', '🚨 期限切れ', expired, '期限切れの食材はありません ✨') +
+  buildSection('today', '⏰ 今日まで', todayArr, '今日期限の食材はありません') +
+  buildSection('soon', '📅 ３日以内', soon, '3日以内に期限が来る食材はありません') +
+  buildSection('normal', '📦 在庫中', normal, '') +
+  buildSection('no-expiry', '🥬 期限なし', noExpiryArr, '期限なしの食材はありません') +
+  buildSection('excluded', '🧂 献立除外・常備品', excludedArr, '献立除外・常備品はありません');
       
       renderInventoryExportInfo();
 
@@ -471,7 +479,9 @@ function buildSection(status, label, items, emptyMsg) {
     : items.map(function(i) { return buildFoodCard(i, status); }).join('');
  
   var collapsible =
-    status === 'normal' || status === 'no-expiry';
+  status === 'normal' ||
+  status === 'no-expiry' ||
+  status === 'excluded';
   return '<section class="expiry-section section-' + status +
     (collapsible ? ' is-collapsible is-closed' : '') +
     '">' +
