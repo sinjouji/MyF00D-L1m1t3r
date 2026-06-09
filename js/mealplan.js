@@ -191,31 +191,28 @@ var ingredientsHtml =
       var hasStock =
         inventoryFoodNames.includes(matchName);
 
-  var stockClass = hasStock
-    ? 'has-stock'
-    : 'no-stock';
+      var stockClass = hasStock
+        ? 'has-stock'
+        : 'no-stock';
 
-  var stockIcon = hasStock
-    ? '✅'
-    : '⚠️';
+      var stockIcon = hasStock
+        ? '✅'
+        : '⚠️';
 
-  return (
-    '<div class="ingredient-row ' + stockClass + '">' +
-
-      '<div class="ingredient-chip">' +
-        stockIcon + ' ' + food +
-      '</div>' +
-
-      '<button class="ingredient-add-btn" ' +
-        'onclick="addIngredientToShopping(\'' +
-        food.replace(/'/g, "\\'") +
-        '\')">' +
-        '＋' +
-      '</button>' +
-
-    '</div>'
-  );
-})
+      return (
+        '<div class="ingredient-row ' + stockClass + '">' +
+          '<div class="ingredient-chip">' +
+            stockIcon + ' ' + matchName +
+          '</div>' +
+          '<button class="ingredient-add-btn" ' +
+            'onclick="addIngredientToShopping(\'' +
+            matchName.replace(/'/g, "\\'") +
+            '\')">' +
+            '＋' +
+          '</button>' +
+        '</div>'
+      );
+    })
     .join('');
     
     var mealMemoHtml =
@@ -250,15 +247,15 @@ content.innerHTML =
   '</section>' +
 
   '<section class="mealplan-card">' +
-    '<div class="mealplan-card-head">🥕 必要食材
-<div class="ingredient-summary">
-  ⚠️ 不足 ' + missingCount + '品　
-  ✅ 在庫あり ' + availableCount + '品
-</div>' +
-    '<div class="mealplan-ingredient-list">' +
-      ingredientsHtml +
-    '</div>' +
-  '</section>' +
+  '<div class="mealplan-card-head">🥕 必要食材</div>' +
+  '<div class="ingredient-summary">' +
+    '⚠️ 不足 ' + missingCount + '品　' +
+    '✅ 在庫あり ' + availableCount + '品' +
+  '</div>' +
+  '<div class="mealplan-ingredient-list">' +
+    ingredientsHtml +
+  '</div>' +
+'</section>' +
 
   '<section class="mealplan-card">' +
     '<div class="mealplan-card-head">📋 献立別 材料メモ</div>' +
