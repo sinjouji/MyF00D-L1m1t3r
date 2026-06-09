@@ -887,7 +887,11 @@ function sendPlanToFoodApp() {
   var planData={
     createdAt: (prev&&prev.createdAt)||now,
     updatedAt: now,
-    meals: planSelected.map(function(s){return{name:s.name, ingredients:ingrNames(s.ingredients)};}),
+    meals: planSelected.map(function(s){return{
+      name: s.name,
+      ingredients: ingrNames(s.ingredients),
+      ingredientLabels: (s.ingredients||[]).map(ingrLabel).filter(Boolean)
+    };}),
     ingredients: ingrSet
   };
   localStorage.setItem('mealPlanForFoodApp', JSON.stringify(planData));
