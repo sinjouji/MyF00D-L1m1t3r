@@ -1360,7 +1360,10 @@ function exportInventoryForMenu() {
 
   localStorage.setItem(
     'foodInventoryForMenu',
-    JSON.stringify(uniqueNames)
+    JSON.stringify({
+      updatedAt: new Date().toISOString(),
+      ingredients: uniqueNames
+    })
   );
 }
 
