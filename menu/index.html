@@ -739,22 +739,59 @@ function renderLogs(){
   if(logs.length===0){list.innerHTML='<div class="log-empty"><div class="eico">📋</div><p>まだ保存した献立はありません。<br>提案画面から「ログに保存」してください。</p></div>';return;}
   if(filtered.length===0){list.innerHTML='<div class="log-empty"><div class="eico">🔍</div><p>「'+esc(q)+'」に一致する献立が<br>見つかりませんでした。</p></div>';return;}
   list.innerHTML='';
-  filtered.forEach(function(entry){
+  filtered.forEach(function(entry, fi){
     var realIdx=logs.indexOf(entry);
     var d=new Date(entry.savedAt);
     var ds=d.getFullYear()+'/'+(String(d.getMonth()+1).padStart(2,'0'))+'/'+String(d.getDate()).padStart(2,'0');
-    var lower=q.toLowerCase();
-    var matchedIngr=q?(entry.ingredients||[]).filter(function(x){return ingrName(x).toLowerCase().includes(lower);}):[]; 
-    var matchedSteps=q?(entry.steps||[]).filter(function(x){return x.toLowerCase().includes(lower);}):[]; 
-    var previewHtml='';
-    if(matchedIngr.length>0)previewHtml+='<div class="log-preview">🥕 '+matchedIngr.slice(0,3).map(function(x){return highlight(ingrLabel(x),q);}).join('、')+'</div>';
-    if(matchedSteps.length>0)previewHtml+='<div class="log-preview">📝 '+highlight(matchedSteps[0].slice(0,40)+(matchedSteps[0].length>40?'…':''),q)+'</div>';
-    var item=document.createElement('div');item.className='log-item';
-    item.innerHTML='<div class="log-info"><div class="log-name">'+highlight(entry.name,q)+'</div>'
-      +'<div class="log-meta">'+(entry.category?'<span>'+esc(entry.category)+'</span>':'')+(entry.calories?'<span>🔥 '+entry.calories+'kcal</span>':'')+(entry.cookTime?'<span>⏱ '+esc(entry.cookTime)+'</span>':'')+'<span>📅 '+ds+'</span></div>'+previewHtml+'</div>'
-      +'<button class="log-del" onclick="deleteLog('+realIdx+')" title="削除">✕</button>';
-    list.appendChild(item);
+    var cardId='lcard-'+realIdx;
+
+    var card=document.createElement('div');
+    card.className='meal-card';
+    card.style.animationDelay=(fi*0.05)+'s';
+
+    // 材料HTML
+    var ingrHtml='';
+    if(entry.ingredients&&entry.ingredients.length){
+      ingrHtml='<div class="sec-title">材料</div><div class="chips">'
+        +entry.ingredients.map(function(x){return'<span class="chip">'+highlight(ingrLabel(x),q)+'</span>';}).join('')
+        +'</div>';
+    }
+    // 手順HTML
+    var stepsHtml='';
+    if(entry.steps&&entry.steps.length){
+      stepsHtml='<div class="sec-title">作り方</div><div class="steps-list">'
+        +entry.steps.map(function(s,si){
+          return'<div class="step-row"><div class="step-num">'+(si+1)+'</div><div>'+highlight(esc(s),q)+'</div></div>';
+        }).join('')
+        +'</div>';
+    }
+
+    card.innerHTML=
+      '<div class="meal-head" onclick="toggleLogCard(\''+cardId+'\')">'
+        +'<div class="meal-title">'+highlight(entry.name,q)+'</div>'
+        +'<div class="meal-badges">'
+          +(entry.category?'<span class="badge cat">'+esc(entry.category)+'</span>':'')
+          +(entry.calories?'<span class="badge">'+entry.calories+'kcal</span>':'')
+          +(entry.cookTime?'<span class="badge">⏱ '+esc(entry.cookTime)+'</span>':'')
+          +'<span class="badge">📅 '+ds+'</span>'
+        +'</div>'
+        +'<span class="chevron" id="chev-'+cardId+'">▼</span>'
+      +'</div>'
+      +'<div class="meal-body" id="'+cardId+'">'
+        +'<div class="meal-inner">'
+          +(entry.description?'<p class="meal-desc">'+highlight(esc(entry.description),q)+'</p>':'')
+          +ingrHtml
+          +stepsHtml
+          +'<button class="log-del-btn" onclick="deleteLog('+realIdx+')">🗑 このログを削除</button>'
+        +'</div>'
+      +'</div>';
+    list.appendChild(card);
   });
+}
+function toggleLogCard(cardId){
+  var body=document.getElementById(cardId);
+  var chev=document.getElementById('chev-'+cardId);
+  chev.classList.toggle('open',body.classList.toggle('open'));
 }
 function deleteLog(i){var name=logs[i]?logs[i].name:'';logs.splice(i,1);persistLogs();renderLogs();showToast('「'+name+'」を削除しました');}
 function clearAllLogs(){
