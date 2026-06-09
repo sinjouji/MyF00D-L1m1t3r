@@ -1574,4 +1574,10 @@ body.modal-open .today-box {
 .ingredient-row.no-stock {
   border-color: #ffb74d;
 }
+.ingredient-summary{
+  margin-top:4px;
+  font-size:0.85rem;
+  color:var(--text-2);
+}
+
 
