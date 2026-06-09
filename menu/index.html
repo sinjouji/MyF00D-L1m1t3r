@@ -174,6 +174,33 @@ mark{background:#ffe08a;color:var(--br1);border-radius:2px;padding:0 1px}
 .fav-btn:active{transform:scale(1.3)}
 .fav-filter-btn{padding:7px 13px;font-size:13px;border-radius:20px;border:1.5px solid var(--border);background:#fff;color:var(--txl);cursor:pointer;white-space:nowrap;transition:all .18s;flex-shrink:0}
 .fav-filter-btn.active{border-color:#e8a000;background:#fff8e6;color:#8a5e00;font-weight:500}
+/* made count */
+.made-badge{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:2px 7px;border-radius:10px;background:#f0f7ff;color:#2a6496;border:1px solid #c8e0f5;white-space:nowrap}
+.card-actions{display:flex;flex-direction:column;gap:7px;margin-top:12px}
+.action-row{display:flex;gap:7px}
+.action-btn-sm{flex:1;padding:9px 6px;border-radius:var(--rs);font-size:13px;font-weight:500;border:1.5px solid var(--border);background:#fff;color:var(--txm);transition:all .18s;cursor:pointer}
+.action-btn-sm:hover{background:var(--cream)}
+.action-btn-sm.made{border-color:#6aacde;color:#2a6496;background:#f0f7ff}
+.action-btn-sm.made:hover{background:#d9ecf8}
+.action-btn-sm.regen{border-color:var(--br5);color:var(--br3)}
+.action-btn-sm.regen:hover{background:var(--cream)}
+.action-btn-sm.similar{border-color:var(--br3);color:var(--br2);background:var(--cream)}
+.action-btn-sm.similar:hover{background:var(--br6)}
+/* save modal */
+.save-modal-overlay{position:fixed;inset:0;z-index:9998;background:rgba(44,26,14,.55);display:flex;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom);backdrop-filter:blur(3px);animation:fadeIn .2s ease}
+.save-modal-overlay.hidden{display:none}
+.save-modal-box{background:var(--card);border-radius:var(--r) var(--r) 0 0;padding:24px 20px;width:100%;max-width:480px;box-shadow:0 -4px 24px rgba(44,26,14,.18);animation:slideUp .25s ease}
+.save-modal-box h3{font-family:var(--serif);font-size:17px;color:var(--br2);margin-bottom:6px}
+.save-modal-box p{font-size:13px;color:var(--txl);margin-bottom:18px;line-height:1.7}
+.save-modal-meal-name{font-weight:700;color:var(--br2)}
+.save-modal-btns{display:flex;flex-direction:column;gap:9px}
+.save-modal-btn{width:100%;padding:13px;border-radius:var(--rs);font-size:14px;font-weight:700;border:none;cursor:pointer;transition:all .18s}
+.save-modal-btn.overwrite{background:var(--br2);color:#fff9f2}
+.save-modal-btn.overwrite:hover{background:var(--br3)}
+.save-modal-btn.newlog{background:var(--cream);color:var(--br2);border:1.5px solid var(--br5)}
+.save-modal-btn.newlog:hover{background:var(--br6)}
+.save-modal-btn.cancel{background:transparent;color:var(--txl);border:1.5px solid var(--border)}
+.save-modal-btn.cancel:hover{background:var(--cream)}
 
 /* ===== PLAN PAGE ===== */
 .plan-section{padding:16px;border-bottom:1.5px solid var(--border)}
@@ -429,6 +456,20 @@ mark{background:#ffe08a;color:var(--br1);border-radius:2px;padding:0 1px}
 </div>
 
 <input type="file" id="importInput" accept=".html" style="display:none" onchange="handleImport(this)">
+
+<!-- ===== 保存選択モーダル ===== -->
+<div class="save-modal-overlay hidden" id="saveModal">
+  <div class="save-modal-box">
+    <h3>💾 保存方法を選択</h3>
+    <p id="saveModalDesc">この献立をどのように保存しますか？</p>
+    <div class="save-modal-btns">
+      <button class="save-modal-btn overwrite" onclick="doSaveModal('overwrite')">上書き保存</button>
+      <button class="save-modal-btn newlog"    onclick="doSaveModal('new')">新規保存（別の献立として追加）</button>
+      <button class="save-modal-btn cancel"    onclick="doSaveModal('cancel')">キャンセル</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -796,6 +837,9 @@ function renderLogs(){
     var delBtn=isFav
       ?'<button class="log-del-btn locked">⭐ お気に入り中は削除できません</button>'
       :'<button class="log-del-btn" onclick="deleteLog('+realIdx+')">🗑 このログを削除</button>';
+    var madeLabel = entry.madeCount
+      ? '<span class="made-badge">🍳 '+entry.madeCount+'回作った'+(entry.lastMadeAt?' · '+new Date(entry.lastMadeAt).toLocaleDateString('ja-JP'):'')+'</span>'
+      : '';
     card.innerHTML=
       '<div class="meal-head" onclick="toggleLogCard(\''+cardId+'\')">'
         +'<button class="fav-btn" onclick="event.stopPropagation();toggleFavorite(\''+entry.id+'\')" title="お気に入り">'+(isFav?'⭐':'☆')+'</button>'
@@ -811,7 +855,16 @@ function renderLogs(){
       +'<div class="meal-body" id="'+cardId+'">'
         +'<div class="meal-inner">'
           +(entry.description?'<p class="meal-desc">'+highlight(esc(entry.description),q)+'</p>':'')
-          +ingrHtml+stepsHtml+delBtn
+          +ingrHtml+stepsHtml
+          +'<div class="card-actions">'
+            +(madeLabel?'<div>'+madeLabel+'</div>':'')
+            +'<div class="action-row">'
+              +'<button class="action-btn-sm made" onclick="incrementMade(\''+entry.id+'\')">🍳 作った！</button>'
+              +'<button class="action-btn-sm regen" onclick="convertLogFormat(\''+entry.id+'\')">🔄 形式変換</button>'
+              +'<button class="action-btn-sm similar" onclick="suggestSimilar(\''+entry.id+'\')">✨ 類似提案</button>'
+            +'</div>'
+            +delBtn
+          +'</div>'
         +'</div>'
       +'</div>';
     list.appendChild(card);
@@ -970,7 +1023,128 @@ function sendPlanToFoodApp() {
   showToast(planSelected.length+'品・材料'+ingrSet.length+'種を送信しました','success');
 }
 
-/* ===== EXPORT JSON ===== */
+/* ===== 作った！カウント ===== */
+function incrementMade(logId) {
+  var entry = logs.find(function(l){ return l.id === logId; });
+  if (!entry) return;
+  entry.madeCount = (entry.madeCount || 0) + 1;
+  entry.lastMadeAt = new Date().toISOString();
+  persistLogs();
+  renderLogs();
+  showToast('🍳 「'+entry.name+'」を作った！（'+entry.madeCount+'回目）', 'success');
+}
+
+/* ===== 保存モーダル ===== */
+var _saveModalCallback = null;
+function openSaveModal(mealName, callback) {
+  var desc = document.getElementById('saveModalDesc');
+  desc.innerHTML = '「<span class="save-modal-meal-name">'+esc(mealName)+'</span>」をどのように保存しますか？';
+  _saveModalCallback = callback;
+  document.getElementById('saveModal').classList.remove('hidden');
+}
+function doSaveModal(choice) {
+  document.getElementById('saveModal').classList.add('hidden');
+  if (_saveModalCallback) { _saveModalCallback(choice); _saveModalCallback = null; }
+}
+document.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('saveModal').addEventListener('click', function(e){
+    if (e.target === this) doSaveModal('cancel');
+  });
+});
+
+/* ===== データ変換（AIなし） ===== */
+function convertIngrToObject(x) {
+  if (!x) return { name: '', amount: '' };
+  if (typeof x === 'object' && x.name !== undefined) return x;
+  // "豚こま肉 300g" → { name:"豚こま肉", amount:"300g" }
+  var str = String(x).trim();
+  var m = str.match(/^(.+?)\s+([\d\/\.]+\s*[a-zA-Zぁ-ん一-龯々〆〤個本枚枚玉袋缶パックカップ大さじ小さじ少々適量]+.*)$/);
+  if (m) return { name: m[1].trim(), amount: m[2].trim() };
+  return { name: str, amount: '' };
+}
+
+function convertLogFormat(logId) {
+  var entry = logs.find(function(l){ return l.id === logId; });
+  if (!entry) return;
+  var converted = Object.assign({}, entry, {
+    ingredients: (entry.ingredients || []).map(convertIngrToObject),
+    ingredientLabels: (entry.ingredients || []).map(function(x){ return ingrLabel(convertIngrToObject(x)); })
+  });
+  openSaveModal(entry.name + '（形式変換）', function(choice) {
+    if (choice === 'cancel') return;
+    if (choice === 'overwrite') {
+      var idx = logs.findIndex(function(l){ return l.id === logId; });
+      logs[idx] = converted;
+      persistLogs(); renderLogs();
+      showToast('データ形式を変換して上書きしました', 'success');
+    } else {
+      converted.id = Date.now()+'_'+Math.random().toString(36).slice(2,6);
+      converted.savedAt = new Date().toISOString();
+      converted.madeCount = 0;
+      logs.unshift(converted);
+      persistLogs(); renderLogs();
+      showToast('変換済みデータを新規保存しました', 'success');
+    }
+  });
+}
+
+/* ===== 類似献立の再提案 ===== */
+var _pendingSimilarMeal = null;
+
+async function suggestSimilar(logId) {
+  var entry = logs.find(function(l){ return l.id === logId; });
+  if (!entry) return;
+  if (!keys[provider]) { showApiModal(); return; }
+
+  showToast('🔄 類似献立を考えています…');
+
+  var prompt = 'あなたはプロの栄養士です。以下の献立の類似献立を1品だけ提案してください。'
+    + '\n\n元の献立：\n- 料理名：'+entry.name
+    + '\n- カテゴリ：'+(entry.category||'')
+    + '\n- 材料：'+ingrNames(entry.ingredients).join('、')
+    + '\n- 説明：'+(entry.description||'')
+    + '\n\n「'+entry.name+'」に似た系統だが別の料理を1品提案してください。'
+    + '\n\n必ず以下のJSON形式のみで出力してください（説明文・Markdownコードブロック不要）：'
+    + '\n{"name":"料理名","category":"朝食/昼食/夕食/おやつ","calories":数値,"cookTime":"XX分","description":"2〜3文の説明","ingredients":[{"name":"材料名","amount":"分量"}],"steps":["手順1","手順2"]}';
+
+  try {
+    var rawText = provider === 'gemini' ? await callGemini(prompt) : await callAnthropic(prompt);
+    var clean = rawText.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim();
+    var meal = JSON.parse(clean);
+    if (!meal.name) throw new Error('提案が取得できませんでした');
+
+    _pendingSimilarMeal = meal;
+    openSaveModal('類似提案：' + meal.name, function(choice) {
+      if (choice === 'cancel') { _pendingSimilarMeal = null; return; }
+      var newEntry = {
+        id: Date.now()+'_'+Math.random().toString(36).slice(2,6),
+        mealRef: makeMealRef(meal),
+        name: meal.name, category: meal.category||'', calories: meal.calories||'',
+        cookTime: meal.cookTime||'', description: meal.description||'',
+        ingredients: meal.ingredients||[], steps: meal.steps||[],
+        savedAt: new Date().toISOString(), madeCount: 0
+      };
+      if (choice === 'overwrite') {
+        var idx = logs.findIndex(function(l){ return l.id === logId; });
+        newEntry.id = logId;
+        newEntry.savedAt = entry.savedAt;
+        newEntry.favorite = entry.favorite;
+        newEntry.madeCount = entry.madeCount || 0;
+        logs[idx] = newEntry;
+        showToast('「'+meal.name+'」で上書き保存しました', 'success');
+      } else {
+        logs.unshift(newEntry);
+        showToast('「'+meal.name+'」を新規保存しました', 'success');
+      }
+      persistLogs(); renderLogs();
+      _pendingSimilarMeal = null;
+    });
+  } catch(e) {
+    showToast('類似提案エラー：'+e.message, 'error');
+  }
+}
+
+
 function exportJson(){
   if(logs.length===0){showToast('エクスポートするログがありません');return;}
   var blob=new Blob([JSON.stringify(logs,null,2)],{type:'application/json;charset=utf-8'});
