@@ -153,25 +153,36 @@ var ingredientsHtml =
       return !excludedMenuFoods.includes(normalizeIngredientName(food));
     })
     .map(function(food) {
+  var matchName = normalizeIngredientName(food);
 
-      return (
-        '<div class="ingredient-row">' +
+  var hasStock =
+    inventoryFoodNames.includes(matchName);
 
-          '<div class="ingredient-chip">' +
-            food +
-          '</div>' +
+  var stockClass = hasStock
+    ? 'has-stock'
+    : 'no-stock';
 
-          '<button class="ingredient-add-btn" ' +
-            'onclick="addIngredientToShopping(\'' +
-            food.replace(/'/g, "\\'") +
-            '\')">' +
-            '＋' +
-          '</button>' +
+  var stockIcon = hasStock
+    ? '✅'
+    : '⚠️';
 
-        '</div>'
-      );
+  return (
+    '<div class="ingredient-row ' + stockClass + '">' +
 
-    })
+      '<div class="ingredient-chip">' +
+        stockIcon + ' ' + food +
+      '</div>' +
+
+      '<button class="ingredient-add-btn" ' +
+        'onclick="addIngredientToShopping(\'' +
+        food.replace(/'/g, "\\'") +
+        '\')">' +
+        '＋' +
+      '</button>' +
+
+    '</div>'
+  );
+})
     .join('');
     
     var mealMemoHtml =
