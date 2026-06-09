@@ -22,6 +22,37 @@ function loadMealPlan() {
   }
 }
 
+//==============================
+// 在庫リスト読むよ
+//==============================
+var inventoryFoodNames = [];
+
+async function loadInventoryFoodNames() {
+  try {
+    var snap = await db.collection('inventory').get();
+
+    inventoryFoodNames = [];
+
+    snap.forEach(function(doc) {
+      var item = doc.data();
+      var name = item.foodName || item.name || '';
+
+      if (name) {
+        inventoryFoodNames.push(
+          normalizeIngredientName(name)
+        );
+      }
+    });
+
+    inventoryFoodNames = Array.from(new Set(inventoryFoodNames));
+
+    console.log('[inventoryFoodNames]', inventoryFoodNames);
+
+  } catch (e) {
+    console.error('loadInventoryFoodNames error:', e);
+    inventoryFoodNames = [];
+  }
+}
 
 
 //==============================
@@ -271,11 +302,13 @@ function normalizeIngredientName(name) {
 }
 
 
-
+//==============================
+// 初期化⭐︎
+//==============================
 async function initMealPlanPage() {
   await loadExcludedMenuFoods();
+  await loadInventoryFoodNames();
   renderMealPlan();
 }
 
 initMealPlanPage();
-
