@@ -164,12 +164,12 @@ function renderMealPlan() {
     });
 
     var availableCount = 0;
-    var missingCount = 0;
+var missingCount = 0;
 
-    sortedIngredients.forEach(function(food) {
-
-  var matchName =
-    normalizeIngredientName(food);
+sortedIngredients.forEach(function(food) {
+  var matchName = normalizeIngredientName(
+    typeof food === 'string' ? food : (food.name || '')
+  );
 
   var hasStock =
     inventoryFoodNames.includes(matchName);
@@ -179,7 +179,6 @@ function renderMealPlan() {
   } else {
     missingCount++;
   }
-
 });
 
 var ingredientsHtml =
