@@ -250,16 +250,18 @@ async function handleAction(act, food, inv) {
 
   try {
     await db.collection('foods').doc(food.id).update({
-      excludeFromMenu: next
-    });
+  excludeFromMenu: next
+});
 
-    showToast(
-      next
-        ? '🚫 献立提案から除外しました'
-        : '🍛 献立提案に含めます'
-    );
+food.excludeFromMenu = next;
 
-    renderDb();
+showToast(
+  next
+    ? '🚫 献立提案から除外しました'
+    : '🍛 献立提案に含めます'
+);
+
+renderDb();
 
   } catch (err) {
     console.error('excludeFromMenu update error:', err);
