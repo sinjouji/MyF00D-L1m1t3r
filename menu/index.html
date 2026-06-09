@@ -50,6 +50,7 @@ textarea{resize:none}
 .provider-badge.none{background:rgba(255,249,242,.1);color:rgba(255,249,242,.45)}
 .icon-btn{background:none;border:none;color:rgba(255,249,242,.75);font-size:20px;padding:4px 7px;border-radius:6px;transition:all .15s;line-height:1}
 .icon-btn:hover{color:#fff9f2;background:rgba(255,249,242,.12)}
+.mealplan-link{color:#fffffb;}
 
 /* ===== TABS ===== */
 .tab-nav{display:flex;background:var(--card);border-bottom:1.5px solid var(--border);position:sticky;top:calc(52px + env(safe-area-inset-top));z-index:190}
@@ -252,7 +253,7 @@ mark{background:#ffe08a;color:var(--br1);border-radius:2px;padding:0 1px}
     <div class="header-title">🍱 今日の献立</div>
     <span class="provider-badge none" id="providerBadge">未設定</span>
   </div>
-  <a href="../mealplan.html">📝献立計画</a>
+  <a href="../mealplan.html" class="mealplan-link">📝献立計画</a>
   <button class="icon-btn" onclick="openSettings()" title="API設定">⚙️</button>
 </header>
 
@@ -519,7 +520,6 @@ function toggleForm(force) {
 /* ===== INVENTORY ===== */
 function loadInventory() {
   var raw = localStorage.getItem('foodInventoryForMenu');
-  console.log('[menu] foodInventoryForMenu raw:', raw);
 
   var inv = [];
   try { if (raw) inv = JSON.parse(raw); } catch(e) {
