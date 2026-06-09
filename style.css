@@ -1406,3 +1406,37 @@ body.modal-open .today-box {
   height: 18px;
   margin: 0;
 }
+
+
+/*手動送信エリア*/
+.menu-sync-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 10px 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.menu-sync-title {
+  font-weight: 800;
+}
+
+.menu-sync-date {
+  font-size: 0.82rem;
+  color: var(--text-3);
+}
+
+.menu-sync-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-weight: 700;
+  background: var(--primary);
+  color: white;
+}
+
+

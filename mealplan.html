@@ -60,6 +60,42 @@
   font-size: 0.9rem;
   color: var(--text-1);
 }
+.menu-sync-info{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+#inventoryUpdatedAt{
+  font-size:0.9rem;
+  color:#666;
+}
+
+.page-header{
+  margin-bottom:16px;
+}
+
+.menu-sync-info{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+
+  padding:10px 12px;
+  margin-top:8px;
+
+  border:1px solid #ddd;
+  border-radius:12px;
+
+  background:#fafafa;
+}
+
+#inventoryExportInfo{
+  font-size:0.9rem;
+  color:#666;
+}
   </style>
 </head>
 <body>
@@ -79,11 +115,18 @@
 
 <div class="page-header">
   <h2>🍛 献立計画</h2>
-  <p class="meal-plan-updated" id="mealPlanUpdated">最終更新：-</p>
+
+<p class="meal-plan-updated"
+   id="mealPlanUpdated">
+  最終更新：-
+</p>
+
 </div>
 <a class="sub-app-link" href="./menu/">
 ✨ AI献立提案を開く
 </a>
+
+
 
 <div id="mealPlanContent">
   読み込み中...
