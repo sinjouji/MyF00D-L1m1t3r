@@ -254,9 +254,6 @@ mark{background:#ffe08a;color:var(--br1);border-radius:2px;padding:0 1px}
   </div>
   <div style="display:flex;align-items:center;gap:4px">
     <a href="../mealplan.html" style="color:rgba(255,249,242,.75);font-size:13px;text-decoration:none;padding:4px 9px;border-radius:6px;border:1px solid rgba(255,249,242,.25);transition:all .15s;white-space:nowrap" onmouseover="this.style.background='rgba(255,249,242,.12)'" onmouseout="this.style.background=''" >📅 献立計画</a>
-    <button onclick="refreshInventory()">
-  🔄 在庫更新
-</button>
     <button class="icon-btn" onclick="openSettings()" title="API設定">⚙️</button>
   </div>
 </header>
@@ -305,7 +302,11 @@ mark{background:#ffe08a;color:var(--br1);border-radius:2px;padding:0 1px}
 
       <!-- 在庫食材エリア -->
       <div class="form-group" id="inventoryGroup" style="display:none">
-        <label class="form-label">現在の在庫食材</label>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;flex-wrap:wrap">
+          <span class="form-label" style="margin-bottom:0">現在の在庫食材</span>
+          <span id="inventoryUpdatedAt" style="font-size:11px;color:var(--txl);flex:1"></span>
+          <button onclick="refreshInventory()" style="background:none;border:1.5px solid var(--border);border-radius:16px;padding:3px 10px;font-size:12px;color:var(--txm);cursor:pointer">🔄 更新</button>
+        </div>
         <div class="inventory-panel">
           <div class="inventory-scroll">
             <div class="inventory-chips" id="inventoryChips"></div>
@@ -543,20 +544,26 @@ function loadInventory() {
   var inv = readInventory();
   var group = document.getElementById('inventoryGroup');
   var chips  = document.getElementById('inventoryChips');
+  var updatedEl = document.getElementById('inventoryUpdatedAt');
   if (inv.ingredients.length > 0) {
     group.style.display = '';
-    var updatedLabel = '';
     if (inv.updatedAt) {
       var d = new Date(inv.updatedAt);
-      updatedLabel = '<div style="font-size:11px;color:var(--txl);margin-bottom:6px">在庫更新：'
+      updatedEl.textContent = '在庫更新：'
         + d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0')
-        + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0')
-        + '</div>';
+        + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    } else {
+      updatedEl.textContent = '';
     }
-    chips.innerHTML = updatedLabel + inv.ingredients.map(function(x){ return '<span class="inv-chip">'+esc(x)+'</span>'; }).join('');
+    chips.innerHTML = inv.ingredients.map(function(x){ return '<span class="inv-chip">'+esc(x)+'</span>'; }).join('');
   } else {
     group.style.display = 'none';
   }
+}
+
+function refreshInventory() {
+  loadInventory();
+  showToast('在庫一覧を更新しました', 'success');
 }
 
 /* ===== CALORIE ===== */
