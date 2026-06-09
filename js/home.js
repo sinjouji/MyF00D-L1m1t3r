@@ -1358,6 +1358,10 @@ function exportInventoryForMenu() {
     .filter(Boolean);
 
   var uniqueNames = Array.from(new Set(names));
+  //在庫リストの50音順ソート
+  uniqueNames.sort(function(a, b) {
+  return a.localeCompare(b, 'ja');
+});
 
   localStorage.setItem(
     'foodInventoryForMenu',

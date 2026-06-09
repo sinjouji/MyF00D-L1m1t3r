@@ -104,6 +104,17 @@ function renderMealPlan() {
 
     })
     .join('');
+    
+    //食材リスト50音順ソート
+    var sortedIngredients =
+  sortedIngredients
+    .slice()
+    .sort(function(a, b) {
+      return normalizeIngredientName(a).localeCompare(
+        normalizeIngredientName(b),
+        'ja'
+      );
+    });
 
 var ingredientsHtml =
   (plan.ingredients || [])
