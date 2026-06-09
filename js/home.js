@@ -186,16 +186,16 @@ function renderHome() {
   });
 });
 
+var pinnedArr = items.filter(function(i) {
+  return i.pinned;
+});
+
 var excludedArr = items.filter(function(i) {
-  return i.excludeFromMenu;
+  return i.excludeFromMenu && !i.pinned;
 });
 
 var visibleItems = items.filter(function(i) {
-  return !i.excludeFromMenu;
-});
-
-var pinnedArr = visibleItems.filter(function(i) {
-  return i.pinned;
+  return !i.excludeFromMenu && !i.pinned;
 });
 
 var noExpiryArr = visibleItems.filter(function(i) {
