@@ -163,16 +163,28 @@ async function addIngredientToShopping(foodName) {
       showToast('🛒 ' + matchName + ' は既に買い物リストにあります');
       return;
     }
+    
+    var foodSnap = await db.collection('foods')
+  .where('name', '==', matchName)
+  .limit(1)
+  .get();
+
+var matchedFoodId = null;
+
+if (!foodSnap.empty) {
+  matchedFoodId = foodSnap.docs[0].id;
+}
 
     await db.collection('shoppingItems').add({
-      name: displayName,
-      matchName: matchName,
-      category: 'food',
-      checked: false,
-      type: 'item',
-      createdAt: new Date(),
-      order: Date.now()
-    });
+  name: displayName,
+  matchName: matchName,
+  foodId: matchedFoodId,
+  category: 'food',
+  checked: false,
+  type: 'item',
+  createdAt: new Date(),
+  order: Date.now()
+});
 
     showToast('🛒 ' + displayName + ' を買い物リストに追加しました');
 
