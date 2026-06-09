@@ -131,6 +131,29 @@ var ingredientsHtml =
 
     })
     .join('');
+    
+    var mealMemoHtml =
+  (plan.meals || [])
+    .map(function(meal) {
+      var labels =
+        meal.ingredientLabels ||
+        meal.ingredients ||
+        [];
+
+      return (
+        '<div class="meal-material-memo">' +
+          '<div class="meal-material-title">🍛 ' +
+            escapeHtml(meal.name || '') +
+          '</div>' +
+          '<div class="meal-material-list">' +
+            labels.map(function(x) {
+              return escapeHtml(x);
+            }).join('、') +
+          '</div>' +
+        '</div>'
+      );
+    })
+    .join('');
 
 content.innerHTML =
   '<section class="mealplan-card">' +
@@ -144,6 +167,13 @@ content.innerHTML =
     '<div class="mealplan-card-head">🥕 必要食材</div>' +
     '<div class="mealplan-ingredient-list">' +
       ingredientsHtml +
+    '</div>' +
+  '</section>' +
+
+  '<section class="mealplan-card">' +
+    '<div class="mealplan-card-head">📋 献立別 材料メモ</div>' +
+    '<div class="meal-material-memo-list">' +
+      mealMemoHtml +
     '</div>' +
   '</section>';
 
