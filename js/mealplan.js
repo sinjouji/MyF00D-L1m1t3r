@@ -163,7 +163,7 @@ function renderMealPlan() {
       return aName.localeCompare(bName, 'ja');
     });
 
-    var availableCount = 0;
+var availableCount = 0;
 var missingCount = 0;
 
 sortedIngredients.forEach(function(food) {
