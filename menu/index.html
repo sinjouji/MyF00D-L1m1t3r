@@ -596,7 +596,7 @@ function buildPrompt() {
   var cookTime  = document.querySelector('input[name="cookTime"]:checked').value;
   var notes     = document.getElementById('notes').value.trim();
 
-  var inv = readInventory().ingredients;
+  var inv = ingrNames(readInventory().ingredients);
 
   return 'あなたはプロの栄養士です。以下の条件で本日の献立を3〜5品提案してください。\n\n【条件】\n- 目標カロリー: '+calorie+'\n'
     +(inv.length?'- 現在の在庫食材: '+inv.join('、')+'\n':'')
@@ -605,7 +605,7 @@ function buildPrompt() {
     +(mood?'- 気分・希望: '+mood+'\n':'')
     +'- 調理時間: '+cookTime+'\n'
     +(notes?'- その他要望: '+notes+'\n':'')
-    +'\n必ず以下のJSON形式のみで出力してください（説明文・Markdownコードブロック不要）：\n{"meals":[{"name":"料理名","category":"朝食/昼食/夕食/おやつ","calories":数値,"cookTime":"XX分","description":"2〜3文の説明","ingredients":["材料1","材料2"],"steps":["手順1","手順2"]}]}';
+    +'\n必ず以下のJSON形式のみで出力してください（説明文・Markdownコードブロック不要）：\n{"meals":[{"name":"料理名","category":"朝食/昼食/夕食/おやつ","calories":数値,"cookTime":"XX分","description":"2〜3文の説明","ingredients":[{"name":"材料名","amount":"分量"}],"steps":["手順1","手順2"]}]}';
 }
 
 /* ===== API: ANTHROPIC ===== */
@@ -673,7 +673,7 @@ function renderMeals() {
       +'<div class="meal-body" id="mbody-'+i+'"><div class="meal-inner">'
       +(m.cookTime?'<div class="meal-cook">⏱ '+esc(m.cookTime)+'</div>':'')
       +'<p class="meal-desc">'+esc(m.description||'')+'</p>'
-      +(m.ingredients&&m.ingredients.length?'<div class="sec-title">材料</div><div class="chips">'+m.ingredients.map(function(x){return'<span class="chip">'+esc(x)+'</span>';}).join('')+'</div>':'')
+      +(m.ingredients&&m.ingredients.length?'<div class="sec-title">材料</div><div class="chips">'+m.ingredients.map(function(x){return'<span class="chip">'+esc(ingrLabel(x))+'</span>';}).join('')+'</div>':'')
       +(m.steps&&m.steps.length?'<div class="sec-title">作り方</div><div class="steps-list">'+m.steps.map(function(s,si){return'<div class="step-row"><div class="step-num">'+(si+1)+'</div><div>'+esc(s)+'</div></div>';}).join('')+'</div>':'')
       +'<button class="save-btn'+(isSaved?' saved':'')+(isSaved?'" onclick=""':'" onclick="saveMeal('+i+')"')+'>'+(isSaved?'✓ 保存済み':'📌 ログに保存')+'</button>'
       +'</div></div>';
@@ -726,7 +726,7 @@ function matchesSearch(entry,q){
   if((entry.category||'').toLowerCase().includes(lower))return true;
   if((entry.description||'').toLowerCase().includes(lower))return true;
   if((entry.cookTime||'').toLowerCase().includes(lower))return true;
-  if(entry.ingredients&&entry.ingredients.some(function(x){return x.toLowerCase().includes(lower);}))return true;
+  if(entry.ingredients&&entry.ingredients.some(function(x){return ingrName(x).toLowerCase().includes(lower);}))return true;
   if(entry.steps&&entry.steps.some(function(x){return x.toLowerCase().includes(lower);}))return true;
   return false;
 }
@@ -744,10 +744,10 @@ function renderLogs(){
     var d=new Date(entry.savedAt);
     var ds=d.getFullYear()+'/'+(String(d.getMonth()+1).padStart(2,'0'))+'/'+String(d.getDate()).padStart(2,'0');
     var lower=q.toLowerCase();
-    var matchedIngr=q?(entry.ingredients||[]).filter(function(x){return x.toLowerCase().includes(lower);}):[]; 
+    var matchedIngr=q?(entry.ingredients||[]).filter(function(x){return ingrName(x).toLowerCase().includes(lower);}):[]; 
     var matchedSteps=q?(entry.steps||[]).filter(function(x){return x.toLowerCase().includes(lower);}):[]; 
     var previewHtml='';
-    if(matchedIngr.length>0)previewHtml+='<div class="log-preview">🥕 '+matchedIngr.slice(0,3).map(function(x){return highlight(x,q);}).join('、')+'</div>';
+    if(matchedIngr.length>0)previewHtml+='<div class="log-preview">🥕 '+matchedIngr.slice(0,3).map(function(x){return highlight(ingrLabel(x),q);}).join('、')+'</div>';
     if(matchedSteps.length>0)previewHtml+='<div class="log-preview">📝 '+highlight(matchedSteps[0].slice(0,40)+(matchedSteps[0].length>40?'…':''),q)+'</div>';
     var item=document.createElement('div');item.className='log-item';
     item.innerHTML='<div class="log-info"><div class="log-name">'+highlight(entry.name,q)+'</div>'
@@ -843,15 +843,16 @@ function renderPlanSelected() {
     area.appendChild(chip);
   });
 
-  // 材料集約（重複除去）
-  var ingrSet=[];
+  // 材料集約（重複除去・name で判定）
+  var ingrSet = [];
   planSelected.forEach(function(s){
     (s.ingredients||[]).forEach(function(x){
-      if(x && !ingrSet.includes(x)) ingrSet.push(x);
+      var n = ingrName(x);
+      if (n && !ingrSet.some(function(i){ return ingrName(i)===n; })) ingrSet.push(x);
     });
   });
   ingrGrid.innerHTML=ingrSet.length
-    ? ingrSet.map(function(x){return'<span class="ingr-chip">'+esc(x)+'</span>';}).join('')
+    ? ingrSet.map(function(x){return'<span class="ingr-chip">'+esc(ingrLabel(x))+'</span>';}).join('')
     : '<span class="ingr-empty">材料情報がありません</span>';
 
   sendBtn.disabled=false;
@@ -875,7 +876,10 @@ function sendPlanToFoodApp() {
   if(planSelected.length===0){showToast('献立を選んでください');return;}
   var ingrSet=[];
   planSelected.forEach(function(s){
-    (s.ingredients||[]).forEach(function(x){if(x&&!ingrSet.includes(x))ingrSet.push(x);});
+    (s.ingredients||[]).forEach(function(x){
+      var n=ingrName(x);
+      if(n && !ingrSet.includes(n)) ingrSet.push(n);
+    });
   });
   var now=new Date().toISOString();
   var prev=null;
@@ -883,7 +887,7 @@ function sendPlanToFoodApp() {
   var planData={
     createdAt: (prev&&prev.createdAt)||now,
     updatedAt: now,
-    meals: planSelected.map(function(s){return{name:s.name,ingredients:s.ingredients};}),
+    meals: planSelected.map(function(s){return{name:s.name, ingredients:ingrNames(s.ingredients)};}),
     ingredients: ingrSet
   };
   localStorage.setItem('mealPlanForFoodApp', JSON.stringify(planData));
@@ -959,7 +963,23 @@ function showToast(msg, type) {
   }, duration);
 }
 
-/* ===== UTIL ===== */
+/* ===== INGREDIENT HELPERS ===== */
+// 旧形式（文字列）・新形式（オブジェクト）どちらでも name を返す
+function ingrName(x) {
+  if (!x) return '';
+  if (typeof x === 'string') return x;
+  return x.name || '';
+}
+// 表示用: "豚こま肉 300g" または "豚こま肉" のように返す
+function ingrLabel(x) {
+  if (!x) return '';
+  if (typeof x === 'string') return x;
+  return x.amount ? x.name + ' ' + x.amount : x.name;
+}
+// ingredients 配列から name だけの配列を返す（計画・プロンプト用）
+function ingrNames(arr) {
+  return (arr || []).map(ingrName).filter(Boolean);
+}
 function esc(str){if(!str)return'';return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 init();
