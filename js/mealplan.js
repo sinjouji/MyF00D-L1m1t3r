@@ -163,6 +163,25 @@ function renderMealPlan() {
       return aName.localeCompare(bName, 'ja');
     });
 
+    var availableCount = 0;
+    var missingCount = 0;
+
+    sortedIngredients.forEach(function(food) {
+
+  var matchName =
+    normalizeIngredientName(food);
+
+  var hasStock =
+    inventoryFoodNames.includes(matchName);
+
+  if (hasStock) {
+    availableCount++;
+  } else {
+    missingCount++;
+  }
+
+});
+
 var ingredientsHtml =
   sortedIngredients
     .filter(function(food) {
@@ -235,7 +254,11 @@ content.innerHTML =
   '</section>' +
 
   '<section class="mealplan-card">' +
-    '<div class="mealplan-card-head">🥕 必要食材</div>' +
+    '<div class="mealplan-card-head">🥕 必要食材
+<div class="ingredient-summary">
+  ⚠️ 不足 ' + missingCount + '品　
+  ✅ 在庫あり ' + availableCount + '品
+</div>' +
     '<div class="mealplan-ingredient-list">' +
       ingredientsHtml +
     '</div>' +
