@@ -252,7 +252,10 @@ mark{background:#ffe08a;color:var(--br1);border-radius:2px;padding:0 1px}
     <div class="header-title">🍱 今日の献立</div>
     <span class="provider-badge none" id="providerBadge">未設定</span>
   </div>
-  <button class="icon-btn" onclick="openSettings()" title="API設定">⚙️</button>
+  <div style="display:flex;align-items:center;gap:4px">
+    <a href="../mealplan.html" style="color:rgba(255,249,242,.75);font-size:13px;text-decoration:none;padding:4px 9px;border-radius:6px;border:1px solid rgba(255,249,242,.25);transition:all .15s;white-space:nowrap" onmouseover="this.style.background='rgba(255,249,242,.12)'" onmouseout="this.style.background=''" >📅 献立計画</a>
+    <button class="icon-btn" onclick="openSettings()" title="API設定">⚙️</button>
+  </div>
 </header>
 
 <!-- ===== TABS ===== -->
@@ -928,11 +931,22 @@ function handleImport(input){
 }
 
 /* ===== TOAST ===== */
-var toastTimer;
-function showToast(msg,type){
-  var el=document.getElementById('toast');
-  el.textContent=msg;el.className='toast'+(type?' '+type:'');el.classList.add('visible');
-  clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.remove('visible');},type==='error'?8000:3200);
+var toastTimer = null;
+function showToast(msg, type) {
+  var el = document.getElementById('toast');
+  clearTimeout(toastTimer);
+  // 一度非表示にしてアニメーションをリセット
+  el.classList.remove('visible');
+  el.textContent = msg;
+  el.className = 'toast' + (type ? ' ' + type : '');
+  // reflow を強制してトランジションを再発火
+  void el.offsetWidth;
+  el.classList.add('visible');
+  var duration = type === 'error' ? 8000 : 3200;
+  toastTimer = setTimeout(function() {
+    el.classList.remove('visible');
+    toastTimer = null;
+  }, duration);
 }
 
 /* ===== UTIL ===== */
