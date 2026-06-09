@@ -137,30 +137,31 @@ function renderMealPlan() {
     .join('');
     
     //食材リスト50音順ソート
-    sortedIngredients.sort(function(a, b) {
+    var sortedIngredients =
+  (plan.ingredients || [])
+    .slice()
+    .sort(function(a, b) {
 
-  var aHas =
-    inventoryFoodNames.includes(
-      normalizeIngredientName(a)
-    );
+      var aName = normalizeIngredientName(
+        typeof a === 'string' ? a : (a.name || '')
+      );
 
-  var bHas =
-    inventoryFoodNames.includes(
-      normalizeIngredientName(b)
-    );
+      var bName = normalizeIngredientName(
+        typeof b === 'string' ? b : (b.name || '')
+      );
 
-  // 不足を先頭へ
-  if (aHas !== bHas) {
-    return aHas ? 1 : -1;
-  }
+      var aHas =
+        inventoryFoodNames.includes(aName);
 
-  // 同じグループ内は50音順
-  return normalizeIngredientName(a)
-    .localeCompare(
-      normalizeIngredientName(b),
-      'ja'
-    );
-});
+      var bHas =
+        inventoryFoodNames.includes(bName);
+
+      if (aHas !== bHas) {
+        return aHas ? 1 : -1;
+      }
+
+      return aName.localeCompare(bName, 'ja');
+    });
 
 var ingredientsHtml =
   sortedIngredients
@@ -168,7 +169,9 @@ var ingredientsHtml =
       return !excludedMenuFoods.includes(normalizeIngredientName(food));
     })
     .map(function(food) {
-  var matchName = normalizeIngredientName(food);
+  var matchName = normalizeIngredientName(
+  typeof food === 'string' ? food : (food.name || '')
+);
 
   var hasStock =
     inventoryFoodNames.includes(matchName);
