@@ -140,6 +140,30 @@ async function addIngredientToShopping(foodName) {
   console.log('[add shopping]', displayName, '=>', matchName);
 
   try {
+    var snap = await db.collection('shoppingItems')
+      .where('category', '==', 'food')
+      .where('checked', '==', false)
+      .get();
+
+    var exists = false;
+
+    snap.forEach(function(doc) {
+      var item = doc.data();
+
+      var itemMatchName =
+        item.matchName ||
+        normalizeIngredientName(item.name || '');
+
+      if (itemMatchName === matchName) {
+        exists = true;
+      }
+    });
+
+    if (exists) {
+      showToast('🛒 ' + matchName + ' は既に買い物リストにあります');
+      return;
+    }
+
     await db.collection('shoppingItems').add({
       name: displayName,
       matchName: matchName,
