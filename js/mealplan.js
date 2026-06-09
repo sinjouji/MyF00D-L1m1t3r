@@ -90,11 +90,24 @@ function renderMealPlan() {
 var ingredientsHtml =
   (plan.ingredients || [])
     .map(function(food) {
+
       return (
-        '<span class="mealplan-ingredient-chip">' +
-          food +
-        '</span>'
+        '<div class="ingredient-row">' +
+
+          '<div class="ingredient-chip">' +
+            food +
+          '</div>' +
+
+          '<button class="ingredient-add-btn" ' +
+            'onclick="addIngredientToShopping(\'' +
+            food.replace(/'/g, "\\'") +
+            '\')">' +
+            '＋' +
+          '</button>' +
+
+        '</div>'
       );
+
     })
     .join('');
 
@@ -114,3 +127,12 @@ content.innerHTML =
   '</section>';
 }
 
+
+//==============================
+// 買い物リストに追加処理（仮）
+//==============================
+function addIngredientToShopping(food) {
+
+  alert(food);
+
+}
