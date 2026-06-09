@@ -133,6 +133,8 @@ content.innerHTML =
 //==============================
 async function addIngredientToShopping(foodName) {
   if (!foodName) return;
+  
+  console.log('[add shopping foodName]', foodName);
 
   try {
     await db.collection('shoppingItems').add({
@@ -154,4 +156,14 @@ async function addIngredientToShopping(foodName) {
 
 
 
+//==============================
+// 食材名から分量切り捨て
+//==============================
+function normalizeIngredientName(name) {
+  return name
+    .replace(/[0-9０-９]+(\.[0-9０-９]+)?\s*(g|kg|ml|cc|個|本|枚|袋|パック|束|缶|大さじ|小さじ)/gi, '')
+    .replace(/[0-9０-９]+\/[0-9０-９]+\s*(個|本|枚|袋|パック|束)?/g, '')
+    .replace(/適量|少々/g, '')
+    .trim();
+}
 
