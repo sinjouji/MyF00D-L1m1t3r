@@ -1567,3 +1567,11 @@ body.modal-open .today-box {
   color: var(--text-2);
   line-height: 1.7;
 }
+.ingredient-row.has-stock {
+  border-color: #8bc34a;
+}
+
+.ingredient-row.no-stock {
+  border-color: #ffb74d;
+}
+
