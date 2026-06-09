@@ -22,17 +22,35 @@ function loadMealPlan() {
   }
 }
 
-renderMealPlan();
 
-var plan = loadMealPlan();
 
-if (plan.updatedAt) {
+//==============================
+// 除外リストの取得
+//==============================
+var excludedMenuFoods = [];
 
-  var date =
-    new Date(plan.updatedAt);
+async function loadExcludedMenuFoods() {
+  try {
+    var snap = await db.collection('foods')
+      .where('excludeFromMenu', '==', true)
+      .get();
 
+    excludedMenuFoods = [];
+
+    snap.forEach(function(doc) {
+      var food = doc.data();
+      if (food.name) {
+        excludedMenuFoods.push(food.name);
+      }
+    });
+
+    console.log('[excludedMenuFoods]', excludedMenuFoods);
+
+  } catch (e) {
+    console.error('loadExcludedMenuFoods error:', e);
+    excludedMenuFoods = [];
+  }
 }
-
 
 
 //==============================
@@ -89,6 +107,9 @@ function renderMealPlan() {
 
 var ingredientsHtml =
   (plan.ingredients || [])
+    .filter(function(food) {
+      return !excludedMenuFoods.includes(normalizeIngredientName(food));
+    })
     .map(function(food) {
 
       return (
@@ -125,6 +146,7 @@ content.innerHTML =
       ingredientsHtml +
     '</div>' +
   '</section>';
+
 }
 
 
@@ -206,4 +228,13 @@ function normalizeIngredientName(name) {
     .replace(/適量|少々/g, '')
     .trim();
 }
+
+
+
+async function initMealPlanPage() {
+  await loadExcludedMenuFoods();
+  renderMealPlan();
+}
+
+initMealPlanPage();
 
