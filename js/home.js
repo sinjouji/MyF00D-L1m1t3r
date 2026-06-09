@@ -1345,17 +1345,18 @@ document.getElementById('newFoodRegisterBtn').addEventListener('click', async fu
 
 //在庫の食材データを渡すやつ
 function exportInventoryForMenu() {
-
   var names = inventoryItems
+    .filter(function(item) {
+      var food = foodMap[item.foodId];
+
+      return !(food && food.excludeFromMenu);
+    })
     .map(function(item) {
       return item.foodName;
     })
     .filter(Boolean);
 
-  var uniqueNames =
-    Array.from(new Set(names));
-    
-  console.log('[food] exportInventoryForMenu:', uniqueNames);
+  var uniqueNames = Array.from(new Set(names));
 
   localStorage.setItem(
     'foodInventoryForMenu',
