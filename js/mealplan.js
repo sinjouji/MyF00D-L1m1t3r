@@ -137,15 +137,30 @@ function renderMealPlan() {
     .join('');
     
     //食材リスト50音順ソート
-    var sortedIngredients =
-  (plan.ingredients || [])
-    .slice()
-    .sort(function(a, b) {
-      return normalizeIngredientName(a).localeCompare(
-        normalizeIngredientName(b),
-        'ja'
-      );
-    });
+    sortedIngredients.sort(function(a, b) {
+
+  var aHas =
+    inventoryFoodNames.includes(
+      normalizeIngredientName(a)
+    );
+
+  var bHas =
+    inventoryFoodNames.includes(
+      normalizeIngredientName(b)
+    );
+
+  // 不足を先頭へ
+  if (aHas !== bHas) {
+    return aHas ? 1 : -1;
+  }
+
+  // 同じグループ内は50音順
+  return normalizeIngredientName(a)
+    .localeCompare(
+      normalizeIngredientName(b),
+      'ja'
+    );
+});
 
 var ingredientsHtml =
   sortedIngredients
