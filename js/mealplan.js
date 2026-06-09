@@ -131,8 +131,27 @@ content.innerHTML =
 //==============================
 // 買い物リストに追加処理（仮）
 //==============================
-function addIngredientToShopping(food) {
+async function addIngredientToShopping(foodName) {
+  if (!foodName) return;
 
-  alert(food);
+  try {
+    await db.collection('shoppingItems').add({
+      name: foodName,
+      category: 'food',
+      checked: false,
+      type: 'item',
+      createdAt: new Date(),
+      order: Date.now()
+    });
 
+    showToast('🛒 ' + foodName + ' を買い物リストに追加しました');
+
+  } catch (e) {
+    console.error('addIngredientToShopping error:', e);
+    showToast('❌ 買い物リストに追加できませんでした');
+  }
 }
+
+
+
+
