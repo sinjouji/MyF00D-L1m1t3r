@@ -211,6 +211,9 @@ var normal   = datedItems.filter(function(i) { return getDaysUntil(i.expiryDate)
       buildSection('normal', '📦 在庫中', normal, '')
       +
       buildSection('no-expiry', '🥬 期限なし', noExpiryArr, '期限なしの食材はありません');
+      
+      renderInventoryExportInfo();
+
     
     
     main.querySelectorAll('.expiry-section.is-collapsible .section-head')
@@ -456,8 +459,6 @@ if (todayRegisterBtn) {
       '</div>';
   }
 }
-
-
 
 
 
@@ -1365,6 +1366,42 @@ function exportInventoryForMenu() {
       ingredients: uniqueNames
     })
   );
+  renderInventoryExportInfo();
 }
 
-console.log('[index] script end');
+//==============================
+// 在庫の手動更新
+//==============================
+function renderInventoryExportInfo() {
+  var el = document.getElementById('inventoryExportInfo');
+  if (!el) return;
+
+  var raw = localStorage.getItem('foodInventoryForMenu');
+
+  if (!raw) {
+    el.textContent = '最終送信：未送信';
+    return;
+  }
+
+  try {
+    var data = JSON.parse(raw);
+
+    if (!data.updatedAt) {
+      el.textContent = '最終送信：不明';
+      return;
+    }
+
+    el.textContent =
+      '最終送信：' +
+      new Date(data.updatedAt).toLocaleString('ja-JP');
+
+  } catch(e) {
+    el.textContent = '最終送信：不明';
+  }
+}
+
+function manualExportInventory() {
+  exportInventoryForMenu();
+  renderInventoryExportInfo();
+  showToast('🍛 献立アプリ用の在庫一覧を送信しました');
+}

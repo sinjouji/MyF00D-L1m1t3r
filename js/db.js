@@ -255,8 +255,6 @@ var next = !food.excludeFromMenu;
 
 food.excludeFromMenu = next;
 
-exportInventoryForMenu();
-
 showToast(
   next
     ? '🚫 献立提案から除外しました'
@@ -294,6 +292,7 @@ renderDb();
     } catch (e) { showToast('❌ 削除失敗（' + (e.code || e.message) + '）'); }
   }
 }
+
 
 
 /* ====================================

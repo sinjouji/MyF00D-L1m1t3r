@@ -114,7 +114,3 @@ content.innerHTML =
   '</section>';
 }
 
-
-
-
-
