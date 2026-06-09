@@ -163,18 +163,20 @@ function renderMealPlan() {
       return aName.localeCompare(bName, 'ja');
     });
 
+var visibleIngredients =
+  sortedIngredients.filter(function(food) {
+    return !excludedMenuFoods.includes(
+      getIngredientName(food)
+    );
+  });
+
 var availableCount = 0;
 var missingCount = 0;
 
-sortedIngredients.forEach(function(food) {
-  var matchName = normalizeIngredientName(
-    typeof food === 'string' ? food : (food.name || '')
-  );
+visibleIngredients.forEach(function(food) {
+  var matchName = getIngredientName(food);
 
-  var hasStock =
-    inventoryFoodNames.includes(matchName);
-
-  if (hasStock) {
+  if (inventoryFoodNames.includes(matchName)) {
     availableCount++;
   } else {
     missingCount++;
@@ -182,17 +184,12 @@ sortedIngredients.forEach(function(food) {
 });
 
 var ingredientsHtml =
-  sortedIngredients
-    .filter(function(food) {
-      return !excludedMenuFoods.includes(normalizeIngredientName(food));
-    })
+  visibleIngredients
     .map(function(food) {
-  var matchName = normalizeIngredientName(
-  typeof food === 'string' ? food : (food.name || '')
-);
+      var matchName = getIngredientName(food);
 
-  var hasStock =
-    inventoryFoodNames.includes(matchName);
+      var hasStock =
+        inventoryFoodNames.includes(matchName);
 
   var stockClass = hasStock
     ? 'has-stock'
@@ -350,6 +347,17 @@ function normalizeIngredientName(name) {
     .replace(/[0-9０-９]+\/[0-9０-９]+\s*(個|本|枚|袋|パック|束|玉|株|尾|切れ|片|丁)?/g, '')
     .replace(/適量|少々/g, '')
     .trim();
+}
+
+
+
+//共通関数
+function getIngredientName(food) {
+  return normalizeIngredientName(
+    typeof food === 'string'
+      ? food
+      : (food.name || '')
+  );
 }
 
 
