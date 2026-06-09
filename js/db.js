@@ -244,8 +244,19 @@ async function handleAction(act, food, inv) {
 
   } else if (act === 'exclude') {
 
-  var next = !food.excludeFromMenu;
+console.log(
+  '[exclude before]',
+  food.name,
+  food.excludeFromMenu
+);
 
+var next = !food.excludeFromMenu;
+
+console.log(
+  '[exclude after]',
+  food.name,
+  next
+);
   console.log('[exclude]', food.id, food.name, next);
 
   try {
