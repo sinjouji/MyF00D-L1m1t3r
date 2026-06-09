@@ -113,10 +113,13 @@ db.collection('foods').onSnapshot(function(snap) {
   allFoods.forEach(function(food) {
     foodMap[food.id] = food;
   });
-
+  
   applyPendingFoodFromShopping();
 
-  if (invReady) renderHome();
+if (invReady) {
+  exportInventoryForMenu();
+  renderHome();
+}
 
 }, function(err) {
   console.warn('foods onSnapshot error:', err.code);
