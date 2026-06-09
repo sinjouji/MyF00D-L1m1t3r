@@ -406,6 +406,7 @@ mark{background:#ffe08a;color:var(--br1);border-radius:2px;padding:0 1px}
       <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
     </div>
     <button class="fav-filter-btn" id="logFavFilter" onclick="toggleLogFavFilter()">⭐ お気に入り</button>
+    <button class="fav-filter-btn" id="logPlanFilter" onclick="toggleLogPlanFilter()">📅 計画中</button>
     <span class="search-hit" id="searchHit"></span>
   </div>
   <div class="log-list" id="logList"></div>
@@ -756,6 +757,7 @@ function updateBadge(){
 var searchQuery='';
 var logFavOnly=false;
 var planFavOnly=false;
+var logPlanFirst=false;
 
 function toggleLogFavFilter(){
   logFavOnly=!logFavOnly;
@@ -766,6 +768,11 @@ function togglePlanFavFilter(){
   planFavOnly=!planFavOnly;
   document.getElementById('planFavFilter').classList.toggle('active',planFavOnly);
   renderPlanLogList();
+}
+function toggleLogPlanFilter(){
+  logPlanFirst=!logPlanFirst;
+  document.getElementById('logPlanFilter').classList.toggle('active',logPlanFirst);
+  renderLogs();
 }
 function toggleFavorite(id){
   var entry=logs.find(function(l){return l.id===id;});
@@ -808,6 +815,19 @@ function renderLogs(){
   var filtered=logs.filter(function(e){
     return matchesSearch(e,q)&&(!logFavOnly||e.favorite);
   });
+
+  // 計画中を上に（選択順維持）、それ以外は保存日時順
+  if(logPlanFirst && planSelected.length>0){
+    var planIds=planSelected.map(function(s){return s.id;});
+    var inPlan=[], notInPlan=[];
+    filtered.forEach(function(e){
+      if(planIds.includes(e.id)) inPlan.push(e);
+      else notInPlan.push(e);
+    });
+    // 計画内は選択順に並べる
+    inPlan.sort(function(a,b){ return planIds.indexOf(a.id)-planIds.indexOf(b.id); });
+    filtered=inPlan.concat(notInPlan);
+  }
   var hitEl=document.getElementById('searchHit');
   hitEl.textContent=(q||logFavOnly)?filtered.length+'件':'';
   if(logs.length===0){list.innerHTML='<div class="log-empty"><div class="eico">📋</div><p>まだ保存した献立はありません。<br>提案画面から「ログに保存」してください。</p></div>';return;}
@@ -819,8 +839,10 @@ function renderLogs(){
     var ds=d.getFullYear()+'/'+(String(d.getMonth()+1).padStart(2,'0'))+'/'+String(d.getDate()).padStart(2,'0');
     var cardId='lcard-'+realIdx;
     var isFav=!!entry.favorite;
+    var isPlanned=planSelected.some(function(s){return s.id===entry.id;});
     var card=document.createElement('div');
     card.className='meal-card';
+    if(isPlanned&&logPlanFirst) card.style.borderColor='var(--br3)';
     card.style.animationDelay=(fi*0.05)+'s';
     var ingrHtml='';
     if(entry.ingredients&&entry.ingredients.length){
@@ -845,6 +867,7 @@ function renderLogs(){
         +'<button class="fav-btn" onclick="event.stopPropagation();toggleFavorite(\''+entry.id+'\')" title="お気に入り">'+(isFav?'⭐':'☆')+'</button>'
         +'<div class="meal-title">'+highlight(entry.name,q)+'</div>'
         +'<div class="meal-badges">'
+          +(isPlanned?'<span class="badge" style="background:var(--br6);color:var(--br2)">📅 計画中</span>':'')
           +(entry.category?'<span class="badge cat">'+esc(entry.category)+'</span>':'')
           +(entry.calories?'<span class="badge">'+entry.calories+'kcal</span>':'')
           +(entry.cookTime?'<span class="badge">⏱ '+esc(entry.cookTime)+'</span>':'')
