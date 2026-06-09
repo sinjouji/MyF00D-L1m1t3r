@@ -255,6 +255,8 @@ var next = !food.excludeFromMenu;
 
 food.excludeFromMenu = next;
 
+exportInventoryForMenu();
+
 showToast(
   next
     ? '🚫 献立提案から除外しました'
