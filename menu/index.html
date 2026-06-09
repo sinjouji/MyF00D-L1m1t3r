@@ -252,7 +252,7 @@ mark{background:#ffe08a;color:var(--br1);border-radius:2px;padding:0 1px}
     <div class="header-title">🍱 今日の献立</div>
     <span class="provider-badge none" id="providerBadge">未設定</span>
   </div>
-  <a href="../mealplan.html" class="active">📝献立計画</a>
+  <a href="../mealplan.html">📝献立計画</a>
   <button class="icon-btn" onclick="openSettings()" title="API設定">⚙️</button>
 </header>
 
@@ -519,10 +519,18 @@ function toggleForm(force) {
 /* ===== INVENTORY ===== */
 function loadInventory() {
   var raw = localStorage.getItem('foodInventoryForMenu');
+  console.log('[menu] foodInventoryForMenu raw:', raw);
+
   var inv = [];
-  try { if (raw) inv = JSON.parse(raw); } catch(e) {}
+  try { if (raw) inv = JSON.parse(raw); } catch(e) {
+    console.warn('[menu] inventory parse error:', e);
+  }
+
+  console.log('[menu] parsed inventory:', inv);
+
   var group = document.getElementById('inventoryGroup');
   var chips  = document.getElementById('inventoryChips');
+
   if (inv && inv.length > 0) {
     group.style.display = '';
     chips.innerHTML = inv.map(function(x){ return '<span class="inv-chip">'+esc(x)+'</span>'; }).join('');
