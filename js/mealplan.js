@@ -133,12 +133,16 @@ content.innerHTML =
 //==============================
 async function addIngredientToShopping(foodName) {
   if (!foodName) return;
-  
-  console.log('[add shopping foodName]', foodName);
+
+  var displayName = foodName;
+  var matchName = normalizeIngredientName(foodName);
+
+  console.log('[add shopping]', displayName, '=>', matchName);
 
   try {
     await db.collection('shoppingItems').add({
-      name: foodName,
+      name: displayName,
+      matchName: matchName,
       category: 'food',
       checked: false,
       type: 'item',
@@ -146,7 +150,7 @@ async function addIngredientToShopping(foodName) {
       order: Date.now()
     });
 
-    showToast('🛒 ' + foodName + ' を買い物リストに追加しました');
+    showToast('🛒 ' + displayName + ' を買い物リストに追加しました');
 
   } catch (e) {
     console.error('addIngredientToShopping error:', e);
