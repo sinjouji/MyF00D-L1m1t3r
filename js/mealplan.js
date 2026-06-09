@@ -99,14 +99,19 @@ var ingredientsHtml =
     .join('');
 
 content.innerHTML =
-  '<h3>計画中の献立</h3>' +
-  mealsHtml +
+  '<section class="mealplan-card">' +
+    '<div class="mealplan-card-head">🍛 計画中の献立</div>' +
+    '<div class="mealplan-meal-list">' +
+      mealsHtml +
+    '</div>' +
+  '</section>' +
 
-  '<h3>🥕 必要食材</h3>' +
-
-  '<div class="mealplan-ingredient-list">' +
-    ingredientsHtml +
-  '</div>';
+  '<section class="mealplan-card">' +
+    '<div class="mealplan-card-head">🥕 必要食材</div>' +
+    '<div class="mealplan-ingredient-list">' +
+      ingredientsHtml +
+    '</div>' +
+  '</section>';
 }
 
 
