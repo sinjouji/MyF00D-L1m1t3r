@@ -1546,3 +1546,24 @@ body.modal-open .today-box {
   padding: 2px 8px;
   font-weight: 800;
 }
+
+/*献立の材料一覧テキスト*/
+.meal-material-memo {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.meal-material-memo:last-child {
+  border-bottom: none;
+}
+
+.meal-material-title {
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.meal-material-list {
+  font-size: 0.9rem;
+  color: var(--text-2);
+  line-height: 1.7;
+}
