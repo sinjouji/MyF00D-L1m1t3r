@@ -194,6 +194,11 @@ function buildFoodItem(food) {
           '<button class="icon-btn ' + (food.favorite ? 'fav-on' : 'fav-off') + '" data-act="fav">' +
             (food.favorite ? '⭐' : '☆') +
           '</button>' +
+          '<button class="icon-btn ' + 
+  (food.excludeFromMenu ? 'exclude-on' : 'exclude-off') +
+  '" data-act="exclude" title="献立提案から除外">' +
+  '🚫' +
+'</button>' +
           '<button class="mini-action db-buy-btn">🛒</button>' +
           '<button class="icon-btn edit" data-act="edit" title="編集">✏️</button>' +
           '<button class="icon-btn del"  data-act="del"  title="削除">🗑️</button>' +
@@ -237,7 +242,33 @@ async function handleAction(act, food, inv) {
       showToast(nf ? '⭐ お気に入りに追加' : '☆ お気に入りを解除');
     } catch (e) { showToast('❌ 更新失敗（' + (e.code || e.message) + '）'); }
 
-  } else if (act === 'edit') {
+  } else if (act === 'exclude') {
+  e.stopPropagation();
+
+  var next = !food.excludeFromMenu;
+
+  try {
+    await db.collection('foods').doc(food.id).update({
+      excludeFromMenu: next
+    });
+
+    food.excludeFromMenu = next;
+
+    showToast(
+      next
+        ? '🚫 献立提案から除外しました'
+        : '🍛 献立提案に含めます'
+    );
+
+    renderFoods();
+
+  } catch (err) {
+    console.error('excludeFromMenu update error:', err);
+    showToast('❌ 除外設定を更新できませんでした');
+  }
+
+  return;
+} else if (act === 'edit') {
     editingId = food.id;
     renderDb();
     setTimeout(function() {
