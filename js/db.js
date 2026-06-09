@@ -247,12 +247,12 @@ async function handleAction(act, food, inv) {
 
   var next = !food.excludeFromMenu;
 
+  console.log('[exclude]', food.id, food.name, next);
+
   try {
     await db.collection('foods').doc(food.id).update({
       excludeFromMenu: next
     });
-
-    food.excludeFromMenu = next;
 
     showToast(
       next
