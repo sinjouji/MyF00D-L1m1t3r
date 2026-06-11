@@ -225,13 +225,22 @@ var normal   = datedItems.filter(function(i) { return getDaysUntil(i.expiryDate)
       
       renderInventoryExportInfo();
 
+    var homeSectionClosedState = {};
     
-    
-    main.querySelectorAll('.expiry-section.is-collapsible .section-head')
+   main.querySelectorAll('.expiry-section.is-collapsible .section-head')
   .forEach(function(head) {
     head.addEventListener('click', function() {
       var section = head.closest('.expiry-section');
+      if (!section) return;
+
+      var status = section.dataset.status;
+
       section.classList.toggle('is-closed');
+
+      if (status) {
+        homeSectionClosedState[status] =
+          section.classList.contains('is-closed');
+      }
     });
   });
     
@@ -472,6 +481,11 @@ if (todayRegisterBtn) {
 }
 
 
+var homeSectionClosedState = {
+  normal: true,
+  'no-expiry': true,
+  excluded: true
+};
 
 function buildSection(status, label, items, emptyMsg) {
   /* normal セクションは空なら丸ごと非表示 */
@@ -485,16 +499,22 @@ function buildSection(status, label, items, emptyMsg) {
   status === 'normal' ||
   status === 'no-expiry' ||
   status === 'excluded';
-  return '<section class="expiry-section section-' + status +
-    (collapsible ? ' is-collapsible is-closed' : '') +
-    '">' +
-    '<div class="section-head" data-status="' + status + '">' +
-      '<span class="badge ' + status + '">' + label + '</span>' +
-      '<span class="section-count">' + items.length + '件</span>' +
-      (collapsible ? '<span class="section-arrow">▼</span>' : '') +
-    '</div>' +
-    '<div class="food-grid">' + inner + '</div>' +
-    '</section>';
+
+var isClosed =
+  collapsible &&
+  homeSectionClosedState[status];
+
+return '<section class="expiry-section section-' + status +
+  (collapsible ? ' is-collapsible' : '') +
+  (isClosed ? ' is-closed' : '') +
+  '" data-status="' + status + '">' +
+  '<div class="section-head" data-status="' + status + '">' +
+    '<span class="badge ' + status + '">' + label + '</span>' +
+    '<span class="section-count">' + items.length + '件</span>' +
+    (collapsible ? '<span class="section-arrow">▼</span>' : '') +
+  '</div>' +
+  '<div class="food-grid">' + inner + '</div>' +
+  '</section>';
 }
 
 function buildFoodCard(item, status) {
