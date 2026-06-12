@@ -355,7 +355,12 @@ mark{background:#ffe08a;color:var(--br1);border-radius:2px;padding:0 1px}
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="exclude">除外したい食材・アレルギー</label>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;flex-wrap:wrap">
+          <label class="form-label" for="exclude" style="margin-bottom:0">除外したい食材・アレルギー</label>
+          <span id="excludeMemoBadge" style="font-size:11px;color:var(--txl);flex:1"></span>
+          <button type="button" onclick="saveExcludeMemo()" style="background:none;border:1.5px solid var(--border);border-radius:16px;padding:3px 10px;font-size:12px;color:var(--txm);cursor:pointer">💾 記憶</button>
+          <button type="button" onclick="clearExcludeMemo()" style="background:none;border:1.5px solid var(--border);border-radius:16px;padding:3px 10px;font-size:12px;color:var(--txl);cursor:pointer">✕ 削除</button>
+        </div>
         <input type="text" id="exclude" class="text-input" placeholder="例：えび・そば・乳製品・辛いもの">
       </div>
 
@@ -500,6 +505,7 @@ function init() {
   renderLogs();
   toggleForm(true);
   loadInventory();
+  loadExcludeMemo();
 
   if (!keys[provider]) showApiModal();
 
@@ -1167,6 +1173,28 @@ async function suggestSimilar(logId) {
   }
 }
 
+
+/* ===== 除外食材メモリー ===== */
+function loadExcludeMemo() {
+  var memo = localStorage.getItem('menuExcludeMemo') || '';
+  if (memo) {
+    document.getElementById('exclude').value = memo;
+    document.getElementById('excludeMemoBadge').textContent = '記憶済み';
+  }
+}
+function saveExcludeMemo() {
+  var val = document.getElementById('exclude').value.trim();
+  if (!val) { showToast('除外食材を入力してから記憶してください'); return; }
+  localStorage.setItem('menuExcludeMemo', val);
+  document.getElementById('excludeMemoBadge').textContent = '記憶済み';
+  showToast('除外食材を記憶しました', 'success');
+}
+function clearExcludeMemo() {
+  localStorage.removeItem('menuExcludeMemo');
+  document.getElementById('exclude').value = '';
+  document.getElementById('excludeMemoBadge').textContent = '';
+  showToast('除外食材の記憶を削除しました');
+}
 
 function exportJson(){
   if(logs.length===0){showToast('エクスポートするログがありません');return;}
