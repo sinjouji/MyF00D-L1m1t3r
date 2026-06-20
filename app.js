@@ -144,7 +144,10 @@ function enhanceDateButtons(root) {
       days === '1' ? '明日' :
       days === '2' ? '２日後' :
       days === '3' ? '３日後' :
+      days === '4' ? '４日後' :
+      days === '5' ? '５日後' :
       days === '7' ? '７日後' :
+      days === '30' ? '１か月後' :
       days + '日後';
 
     btn.innerHTML =
