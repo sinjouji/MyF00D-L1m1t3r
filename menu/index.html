@@ -82,6 +82,15 @@ textarea{resize:none}
 .auto-fields input,.auto-fields select{flex:1;min-width:90px;padding:9px 11px;border:1.5px solid var(--border);border-radius:var(--rs);background:#fff;color:var(--txt);outline:none;transition:border-color .2s}
 .auto-fields input:focus,.auto-fields select:focus{border-color:var(--br4)}
 .cal-result{width:100%;font-size:13px;color:var(--grn);font-weight:500;padding:2px 0}
+/* テンプレボタン */
+.template-area{margin-top:10px;padding:10px 12px;background:var(--cream);border-radius:var(--rs)}
+.template-cat{margin-bottom:8px}
+.template-cat:last-child{margin-bottom:0}
+.template-cat-label{font-size:11px;font-weight:700;color:var(--txl);letter-spacing:.04em;margin-bottom:5px}
+.template-pills{display:flex;flex-wrap:wrap;gap:5px}
+.template-pill{font-size:12px;padding:5px 11px;border-radius:14px;border:1.5px solid var(--br5);background:#fff;color:var(--br3);cursor:pointer;transition:all .15s;white-space:nowrap}
+.template-pill:hover{background:var(--br6)}
+.template-pill.used{background:var(--br3);color:#fff;border-color:var(--br3)}
 .cal-manual-row{display:flex;align-items:center;gap:9px;margin-top:10px}
 .cal-manual-row input{flex:1;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--rs);background:#fff;color:var(--txt);outline:none;font-family:var(--sans);transition:border-color .2s}
 .cal-manual-row input:focus{border-color:var(--br4)}
@@ -367,6 +376,42 @@ mark{background:#ffe08a;color:var(--br1);border-radius:2px;padding:0 1px}
       <div class="form-group">
         <label class="form-label" for="mood">気分・食べたいもの</label>
         <input type="text" id="mood" class="text-input" placeholder="例：さっぱりしたもの、和食、丼もの">
+        <div class="template-area">
+          <div class="template-cat">
+            <div class="template-cat-label">気分</div>
+            <div class="template-pills" data-cat="気分">
+              <button type="button" class="template-pill" onclick="addTemplate(this,'がっつり')">がっつり</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'あっさり')">あっさり</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'野菜多め')">野菜多め</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'節約')">節約</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'おしゃれ')">おしゃれ</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'疲れてる')">疲れてる</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'温まりたい')">温まりたい</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'スタミナ')">スタミナ</button>
+            </div>
+          </div>
+          <div class="template-cat">
+            <div class="template-cat-label">食べたいもの</div>
+            <div class="template-pills" data-cat="食べたいもの">
+              <button type="button" class="template-pill" onclick="addTemplate(this,'麺類')">麺類</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'ご飯もの')">ご飯もの</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'汁物')">汁物</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'肉料理')">肉料理</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'魚料理')">魚料理</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'副菜多め')">副菜多め</button>
+            </div>
+          </div>
+          <div class="template-cat">
+            <div class="template-cat-label">シチュエーション</div>
+            <div class="template-pills" data-cat="シチュエーション">
+              <button type="button" class="template-pill" onclick="addTemplate(this,'子供向け')">子供向け</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'お弁当向け')">お弁当向け</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'作り置き可')">作り置き可</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'洗い物少なめ')">洗い物少なめ</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'一皿完結')">一皿完結</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="form-group">
@@ -624,7 +669,27 @@ function refreshInventory() {
   showToast('在庫一覧を更新しました', 'success');
 }
 
-/* ===== CALORIE ===== */
+/* ===== テンプレ追加（トグル式） ===== */
+function addTemplate(btn, text) {
+  var input = document.getElementById('mood');
+  var current = input.value;
+  var isUsed = btn.classList.contains('used');
+
+  if (isUsed) {
+    // 取り消し：単語＋直後の読点を除去
+    var re = new RegExp('(^|、)\\s*'+text.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*(?=、|$)');
+    current = current.replace(re, function(m, p1){ return p1==='、' ? '' : ''; });
+    current = current.replace(/^、+/, '').replace(/、+$/, '').replace(/、、+/g, '、');
+    btn.classList.remove('used');
+  } else {
+    current = current.trim();
+    current = current ? current + '、' + text : text;
+    btn.classList.add('used');
+  }
+  input.value = current;
+}
+
+
 function onCalModeChange() {
   var isAuto = document.querySelector('input[name="calMode"]:checked').value==='auto';
   document.getElementById('calManualArea').style.display = isAuto ? 'none' : 'block';
