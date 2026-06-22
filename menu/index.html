@@ -373,6 +373,17 @@ mark{background:#ffe08a;color:var(--br1);border-radius:2px;padding:0 1px}
         <input type="text" id="mood" class="text-input" placeholder="例：さっぱりしたもの、和食、丼もの">
         <div class="template-area">
           <div class="template-cat">
+            <div class="template-cat-label">ジャンル</div>
+            <div class="template-pills" data-cat="ジャンル">
+              <button type="button" class="template-pill" onclick="addTemplate(this,'和食')">和食</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'洋食')">洋食</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'中華')">中華</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'韓国風')">韓国風</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'エスニック')">エスニック</button>
+              <button type="button" class="template-pill" onclick="addTemplate(this,'イタリアン')">イタリアン</button>
+            </div>
+          </div>
+          <div class="template-cat">
             <div class="template-cat-label">気分</div>
             <div class="template-pills" data-cat="気分">
               <button type="button" class="template-pill" onclick="addTemplate(this,'がっつり')">がっつり</button>
@@ -737,6 +748,15 @@ function buildPrompt() {
 
   var inv = ingrNames(readInventory().ingredients);
 
+  // 直近14日以内に「作った！」を押した料理を取得
+  var recentMeals = [];
+  var cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
+  logs.forEach(function(l){
+    if (l.lastMadeAt && new Date(l.lastMadeAt).getTime() > cutoff) {
+      recentMeals.push(l.name);
+    }
+  });
+
   return 'あなたはプロの栄養士です。以下の条件で本日の献立を3〜5品提案してください。\n\n【条件】\n- 目標カロリー: '+calorie+'\n'
     +(inv.length?'- 現在の在庫食材: '+inv.join('、')+'\n':'')
     +(priority?'- 優先して使いたい食材: '+priority+'\n':'')
@@ -744,6 +764,8 @@ function buildPrompt() {
     +(mood?'- 気分・希望: '+mood+'\n':'')
     +'- 調理時間: '+cookTime+'\n'
     +(notes?'- その他要望: '+notes+'\n':'')
+    +(recentMeals.length?'- 最近作った料理（できれば重複を避けてください）: '+recentMeals.join('、')+'\n':'')
+    +'\n【提案のコツ】\n- 定番料理と少し珍しい料理を混ぜて提案してください\n- 同じ食材でも調理法を変えてバリエーションを出してください\n- 単調にならないよう、提案の組み合わせに変化をつけてください\n'
     +'\n必ず以下のJSON形式のみで出力してください（説明文・Markdownコードブロック不要）：\n{"meals":[{"name":"料理名","category":"朝食/昼食/夕食/おやつ","calories":数値,"cookTime":"XX分","description":"2〜3文の説明","ingredients":[{"name":"材料名","amount":"分量"}],"steps":["手順1","手順2"]}]}';
 }
 
