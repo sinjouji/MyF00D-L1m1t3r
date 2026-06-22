@@ -103,11 +103,7 @@ textarea{resize:none}
 .suggest-btn:disabled{opacity:.5;transform:none;cursor:not-allowed}
 
 /* 在庫エリア */
-.inventory-panel{background:var(--cream);border-radius:var(--rs);padding:10px 13px;margin-top:10px}
-.inventory-scroll{max-height:100px;overflow-y:auto;margin-top:6px}
-.inventory-chips{display:flex;flex-wrap:wrap;gap:5px}
-.inv-chip{font-size:12px;padding:3px 9px;background:#fff;border:1px solid var(--border);border-radius:14px;color:var(--txm)}
-.inventory-none{font-size:13px;color:var(--txl)}
+.inventory-scroll{max-height:110px;overflow-y:auto}
 
 /* ===== RESULT ===== */
 .result-area{padding:16px}
@@ -351,10 +347,9 @@ mark{background:#ffe08a;color:var(--br1);border-radius:2px;padding:0 1px}
           <span id="inventoryUpdatedAt" style="font-size:11px;color:var(--txl);flex:1"></span>
           <button onclick="refreshInventory()" style="background:none;border:1.5px solid var(--border);border-radius:16px;padding:3px 10px;font-size:12px;color:var(--txm);cursor:pointer">🔄 更新</button>
         </div>
-        <div class="inventory-panel">
-          <div class="inventory-scroll">
-            <div class="inventory-chips" id="inventoryChips"></div>
-          </div>
+        <div style="font-size:11px;color:var(--txl);margin-bottom:7px">タップで「優先食材」に追加</div>
+        <div class="inventory-scroll" style="max-height:110px;overflow-y:auto">
+          <div class="template-pills" id="inventoryChips"></div>
         </div>
       </div>
 
@@ -658,7 +653,11 @@ function loadInventory() {
     } else {
       updatedEl.textContent = '';
     }
-    chips.innerHTML = inv.ingredients.map(function(x){ return '<span class="inv-chip">'+esc(x)+'</span>'; }).join('');
+    // タップで優先食材欄に追記するボタンとして生成
+    chips.innerHTML = inv.ingredients.map(function(x){
+      var name = typeof x === 'object' ? (x.name||'') : String(x);
+      return '<button type="button" class="template-pill" onclick="addPriorityIngr(this,\''+esc(name)+'\')">'+esc(name)+'</button>';
+    }).join('');
   } else {
     group.style.display = 'none';
   }
@@ -689,6 +688,23 @@ function addTemplate(btn, text) {
   input.value = current;
 }
 
+/* ===== 在庫→優先食材追記（トグル式） ===== */
+function addPriorityIngr(btn, name) {
+  var input = document.getElementById('priorityIngr');
+  var current = input.value;
+  var isUsed = btn.classList.contains('used');
+  if (isUsed) {
+    var re = new RegExp('(^|、)\\s*'+name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*(?=、|$)');
+    current = current.replace(re, function(m, p1){ return p1==='、' ? '' : ''; });
+    current = current.replace(/^、+/, '').replace(/、+$/, '').replace(/、、+/g, '、');
+    btn.classList.remove('used');
+  } else {
+    current = current.trim();
+    current = current ? current + '、' + name : name;
+    btn.classList.add('used');
+  }
+  input.value = current;
+}
 
 function onCalModeChange() {
   var isAuto = document.querySelector('input[name="calMode"]:checked').value==='auto';
